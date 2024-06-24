@@ -16,12 +16,9 @@
  */
 package org.apache.naming;
 
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
+import java.util.*;
 
 /**
  * An internationalization / localization helper class which reduces
@@ -68,16 +65,16 @@ public class StringManager {
         ResourceBundle tempBundle = null;
         try {
             tempBundle = ResourceBundle.getBundle(bundleName, Locale.getDefault());
-        } catch( MissingResourceException ex ) {
+        } catch (MissingResourceException ex) {
             // Try from the current loader (that's the case for trusted apps)
             // Should only be required if using a TC5 style classloader structure
             // where common != shared != server
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
-            if( cl != null ) {
+            if (cl != null) {
                 try {
                     tempBundle = ResourceBundle.getBundle(
-                            bundleName, Locale.getDefault(), cl);
-                } catch(MissingResourceException ex2) {
+                        bundleName, Locale.getDefault(), cl);
+                } catch (MissingResourceException ex2) {
                     // Ignore
                 }
             }
@@ -92,16 +89,16 @@ public class StringManager {
     }
 
     /**
-        Get a string from the underlying resource bundle or return
-        null if the String is not found.
-
-        @param key to desired resource String
-        @return resource String matching <i>key</i> from underlying
-                bundle or null if not found.
-        @throws IllegalArgumentException if <i>key</i> is null.
+     * Get a string from the underlying resource bundle or return
+     * null if the String is not found.
+     *
+     * @param key to desired resource String
+     * @return resource String matching <i>key</i> from underlying
+     * bundle or null if not found.
+     * @throws IllegalArgumentException if <i>key</i> is null.
      */
     public String getString(String key) {
-        if(key == null){
+        if (key == null) {
             String msg = "key may not have a null value";
 
             throw new IllegalArgumentException(msg);
@@ -114,7 +111,7 @@ public class StringManager {
             if (bundle != null) {
                 str = bundle.getString(key);
             }
-        } catch(MissingResourceException mre) {
+        } catch (MissingResourceException mre) {
             //bad: shouldn't mask an exception the following way:
             //   str = "[cannot find message associated with key '" + key + "' due to " + mre + "]";
             //     because it hides the fact that the String was missing
@@ -128,6 +125,16 @@ public class StringManager {
             str = null;
         }
 
+        // 日志打印时会读取系统默认的语言，将原本的 iso-8859-1 转换成 utf-8
+        if (str != null) {
+            try {
+                str = new String(str.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+            } catch (Exception e) {
+
+            }
+        }
+
+
         return str;
     }
 
@@ -137,9 +144,8 @@ public class StringManager {
      *
      * @param key  The key for the required message
      * @param args The values to insert into the message
-     *
      * @return The request string formatted with the provided arguments or the
-     *         key if the key was not found.
+     * key if the key was not found.
      */
     public String getString(final String key, final Object... args) {
         String value = getString(key);
@@ -164,7 +170,6 @@ public class StringManager {
      * StringManager will be created and returned.
      *
      * @param packageName The package name
-     *
      * @return The instance associated with the given package
      */
     public static final synchronized StringManager getManager(String packageName) {

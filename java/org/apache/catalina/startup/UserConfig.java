@@ -17,6 +17,11 @@
 package org.apache.catalina.startup;
 
 
+import org.apache.catalina.*;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.util.res.StringManager;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -24,15 +29,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
-
-import org.apache.catalina.Context;
-import org.apache.catalina.Host;
-import org.apache.catalina.Lifecycle;
-import org.apache.catalina.LifecycleEvent;
-import org.apache.catalina.LifecycleListener;
-import org.apache.juli.logging.Log;
-import org.apache.juli.logging.LogFactory;
-import org.apache.tomcat.util.res.StringManager;
 
 
 /**
@@ -44,8 +40,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  */
-public final class UserConfig
-    implements LifecycleListener {
+public final class UserConfig implements LifecycleListener {
 
 
     private static final Log log = LogFactory.getLog(UserConfig.class);
@@ -192,6 +187,7 @@ public final class UserConfig
 
     /**
      * Set the user database class name for this component.
+     *
      * @param userClass The user database class name
      */
     public void setUserClass(String userClass) {
@@ -391,7 +387,7 @@ public final class UserConfig
      * Test allow and deny rules for the provided user.
      *
      * @return <code>true</code> if this user is allowed to deploy,
-     *         <code>false</code> otherwise
+     * <code>false</code> otherwise
      */
     private boolean isDeployAllowed(String user) {
         if (deny != null && deny.matcher(user).matches()) {
@@ -416,7 +412,7 @@ public final class UserConfig
         public DeployUserDirectory(UserConfig config, String user, String home) {
             this.config = config;
             this.user = user;
-            this.home= home;
+            this.home = home;
         }
 
         @Override
