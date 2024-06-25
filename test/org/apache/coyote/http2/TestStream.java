@@ -16,21 +16,18 @@
  */
 package org.apache.coyote.http2;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
+import org.apache.catalina.Context;
+import org.apache.catalina.startup.Tomcat;
+import org.apache.trailers.ResponseTrailers;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.apache.catalina.Context;
-import org.apache.catalina.startup.Tomcat;
-
-import trailers.ResponseTrailers;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 
 public class TestStream extends Http2TestBase {
@@ -58,16 +55,16 @@ public class TestStream extends Http2TestBase {
         sendClientPreface();
         validateHttp2InitialResponse();
 
-        byte[] frameHeader = new byte[9];
+        byte[] frameHeader = new byte[ 9 ];
         ByteBuffer headersPayload = ByteBuffer.allocate(128);
         buildGetRequest(frameHeader, headersPayload, null, 3,
-                "/pathparam;jsessionid=" + PathParam.EXPECTED_SESSION_ID);
+            "/pathparam;jsessionid=" + PathParam.EXPECTED_SESSION_ID);
         writeFrame(frameHeader, headersPayload);
 
         readSimpleGetResponse();
 
         Assert.assertEquals(
-                "3-HeadersStart\n" +
+            "3-HeadersStart\n" +
                 "3-Header-[:status]-[200]\n" +
                 "3-Header-[content-type]-[text/plain;charset=UTF-8]\n" +
                 "3-Header-[content-length]-[2]\n" +
@@ -98,7 +95,7 @@ public class TestStream extends Http2TestBase {
         sendClientPreface();
         validateHttp2InitialResponse();
 
-        byte[] frameHeader = new byte[9];
+        byte[] frameHeader = new byte[ 9 ];
         ByteBuffer headersPayload = ByteBuffer.allocate(128);
         buildGetRequest(frameHeader, headersPayload, null, 3, "/trailers");
         writeFrame(frameHeader, headersPayload);
@@ -111,7 +108,7 @@ public class TestStream extends Http2TestBase {
         parser.readFrame();
 
         Assert.assertEquals(
-                "3-HeadersStart\n" +
+            "3-HeadersStart\n" +
                 "3-Header-[:status]-[200]\n" +
                 "3-Header-[content-type]-[text/plain;charset=UTF-8]\n" +
                 "3-Header-[content-length]-[44]\n" +
@@ -134,7 +131,7 @@ public class TestStream extends Http2TestBase {
 
         @Override
         protected void doGet(HttpServletRequest request, HttpServletResponse response)
-                throws ServletException, IOException {
+            throws ServletException, IOException {
 
             response.setContentType("text/plain");
             response.setCharacterEncoding("UTF-8");

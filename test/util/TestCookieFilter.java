@@ -16,10 +16,10 @@
  */
 package util;
 
+import org.apache.catalina.authenticator.Constants;
+import org.apache.util.CookieFilter;
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.apache.catalina.authenticator.Constants;
 
 public class TestCookieFilter {
 
@@ -39,7 +39,7 @@ public class TestCookieFilter {
     public void test03() {
         // Cookies with leading and trailing whitespace
         Assert.assertEquals(" a=b  ;   c=d    ",
-                CookieFilter.filter(" a=b  ;   c=d    ", null));
+            CookieFilter.filter(" a=b  ;   c=d    ", null));
     }
 
     @Test
@@ -58,14 +58,14 @@ public class TestCookieFilter {
     public void test06() {
         // Simple case
         Assert.assertEquals("JSESSIONID=[obfuscated]",
-                CookieFilter.filter("JSESSIONID=0123456789", null));
+            CookieFilter.filter("JSESSIONID=0123456789", null));
     }
 
     @Test
     public void test07() {
         // Simple SSO case
         Assert.assertEquals(Constants.SINGLE_SIGN_ON_COOKIE + "=[obfuscated]",
-                CookieFilter.filter(Constants.SINGLE_SIGN_ON_COOKIE + "=0123456789", null));
+            CookieFilter.filter(Constants.SINGLE_SIGN_ON_COOKIE + "=0123456789", null));
     }
 
 
