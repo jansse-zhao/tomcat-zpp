@@ -79,78 +79,95 @@ package org.apache.catalina;
  * attempted transition is not valid.
  *
  * @author Craig R. McClanahan
+ * <p>
+ * Tomcat全局生命周期抽象
  */
 public interface Lifecycle {
 
-
     // ----------------------------------------------------- Manifest Constants
 
+    /**
+     * 组件生命周期事件
+     * before_init
+     * after_init
+     * start
+     * before_start
+     * after_start
+     * stop
+     * before_stop
+     * after_stop
+     * after_destroy
+     * before_destroy
+     * periodic
+     * configure_start
+     * configure_stop
+     */
 
     /**
      * The LifecycleEvent type for the "component before init" event.
+     * “组件初始化前”事件的LifecycleEvent类型。
      */
-    public static final String BEFORE_INIT_EVENT = "before_init";
-
+    String BEFORE_INIT_EVENT = "before_init";
 
     /**
      * The LifecycleEvent type for the "component after init" event.
+     * “组件初始化后”事件的LifecycleEvent类型。
      */
-    public static final String AFTER_INIT_EVENT = "after_init";
-
+    String AFTER_INIT_EVENT = "after_init";
 
     /**
      * The LifecycleEvent type for the "component start" event.
+     * “组件启动”事件的LifecycleEvent类型。
      */
-    public static final String START_EVENT = "start";
-
+    String START_EVENT = "start";
 
     /**
      * The LifecycleEvent type for the "component before start" event.
+     * “组件启动前”事件的LifecycleEvent类型。
      */
-    public static final String BEFORE_START_EVENT = "before_start";
-
+    String BEFORE_START_EVENT = "before_start";
 
     /**
      * The LifecycleEvent type for the "component after start" event.
+     * “启动后的组件”事件的LifecycleEvent类型。
      */
-    public static final String AFTER_START_EVENT = "after_start";
-
+    String AFTER_START_EVENT = "after_start";
 
     /**
      * The LifecycleEvent type for the "component stop" event.
+     * “组件停止”事件的LifecycleEvent类型。
      */
-    public static final String STOP_EVENT = "stop";
-
+    String STOP_EVENT = "stop";
 
     /**
      * The LifecycleEvent type for the "component before stop" event.
+     * “停止前的组件”事件的LifecycleEvent类型。
      */
-    public static final String BEFORE_STOP_EVENT = "before_stop";
-
+    String BEFORE_STOP_EVENT = "before_stop";
 
     /**
      * The LifecycleEvent type for the "component after stop" event.
+     * “停止后组件”事件的LifecycleEvent类型。
      */
-    public static final String AFTER_STOP_EVENT = "after_stop";
-
+    String AFTER_STOP_EVENT = "after_stop";
 
     /**
      * The LifecycleEvent type for the "component after destroy" event.
+     * “销毁后的组件”事件的LifecycleEvent类型。
      */
-    public static final String AFTER_DESTROY_EVENT = "after_destroy";
-
+    String AFTER_DESTROY_EVENT = "after_destroy";
 
     /**
      * The LifecycleEvent type for the "component before destroy" event.
+     * “销毁前组件”事件的LifecycleEvent类型。
      */
-    public static final String BEFORE_DESTROY_EVENT = "before_destroy";
-
+    String BEFORE_DESTROY_EVENT = "before_destroy";
 
     /**
      * The LifecycleEvent type for the "periodic" event.
+     * “周期性”事件的LifecycleEvent类型。
      */
-    public static final String PERIODIC_EVENT = "periodic";
-
+    String PERIODIC_EVENT = "periodic";
 
     /**
      * The LifecycleEvent type for the "configure_start" event. Used by those
@@ -158,8 +175,7 @@ public interface Lifecycle {
      * need to signal when configuration should be performed - usually after
      * {@link #BEFORE_START_EVENT} and before {@link #START_EVENT}.
      */
-    public static final String CONFIGURE_START_EVENT = "configure_start";
-
+    String CONFIGURE_START_EVENT = "configure_start";
 
     /**
      * The LifecycleEvent type for the "configure_stop" event. Used by those
@@ -167,56 +183,68 @@ public interface Lifecycle {
      * need to signal when de-configuration should be performed - usually after
      * {@link #STOP_EVENT} and before {@link #AFTER_STOP_EVENT}.
      */
-    public static final String CONFIGURE_STOP_EVENT = "configure_stop";
+    String CONFIGURE_STOP_EVENT = "configure_stop";
 
+    // --------------------------------------------------------- Methods
 
-    // --------------------------------------------------------- Public Methods
-
+    /**
+     * addLifecycleListener(LifecycleListener listener)
+     * findLifecycleListeners()
+     * removeLifecycleListener(LifecycleListener listener)
+     * init()
+     * start()
+     * stop()
+     * destroy()
+     * getState()
+     * getStateName()
+     */
 
     /**
      * Add a LifecycleEvent listener to this component.
+     * <p>
+     * 向该组件添加一个LifecycleEvent监听器。
      *
      * @param listener The listener to add
      */
-    public void addLifecycleListener(LifecycleListener listener);
-
+    void addLifecycleListener(LifecycleListener listener);
 
     /**
      * Get the life cycle listeners associated with this life cycle.
+     * <p>
+     * 获取与此生命周期关联的生命周期侦听器。
      *
      * @return An array containing the life cycle listeners associated with this
-     *         life cycle. If this component has no listeners registered, a
-     *         zero-length array is returned.
+     * life cycle. If this component has no listeners registered, a
+     * zero-length array is returned.
      */
-    public LifecycleListener[] findLifecycleListeners();
-
+    LifecycleListener[] findLifecycleListeners();
 
     /**
      * Remove a LifecycleEvent listener from this component.
+     * <p>
+     * 从这个组件中删除一个LifecycleEvent监听器。
      *
      * @param listener The listener to remove
      */
-    public void removeLifecycleListener(LifecycleListener listener);
-
+    void removeLifecycleListener(LifecycleListener listener);
 
     /**
      * Prepare the component for starting. This method should perform any
      * initialization required post object creation. The following
      * {@link LifecycleEvent}s will be fired in the following order:
      * <ol>
-     *   <li>INIT_EVENT: On the successful completion of component
-     *                   initialization.</li>
+     *   <li>INIT_EVENT: On the successful completion of component initialization.</li>
      * </ol>
      *
-     * @exception LifecycleException if this component detects a fatal error
-     *  that prevents this component from being used
+     * @throws LifecycleException if this component detects a fatal error
+     *                            that prevents this component from being used
      */
-    public void init() throws LifecycleException;
+    void init() throws LifecycleException;
 
     /**
-     * Prepare for the beginning of active use of the public methods other than
+     * Prepare for the beginning of active use of the methods other than
      * property getters/setters and life cycle methods of this component. This
-     * method should be called before any of the public methods other than
+     * method should be called before any of the methods other than
      * property getters/setters and life cycle methods of this component are
      * utilized. The following {@link LifecycleEvent}s will be fired in the
      * following order:
@@ -227,7 +255,7 @@ public interface Lifecycle {
      *   <li>START_EVENT: During the method once it is safe to call start() for
      *                    any child components. It is at this point that the
      *                    state transitions to {@link LifecycleState#STARTING}
-     *                    and that the public methods other than property
+     *                    and that the methods other than property
      *                    getters/setters and life cycle methods may be
      *                    used.</li>
      *   <li>AFTER_START_EVENT: At the end of the method, immediately before it
@@ -236,16 +264,15 @@ public interface Lifecycle {
      *                          </li>
      * </ol>
      *
-     * @exception LifecycleException if this component detects a fatal error
-     *  that prevents this component from being used
+     * @throws LifecycleException if this component detects a fatal error
+     *                            that prevents this component from being used
      */
-    public void start() throws LifecycleException;
-
+    void start() throws LifecycleException;
 
     /**
-     * Gracefully terminate the active use of the public methods other than
+     * Gracefully terminate the active use of the methods other than
      * property getters/setters and life cycle methods of this component. Once
-     * the STOP_EVENT is fired, the public methods other than property
+     * the STOP_EVENT is fired, the methods other than property
      * getters/setters and life cycle methods should not be used. The following
      * {@link LifecycleEvent}s will be fired in the following order:
      * <ol>
@@ -255,7 +282,7 @@ public interface Lifecycle {
      *   <li>STOP_EVENT: During the method once it is safe to call stop() for
      *                   any child components. It is at this point that the
      *                   state transitions to {@link LifecycleState#STOPPING}
-     *                   and that the public methods other than property
+     *                   and that the methods other than property
      *                   getters/setters and life cycle methods may no longer be
      *                   used.</li>
      *   <li>AFTER_STOP_EVENT: At the end of the method, immediately before it
@@ -263,17 +290,17 @@ public interface Lifecycle {
      *                         transitions to {@link LifecycleState#STOPPED}.
      *                         </li>
      * </ol>
-     *
+     * <p>
      * Note that if transitioning from {@link LifecycleState#FAILED} then the
      * three events above will be fired but the component will transition
      * directly from {@link LifecycleState#FAILED} to
      * {@link LifecycleState#STOPPING}, bypassing
      * {@link LifecycleState#STOPPING_PREP}
      *
-     * @exception LifecycleException if this component detects a fatal error
-     *  that needs to be reported
+     * @throws LifecycleException if this component detects a fatal error
+     *                            that needs to be reported
      */
-    public void stop() throws LifecycleException;
+    void stop() throws LifecycleException;
 
     /**
      * Prepare to discard the object. The following {@link LifecycleEvent}s will
@@ -283,19 +310,17 @@ public interface Lifecycle {
      *                      destruction.</li>
      * </ol>
      *
-     * @exception LifecycleException if this component detects a fatal error
-     *  that prevents this component from being used
+     * @throws LifecycleException if this component detects a fatal error
+     *                            that prevents this component from being used
      */
-    public void destroy() throws LifecycleException;
-
+    void destroy() throws LifecycleException;
 
     /**
      * Obtain the current state of the source component.
      *
      * @return The current state of the source component.
      */
-    public LifecycleState getState();
-
+    LifecycleState getState();
 
     /**
      * Obtain a textual representation of the current component state. Useful
@@ -305,8 +330,7 @@ public interface Lifecycle {
      *
      * @return The name of the current component state.
      */
-    public String getStateName();
-
+    String getStateName();
 
     /**
      * Marker interface used to indicate that the instance should only be used
@@ -314,6 +338,6 @@ public interface Lifecycle {
      * will automatically call {@link #destroy()} after {@link #stop()}
      * completes.
      */
-    public interface SingleUse {
+    interface SingleUse {
     }
 }

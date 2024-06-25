@@ -30,6 +30,11 @@ import org.apache.catalina.mapper.Mapper;
  * and classes on the system class path.
  *
  * @author Craig R. McClanahan
+ * Service: 表示服务，Server可以运行多个服务。
+ * 比如一个Tomcat里面可运行订单服务、支付服务、用户服务等等；
+ * Server的实现类StandardServer可以包含一个到多个Services,
+ * Service的实现类为StandardService调用了容器(Container)接口，其实是调用了Servlet Engine(引擎)，
+ * 而且StandardService类中也指明了该Service归属的Server;
  */
 public interface Service extends Lifecycle {
 
@@ -122,18 +127,21 @@ public interface Service extends Lifecycle {
 
     /**
      * Adds a named executor to the service
+     *
      * @param ex Executor
      */
     public void addExecutor(Executor ex);
 
     /**
      * Retrieves all executors
+     *
      * @return Executor[]
      */
     public Executor[] findExecutors();
 
     /**
      * Retrieves executor by name, null if not found
+     *
      * @param name String
      * @return Executor
      */
@@ -141,6 +149,7 @@ public interface Service extends Lifecycle {
 
     /**
      * Removes an executor from the service
+     *
      * @param ex Executor
      */
     public void removeExecutor(Executor ex);

@@ -24,16 +24,17 @@ package org.apache.catalina;
  * change has taken place.
  *
  * @author Craig R. McClanahan
+ * <p>
+ * 生命周期事件
  */
 public interface LifecycleListener {
-
 
     /**
      * Acknowledge the occurrence of the specified event.
      *
      * @param event LifecycleEvent that has occurred
      */
-    public void lifecycleEvent(LifecycleEvent event);
+    void lifecycleEvent(LifecycleEvent event);
 
 
 }

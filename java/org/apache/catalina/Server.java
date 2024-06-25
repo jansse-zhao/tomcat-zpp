@@ -16,11 +16,11 @@
  */
 package org.apache.catalina;
 
-import java.io.File;
-import java.util.concurrent.ScheduledExecutorService;
-
 import org.apache.catalina.deploy.NamingResourcesImpl;
 import org.apache.catalina.startup.Catalina;
+
+import java.io.File;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * A <code>Server</code> element represents the entire Catalina
@@ -40,6 +40,9 @@ import org.apache.catalina.startup.Catalina;
  * If the command matches, shutdown of the server is initiated.
  *
  * @author Craig R. McClanahan
+ * <p>
+ * Server:表示服务器，它提供了一种优雅的方式来启动和停止整个系统，不必单独启停连接器和容器；
+ * 它是Tomcat构成的顶级构成元素，所有一切均包含在Server中；
  */
 public interface Server extends Lifecycle {
 
@@ -56,8 +59,7 @@ public interface Server extends Lifecycle {
      *
      * @param globalNamingResources The new global naming resources
      */
-    public void setGlobalNamingResources
-        (NamingResourcesImpl globalNamingResources);
+    public void setGlobalNamingResources(NamingResourcesImpl globalNamingResources);
 
 
     /**
@@ -68,7 +70,6 @@ public interface Server extends Lifecycle {
 
     /**
      * @return the port number we listen to for shutdown commands.
-     *
      * @see #getPortOffset()
      * @see #getPortWithOffset()
      */
@@ -79,7 +80,6 @@ public interface Server extends Lifecycle {
      * Set the port number we listen to for shutdown commands.
      *
      * @param port The new port number
-     *
      * @see #setPortOffset(int)
      */
     public void setPort(int port);
@@ -201,6 +201,7 @@ public interface Server extends Lifecycle {
 
     /**
      * Get the utility thread count.
+     *
      * @return the thread count
      */
     public int getUtilityThreads();
@@ -208,6 +209,7 @@ public interface Server extends Lifecycle {
 
     /**
      * Set the utility thread count.
+     *
      * @param utilityThreads the new thread count
      */
     public void setUtilityThreads(int utilityThreads);

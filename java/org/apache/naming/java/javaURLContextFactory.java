@@ -16,17 +16,16 @@
  */
 package org.apache.naming.java;
 
-import java.util.Hashtable;
+import org.apache.naming.ContextBindings;
+import org.apache.naming.NamingContext;
+import org.apache.naming.SelectorContext;
 
 import javax.naming.Context;
 import javax.naming.Name;
 import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
 import javax.naming.spi.ObjectFactory;
-
-import org.apache.naming.ContextBindings;
-import org.apache.naming.NamingContext;
-import org.apache.naming.SelectorContext;
+import java.util.Hashtable;
 
 /**
  * Context factory for the "java:" namespace.
@@ -45,70 +44,56 @@ import org.apache.naming.SelectorContext;
  *
  * @author Remy Maucherat
  */
-public class javaURLContextFactory
-    implements ObjectFactory, InitialContextFactory {
-
+public class javaURLContextFactory implements ObjectFactory, InitialContextFactory {
 
     // ----------------------------------------------------------- Constructors
 
-
     // -------------------------------------------------------------- Constants
-
 
     public static final String MAIN = "initialContext";
 
-
     // ----------------------------------------------------- Instance Variables
-
 
     /**
      * Initial context.
      */
     protected static volatile Context initialContext = null;
 
-
     // --------------------------------------------------------- Public Methods
 
-
     // -------------------------------------------------- ObjectFactory Methods
-
 
     /**
      * Crete a new Context's instance.
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Object getObjectInstance(Object obj, Name name, Context nameCtx,
-                                    Hashtable<?,?> environment)
+    public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment)
         throws NamingException {
         if ((ContextBindings.isThreadBound()) ||
             (ContextBindings.isClassLoaderBound())) {
-            return new SelectorContext((Hashtable<String,Object>)environment);
+            return new SelectorContext((Hashtable<String, Object>) environment);
         }
         return null;
     }
-
 
     /**
      * Get a new (writable) initial context.
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Context getInitialContext(Hashtable<?,?> environment)
-        throws NamingException {
+    public Context getInitialContext(Hashtable<?, ?> environment) throws NamingException {
         if (ContextBindings.isThreadBound() ||
             (ContextBindings.isClassLoaderBound())) {
             // Redirect the request to the bound initial context
-            return new SelectorContext(
-                    (Hashtable<String,Object>)environment, true);
+            return new SelectorContext((Hashtable<String, Object>) environment, true);
         }
 
         // If the thread is not bound, return a shared writable context
         if (initialContext == null) {
-            synchronized(javaURLContextFactory.class) {
+            synchronized (javaURLContextFactory.class) {
                 if (initialContext == null) {
-                    initialContext = new NamingContext(
-                            (Hashtable<String,Object>)environment, MAIN);
+                    initialContext = new NamingContext((Hashtable<String, Object>) environment, MAIN);
                 }
             }
         }
