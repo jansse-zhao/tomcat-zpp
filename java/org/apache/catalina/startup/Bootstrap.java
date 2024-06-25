@@ -206,9 +206,11 @@ public final class Bootstrap {
 
     /**
      * System property replacement in the given string.
+     * <p>
+     * 在给定字符串中替换系统属性。
      *
-     * @param str The original string
-     * @return the modified string
+     * @param str The original string - 原始字符串
+     * @return the modified string - 修改后的字符串
      */
     protected String replace(String str) {
         // Implementation is copied from ClassLoaderLogManager.replace(),
@@ -383,10 +385,10 @@ public final class Bootstrap {
             paramTypes = null;
             param = null;
         } else {
-            paramTypes = new Class[ 1 ];
-            paramTypes[ 0 ] = arguments.getClass();
-            param = new Object[ 1 ];
-            param[ 0 ] = arguments;
+            paramTypes = new Class[1];
+            paramTypes[0] = arguments.getClass();
+            param = new Object[1];
+            param[0] = arguments;
         }
         Method method =
             catalinaDaemon.getClass().getMethod("stopServer", paramTypes);
@@ -411,8 +413,8 @@ public final class Bootstrap {
     }
 
     public boolean getAwait() throws Exception {
-        Class<?> paramTypes[] = new Class[ 0 ];
-        Object paramValues[] = new Object[ 0 ];
+        Class<?> paramTypes[] = new Class[0];
+        Object paramValues[] = new Object[0];
         Method method =
             catalinaDaemon.getClass().getMethod("getAwait", paramTypes);
         Boolean b = (Boolean) method.invoke(catalinaDaemon, paramValues);
@@ -460,18 +462,18 @@ public final class Bootstrap {
         try {
             String command = "start";
             if (args.length > 0) {
-                command = args[ args.length - 1 ];
+                command = args[args.length - 1];
             }
 
             // startd
             if (command.equals("startd")) {
-                args[ args.length - 1 ] = "start";
+                args[args.length - 1] = "start";
                 daemon.load(args);
                 daemon.start();
             }
             // stopd
             else if (command.equals("stopd")) {
-                args[ args.length - 1 ] = "stop";
+                args[args.length - 1] = "stop";
                 daemon.stop();
             }
             // start
@@ -615,6 +617,6 @@ public final class Bootstrap {
             result.add(path);
         }
 
-        return result.toArray(new String[ 0 ]);
+        return result.toArray(new String[0]);
     }
 }

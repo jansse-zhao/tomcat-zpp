@@ -16,30 +16,32 @@
  */
 package org.apache.tomcat.util.file;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import org.apache.tomcat.util.buf.UriUtil;
+
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 
-import org.apache.tomcat.util.buf.UriUtil;
-
 /**
  * Abstracts configuration file storage. Allows Tomcat embedding using the regular
  * configuration style.
+ * <p>
+ * 抽象配置文件存储。允许使用常规配置样式嵌入Tomcat。
+ * <p>
  * This abstraction aims to be very simple and does not cover resource listing,
  * which is usually used for dynamic deployments that are usually not used when
  * embedding, as well as resource writing.
+ * <p>
+ * 这个抽象的目的是非常简单，并且不包括资源列表，资源列表通常用于动态部署，通常在嵌入时不会使用，也不包括资源写入。
  */
 public interface ConfigurationSource {
 
-    public static final ConfigurationSource DEFAULT = new ConfigurationSource() {
-        protected final File userDir = new File(System.getProperty("user.dir"));
-        protected final URI userDirUri = userDir.toURI();
+    ConfigurationSource DEFAULT = new ConfigurationSource() {
+        private final File userDir = new File(System.getProperty("user.dir"));
+        private final URI userDirUri = userDir.toURI();
+
         @Override
         public Resource getResource(String name) throws IOException {
             if (!UriUtil.isAbsoluteURI(name)) {
@@ -65,6 +67,7 @@ public interface ConfigurationSource {
                 throw new FileNotFoundException(name);
             }
         }
+
         @Override
         public URI getURI(String name) {
             if (!UriUtil.isAbsoluteURI(name)) {
@@ -81,27 +84,31 @@ public interface ConfigurationSource {
     };
 
     /**
-     * Represents a resource: a stream to the resource associated with
-     * its URI.
+     * Represents a resource: a stream to the resource associated with its URI.
+     * 表示资源:指向与其URI相关联的资源的流
      */
-    public class Resource implements AutoCloseable {
+    class Resource implements AutoCloseable {
         private final InputStream inputStream;
         private final URI uri;
+
         public Resource(InputStream inputStream, URI uri) {
             this.inputStream = inputStream;
             this.uri = uri;
         }
+
         public InputStream getInputStream() {
             return inputStream;
         }
+
         public URI getURI() {
             return uri;
         }
-        public long getLastModified()
-                throws MalformedURLException, IOException {
+
+        public long getLastModified() throws IOException {
             URLConnection connection = null;
             try {
                 connection = uri.toURL().openConnection();
+                // 返回该URL引用的资源最后修改的时间
                 return connection.getLastModified();
             } finally {
                 if (connection != null) {
@@ -109,6 +116,7 @@ public interface ConfigurationSource {
                 }
             }
         }
+
         @Override
         public void close() throws IOException {
             if (inputStream != null) {
@@ -119,52 +127,53 @@ public interface ConfigurationSource {
 
     /**
      * Returns the contents of the main conf/server.xml file.
+     *
      * @return the server.xml as an InputStream
      * @throws IOException if an error occurs or if the resource does not exist
      */
-    public default Resource getServerXml()
-            throws IOException {
+    default Resource getServerXml() throws IOException {
         return getConfResource("server.xml");
     }
 
     /**
      * Returns the contents of the shared conf/web.xml file. This usually
      * contains the declaration of the default and JSP servlets.
+     *
      * @return the web.xml as an InputStream
      * @throws IOException if an error occurs or if the resource does not exist
      */
-    public default Resource getSharedWebXml()
-            throws IOException {
+    default Resource getSharedWebXml() throws IOException {
         return getConfResource("web.xml");
     }
 
     /**
      * Get a resource, based on the conf path.
+     *
      * @param name The resource name
      * @return the resource as an InputStream
      * @throws IOException if an error occurs or if the resource does not exist
      */
-    public default Resource getConfResource(String name)
-            throws IOException {
+    default Resource getConfResource(String name) throws IOException {
         String fullName = "conf/" + name;
         return getResource(fullName);
     }
 
     /**
      * Get a resource, not based on the conf path.
+     *
      * @param name The resource name
      * @return the resource
      * @throws IOException if an error occurs or if the resource does not exist
      */
-    public Resource getResource(String name)
-            throws IOException;
+    Resource getResource(String name) throws IOException;
 
     /**
      * Get a URI to the given resource. Unlike getResource, this will also
      * return URIs to locations where no resource exists.
+     *
      * @param name The resource name
      * @return a URI representing the resource location
      */
-    public URI getURI(String name);
+    URI getURI(String name);
 
 }

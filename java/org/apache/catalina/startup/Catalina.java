@@ -49,8 +49,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.LogManager;
 
 /**
- * Startup/Shutdown shell program for Catalina.  The following command line
- * options are recognized:
+ * Startup/Shutdown shell program for Catalina.
+ * The following command line options are recognized:
  * <ul>
  * <li><b>-config {pathname}</b> - Set the pathname of the configuration file
  *     to be processed.  If a relative path is specified, it will be
@@ -126,6 +126,7 @@ public class Catalina {
 
     /**
      * Generate Tomcat embedded code from configuration files.
+     * 从配置文件生成Tomcat嵌入代码。
      */
     protected boolean generateCode = false;
 
@@ -141,11 +142,13 @@ public class Catalina {
 
     /**
      * Top package name for generated source.
+     * 生成源代码的顶级包名。
      */
     protected String generatedCodePackage = "catalinaembedded";
 
     /**
      * Use generated code as a replacement for configuration files.
+     * 生成的代码作为配置文件的替代品。
      */
     protected boolean useGeneratedCode = false;
 
@@ -350,7 +353,6 @@ public class Catalina {
      * @return the main configuration file
      */
     protected File configFile() {
-
         File file = new File(configFile);
         if (!file.isAbsolute()) {
             file = new File(Bootstrap.getCatalinaBase(), configFile);
@@ -361,6 +363,8 @@ public class Catalina {
 
     /**
      * Create and configure the Digester we will be using for startup.
+     * <p>
+     * 创建并配置我们将用于启动的消化器。
      *
      * @return the main digester to parse server.xml
      */
@@ -553,6 +557,8 @@ public class Catalina {
 
     protected void parseServerXml(boolean start) {
         // Set configuration source
+        // <Bootstrap.getCatalinaBaseFile(), getConfigFile()> = System.getProperty("user.dir") + "conf/server.xml"
+        // 设置ConfigFileLoader类的source属性
         ConfigFileLoader.setSource(new CatalinaBaseConfigurationSource(Bootstrap.getCatalinaBaseFile(), getConfigFile()));
         File file = configFile();
 
@@ -691,6 +697,7 @@ public class Catalina {
 
     /**
      * Start a new server instance.
+     * 启动一个新的服务器实例。
      */
     public void load() {
         if (loaded) {
@@ -701,9 +708,15 @@ public class Catalina {
         long t1 = System.nanoTime();
 
         // Before digester - it may be needed
+        /**
+         * 设置系统变量
+         * 1. 设置"java.naming.factory.url.pkgs"=<org.apache.naming>
+         * 2. 设置"java.naming.factory.initial"=<org.apache.naming.java.javaURLContextFactory>
+         */
         initNaming();
 
         // Parse main server.xml
+        // 解析主的 server.xml
         parseServerXml(true);
         Server s = getServer();
         if (s == null) {
@@ -872,6 +885,7 @@ public class Catalina {
         System.setErr(new SystemLogHandler(System.err));
     }
 
+    // 初始化命名服务
     protected void initNaming() {
         // Setting additional variables
         // 未开启命名功能
@@ -883,6 +897,13 @@ public class Catalina {
         else {
             System.setProperty("catalina.useNaming", "true");
             String value = "org.apache.naming";
+
+            /**
+             * javax.naming.Context.URL_PKG_PREFIXES = "java.naming.factory.url.pkgs"
+             * 常量，它保存环境属性的名称，用于指定在URL上下文工厂中加载时要使用的包前缀列表。
+             * 该属性的值应该是一个以冒号分隔的包前缀列表，用于创建URL上下文工厂的工厂类的类名。此属性可以在环境、系统属性或一个或多个资源文件中指定。
+             * 前缀com.sun.jndi.url总是被附加到可能为空的包前缀列表中。
+             */
             String oldValue = System.getProperty(javax.naming.Context.URL_PKG_PREFIXES);
             if (oldValue != null) {
                 value = value + ":" + oldValue;
@@ -892,7 +913,14 @@ public class Catalina {
                 log.debug("Setting naming prefix=" + value);
             }
 
-            // 上下文工厂：org.apache.naming.java.javaURLContextFactory
+            //
+            /**
+             * 上下文工厂：org.apache.naming.java.javaURLContextFactory
+             * javax.naming.Context.INITIAL_CONTEXT_FACTORY = "java.naming.factory.initial"
+             * 常量，该常量包含用于指定要使用的初始上下文工厂的环境属性的名称。该属性的值应该是将创建初始上下文的工厂类的完全限定类名。
+             * 此属性可以在传递给初始上下文构造函数的环境参数、系统属性或应用程序资源文件中指定。
+             * 如果没有在这些源中指定它，则在需要初始上下文来完成操作时抛出NoInitialContextException。
+             */
             value = System.getProperty(javax.naming.Context.INITIAL_CONTEXT_FACTORY);
             if (value == null) {
                 System.setProperty(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "org.apache.naming.java.javaURLContextFactory");
@@ -903,6 +931,7 @@ public class Catalina {
     }
 
     /**
+     * 实例化对象调用方法
      * Set the security package access/protection.
      */
     protected void setSecurityProtection() {
