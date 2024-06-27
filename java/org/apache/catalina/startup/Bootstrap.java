@@ -147,7 +147,12 @@ public final class Bootstrap {
     // -------------------------------------------------------- Private Methods
 
     /**
-     * 初始化三个类加载器：common、server、shared
+     * 初始化三个类加载器：
+     * commonClassLoader：Common类加载器，负责加载Tomcat和Web应用都复用的类
+     * serverClassLoader：Catalina类加载器，负责加载Tomcat专用的类，而这些被加载的类在Web应用中将不可见
+     * sharedClassLoader：Shared类加载器，负责加载Tomcat下所有的Web应用程序都复用的类，而这些被加载的类在Tomcat中将不可见
+     * - WebApp类加载器，负责加载具体的某个Web应用程序所使用到的类，而这些被加载的类在Tomcat和其他的Web应用程序都将不可见
+     * - Jsp类加载器，每个jsp页面一个类加载器，不同的jsp页面有不同的类加载器，方便实现jsp页面的热插拔
      */
     private void initClassLoaders() {
         try {
@@ -166,11 +171,18 @@ public final class Bootstrap {
     }
 
     private ClassLoader createClassLoader(String name, ClassLoader parent) throws Exception {
+        /**
+         *  读取系统属性中的值：
+         *  common.loader = "${catalina.base}/lib","${catalina.base}/lib/*.jar","${catalina.home}/lib","${catalina.home}/lib/*.jar"
+         *  server.loader = ""
+         *  shared.loader = ""
+         */
         String value = CatalinaProperties.getProperty(name + ".loader");
         if ((value == null) || (value.equals(""))) {
             return parent;
         }
 
+        // 只会解析common.loader的值，因为配置文件conf/catalina.properties中没有定义server.loader和shared.loader的值
         value = replace(value);
 
         List<Repository> repositories = new ArrayList<>();
@@ -191,8 +203,7 @@ public final class Bootstrap {
 
             // Local repository
             if (repository.endsWith("*.jar")) {
-                repository = repository.substring
-                    (0, repository.length() - "*.jar".length());
+                repository = repository.substring(0, repository.length() - "*.jar".length());
                 repositories.add(new Repository(repository, RepositoryType.GLOB));
             } else if (repository.endsWith(".jar")) {
                 repositories.add(new Repository(repository, RepositoryType.JAR));
@@ -208,6 +219,8 @@ public final class Bootstrap {
      * System property replacement in the given string.
      * <p>
      * 在给定字符串中替换系统属性。
+     * "${catalina.base}/lib","${catalina.base}/lib/*.jar","${catalina.home}/lib","${catalina.home}/lib/*.jar"
+     * 替换“${}”中的系统变量
      *
      * @param str The original string - 原始字符串
      * @return the modified string - 修改后的字符串
@@ -215,6 +228,7 @@ public final class Bootstrap {
     protected String replace(String str) {
         // Implementation is copied from ClassLoaderLogManager.replace(),
         // but added special processing for catalina.home and catalina.base.
+        // str = "${catalina.base}/lib","${catalina.base}/lib/*.jar","${catalina.home}/lib","${catalina.home}/lib/*.jar"
         String result = str;
         int pos_start = str.indexOf("${");
         if (pos_start >= 0) {
@@ -385,10 +399,10 @@ public final class Bootstrap {
             paramTypes = null;
             param = null;
         } else {
-            paramTypes = new Class[1];
-            paramTypes[0] = arguments.getClass();
-            param = new Object[1];
-            param[0] = arguments;
+            paramTypes = new Class[ 1 ];
+            paramTypes[ 0 ] = arguments.getClass();
+            param = new Object[ 1 ];
+            param[ 0 ] = arguments;
         }
         Method method =
             catalinaDaemon.getClass().getMethod("stopServer", paramTypes);
@@ -413,10 +427,9 @@ public final class Bootstrap {
     }
 
     public boolean getAwait() throws Exception {
-        Class<?> paramTypes[] = new Class[0];
-        Object paramValues[] = new Object[0];
-        Method method =
-            catalinaDaemon.getClass().getMethod("getAwait", paramTypes);
+        Class<?>[] paramTypes = new Class[ 0 ];
+        Object[] paramValues = new Object[ 0 ];
+        Method method = catalinaDaemon.getClass().getMethod("getAwait", paramTypes);
         Boolean b = (Boolean) method.invoke(catalinaDaemon, paramValues);
         return b.booleanValue();
     }
@@ -462,18 +475,18 @@ public final class Bootstrap {
         try {
             String command = "start";
             if (args.length > 0) {
-                command = args[args.length - 1];
+                command = args[ args.length - 1 ];
             }
 
             // startd
             if (command.equals("startd")) {
-                args[args.length - 1] = "start";
+                args[ args.length - 1 ] = "start";
                 daemon.load(args);
                 daemon.start();
             }
             // stopd
             else if (command.equals("stopd")) {
-                args[args.length - 1] = "stop";
+                args[ args.length - 1 ] = "stop";
                 daemon.stop();
             }
             // start
@@ -582,7 +595,6 @@ public final class Bootstrap {
 
     // Protected for unit testing
     protected static String[] getPaths(String value) {
-
         List<String> result = new ArrayList<>();
         Matcher matcher = PATH_PATTERN.matcher(value);
 
@@ -617,6 +629,6 @@ public final class Bootstrap {
             result.add(path);
         }
 
-        return result.toArray(new String[0]);
+        return result.toArray(new String[ 0 ]);
     }
 }

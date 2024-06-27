@@ -16,7 +16,10 @@
  */
 package org.apache.catalina;
 
+/**
+ * Tomcat自定义线程执行器
+ */
 public interface Executor extends java.util.concurrent.Executor, Lifecycle {
 
-    public String getName();
+    String getName();
 }

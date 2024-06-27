@@ -16,6 +16,9 @@
  */
 package org.apache.catalina.startup;
 
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -23,9 +26,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.Enumeration;
 import java.util.Properties;
-
-import org.apache.juli.logging.Log;
-import org.apache.juli.logging.LogFactory;
 
 
 /**
@@ -44,7 +44,6 @@ public class CatalinaProperties {
         loadProperties();
     }
 
-
     /**
      * @param name The property name
      * @return specified property value
@@ -53,12 +52,11 @@ public class CatalinaProperties {
         return properties.getProperty(name);
     }
 
-
     /**
      * Load properties.
+     * 读取配置文件 conf/catalina.properties 中的属性到系统属性中
      */
     private static void loadProperties() {
-
         InputStream is = null;
         String fileName = "catalina.properties";
 

@@ -16,27 +16,7 @@
  */
 package org.apache.catalina.deploy;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.naming.NamingException;
-
-import org.apache.catalina.Container;
-import org.apache.catalina.Context;
-import org.apache.catalina.Engine;
-import org.apache.catalina.JmxEnabled;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.LifecycleState;
-import org.apache.catalina.Server;
+import org.apache.catalina.*;
 import org.apache.catalina.mbeans.MBeanUtils;
 import org.apache.catalina.util.Introspection;
 import org.apache.catalina.util.LifecycleMBeanBase;
@@ -44,20 +24,17 @@ import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.naming.ContextBindings;
 import org.apache.tomcat.util.ExceptionUtils;
-import org.apache.tomcat.util.descriptor.web.ContextEjb;
-import org.apache.tomcat.util.descriptor.web.ContextEnvironment;
-import org.apache.tomcat.util.descriptor.web.ContextLocalEjb;
-import org.apache.tomcat.util.descriptor.web.ContextResource;
-import org.apache.tomcat.util.descriptor.web.ContextResourceEnvRef;
-import org.apache.tomcat.util.descriptor.web.ContextResourceLink;
-import org.apache.tomcat.util.descriptor.web.ContextService;
-import org.apache.tomcat.util.descriptor.web.ContextTransaction;
-import org.apache.tomcat.util.descriptor.web.InjectionTarget;
-import org.apache.tomcat.util.descriptor.web.MessageDestinationRef;
-import org.apache.tomcat.util.descriptor.web.NamingResources;
-import org.apache.tomcat.util.descriptor.web.ResourceBase;
+import org.apache.tomcat.util.descriptor.web.*;
 import org.apache.tomcat.util.res.StringManager;
 
+import javax.naming.NamingException;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 /**
  * Holds and manages the naming resources defined in the Jakarta EE
@@ -65,8 +42,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  */
-public class NamingResourcesImpl extends LifecycleMBeanBase
-        implements Serializable, NamingResources {
+public class NamingResourcesImpl extends LifecycleMBeanBase implements Serializable, NamingResources {
 
     private static final long serialVersionUID = 1L;
 
@@ -132,29 +108,25 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
      * The resource environment references for this web application,
      * keyed by name.
      */
-    private final HashMap<String, ContextResourceEnvRef> resourceEnvRefs =
-        new HashMap<>();
+    private final HashMap<String, ContextResourceEnvRef> resourceEnvRefs = new HashMap<>();
 
 
     /**
      * The resource references for this web application, keyed by name.
      */
-    private final HashMap<String, ContextResource> resources =
-        new HashMap<>();
+    private final HashMap<String, ContextResource> resources = new HashMap<>();
 
 
     /**
      * The resource links for this web application, keyed by name.
      */
-    private final HashMap<String, ContextResourceLink> resourceLinks =
-        new HashMap<>();
+    private final HashMap<String, ContextResourceLink> resourceLinks = new HashMap<>();
 
 
     /**
      * The web service references for this web application, keyed by name.
      */
-    private final HashMap<String, ContextService> services =
-        new HashMap<>();
+    private final HashMap<String, ContextService> services = new HashMap<>();
 
 
     /**
@@ -166,8 +138,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
     /**
      * The property change support for this component.
      */
-    protected final PropertyChangeSupport support =
-            new PropertyChangeSupport(this);
+    protected final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
 
     // ------------------------------------------------------------- Properties
@@ -184,6 +155,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
 
     /**
      * Set the container with which the naming resources are associated.
+     *
      * @param container the associated with the resources
      */
     public void setContainer(Object container) {
@@ -193,6 +165,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
 
     /**
      * Set the transaction object.
+     *
      * @param transaction the transaction descriptor
      */
     public void setTransaction(ContextTransaction transaction) {
@@ -221,7 +194,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
 
         if (ejbLink != null && ejbLink.length() > 0 && lookupName != null && lookupName.length() > 0) {
             throw new IllegalArgumentException(
-                    sm.getString("namingResources.ejbLookupLink", ejb.getName()));
+                sm.getString("namingResources.ejbLookupLink", ejb.getName()));
         }
 
         if (entries.contains(ejb.getName())) {
@@ -278,20 +251,20 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
 
         // Entries with injection targets but no value are effectively ignored
         if (injectionTargets != null && injectionTargets.size() > 0 &&
-                (value == null || value.length() == 0)) {
+            (value == null || value.length() == 0)) {
             return;
         }
 
         // Entries with lookup-name and value are an error (EE.5.4.1.3)
         if (value != null && value.length() > 0 && lookupName != null && lookupName.length() > 0) {
             throw new IllegalArgumentException(
-                    sm.getString("namingResources.envEntryLookupValue", environment.getName()));
+                sm.getString("namingResources.envEntryLookupValue", environment.getName()));
         }
 
         if (!checkResourceType(environment)) {
             throw new IllegalArgumentException(sm.getString(
-                    "namingResources.resourceTypeFail", environment.getName(),
-                    environment.getType()));
+                "namingResources.resourceTypeFail", environment.getName(),
+                environment.getType()));
         }
 
         entries.add(environment.getName());
@@ -308,7 +281,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
                 MBeanUtils.createMBean(environment);
             } catch (Exception e) {
                 log.warn(sm.getString("namingResources.mbeanCreateFail",
-                        environment.getName()), e);
+                    environment.getName()), e);
             }
         }
     }
@@ -362,8 +335,8 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
         } else {
             if (!checkResourceType(mdr)) {
                 throw new IllegalArgumentException(sm.getString(
-                        "namingResources.resourceTypeFail", mdr.getName(),
-                        mdr.getType()));
+                    "namingResources.resourceTypeFail", mdr.getName(),
+                    mdr.getType()));
             }
             entries.add(mdr.getName());
         }
@@ -402,8 +375,8 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
         } else {
             if (!checkResourceType(resource)) {
                 throw new IllegalArgumentException(sm.getString(
-                        "namingResources.resourceTypeFail", resource.getName(),
-                        resource.getType()));
+                    "namingResources.resourceTypeFail", resource.getName(),
+                    resource.getType()));
             }
             entries.add(resource.getName());
         }
@@ -420,7 +393,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
                 MBeanUtils.createMBean(resource);
             } catch (Exception e) {
                 log.warn(sm.getString("namingResources.mbeanCreateFail",
-                        resource.getName()), e);
+                    resource.getName()), e);
             }
         }
     }
@@ -438,8 +411,8 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
         } else {
             if (!checkResourceType(resource)) {
                 throw new IllegalArgumentException(sm.getString(
-                        "namingResources.resourceTypeFail", resource.getName(),
-                        resource.getType()));
+                    "namingResources.resourceTypeFail", resource.getName(),
+                    resource.getType()));
             }
             entries.add(resource.getName());
         }
@@ -479,7 +452,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
                 MBeanUtils.createMBean(resourceLink);
             } catch (Exception e) {
                 log.warn(sm.getString("namingResources.mbeanCreateFail",
-                        resourceLink.getName()), e);
+                    resourceLink.getName()), e);
             }
         }
     }
@@ -508,10 +481,9 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
 
 
     /**
+     * @param name Name of the desired EJB resource reference
      * @return the EJB resource reference with the specified name, if any;
      * otherwise, return <code>null</code>.
-     *
-     * @param name Name of the desired EJB resource reference
      */
     public ContextEjb findEjb(String name) {
 
@@ -529,17 +501,16 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
     public ContextEjb[] findEjbs() {
 
         synchronized (ejbs) {
-            return ejbs.values().toArray(new ContextEjb[0]);
+            return ejbs.values().toArray(new ContextEjb[ 0 ]);
         }
 
     }
 
 
     /**
+     * @param name Name of the desired environment entry
      * @return the environment entry with the specified name, if any;
      * otherwise, return <code>null</code>.
-     *
-     * @param name Name of the desired environment entry
      */
     public ContextEnvironment findEnvironment(String name) {
 
@@ -558,17 +529,16 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
     public ContextEnvironment[] findEnvironments() {
 
         synchronized (envs) {
-            return envs.values().toArray(new ContextEnvironment[0]);
+            return envs.values().toArray(new ContextEnvironment[ 0 ]);
         }
 
     }
 
 
     /**
+     * @param name Name of the desired EJB resource reference
      * @return the local EJB resource reference with the specified name, if any;
      * otherwise, return <code>null</code>.
-     *
-     * @param name Name of the desired EJB resource reference
      */
     public ContextLocalEjb findLocalEjb(String name) {
 
@@ -586,17 +556,16 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
     public ContextLocalEjb[] findLocalEjbs() {
 
         synchronized (localEjbs) {
-            return localEjbs.values().toArray(new ContextLocalEjb[0]);
+            return localEjbs.values().toArray(new ContextLocalEjb[ 0 ]);
         }
 
     }
 
 
     /**
+     * @param name Name of the desired message destination reference
      * @return the message destination reference with the specified name,
      * if any; otherwise, return <code>null</code>.
-     *
-     * @param name Name of the desired message destination reference
      */
     public MessageDestinationRef findMessageDestinationRef(String name) {
 
@@ -614,17 +583,16 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
     public MessageDestinationRef[] findMessageDestinationRefs() {
 
         synchronized (mdrs) {
-            return mdrs.values().toArray(new MessageDestinationRef[0]);
+            return mdrs.values().toArray(new MessageDestinationRef[ 0 ]);
         }
 
     }
 
 
     /**
+     * @param name Name of the desired resource reference
      * @return the resource reference with the specified name, if any;
      * otherwise return <code>null</code>.
-     *
-     * @param name Name of the desired resource reference
      */
     public ContextResource findResource(String name) {
 
@@ -636,10 +604,9 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
 
 
     /**
+     * @param name Name of the desired resource link
      * @return the resource link with the specified name, if any;
      * otherwise return <code>null</code>.
-     *
-     * @param name Name of the desired resource link
      */
     public ContextResourceLink findResourceLink(String name) {
 
@@ -657,7 +624,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
     public ContextResourceLink[] findResourceLinks() {
 
         synchronized (resourceLinks) {
-            return resourceLinks.values().toArray(new ContextResourceLink[0]);
+            return resourceLinks.values().toArray(new ContextResourceLink[ 0 ]);
         }
 
     }
@@ -670,17 +637,16 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
     public ContextResource[] findResources() {
 
         synchronized (resources) {
-            return resources.values().toArray(new ContextResource[0]);
+            return resources.values().toArray(new ContextResource[ 0 ]);
         }
 
     }
 
 
     /**
+     * @param name Name of the desired resource environment reference
      * @return the resource environment reference type for the specified
      * name, if any; otherwise return <code>null</code>.
-     *
-     * @param name Name of the desired resource environment reference
      */
     public ContextResourceEnvRef findResourceEnvRef(String name) {
 
@@ -699,17 +665,16 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
     public ContextResourceEnvRef[] findResourceEnvRefs() {
 
         synchronized (resourceEnvRefs) {
-            return resourceEnvRefs.values().toArray(new ContextResourceEnvRef[0]);
+            return resourceEnvRefs.values().toArray(new ContextResourceEnvRef[ 0 ]);
         }
 
     }
 
 
     /**
+     * @param name Name of the desired web service
      * @return the web service reference for the specified
      * name, if any; otherwise return <code>null</code>.
-     *
-     * @param name Name of the desired web service
      */
     public ContextService findService(String name) {
 
@@ -727,7 +692,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
     public ContextService[] findServices() {
 
         synchronized (services) {
-            return services.values().toArray(new ContextService[0]);
+            return services.values().toArray(new ContextService[ 0 ]);
         }
 
     }
@@ -776,7 +741,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
                     MBeanUtils.destroyMBean(environment);
                 } catch (Exception e) {
                     log.warn(sm.getString("namingResources.mbeanDestroyFail",
-                            environment.getName()), e);
+                        environment.getName()), e);
                 }
             }
             environment.setNamingResources(null);
@@ -820,7 +785,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
         }
         if (mdr != null) {
             support.firePropertyChange("messageDestinationRef",
-                                       mdr, null);
+                mdr, null);
             mdr.setNamingResources(null);
         }
 
@@ -861,7 +826,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
                     MBeanUtils.destroyMBean(resource);
                 } catch (Exception e) {
                     log.warn(sm.getString("namingResources.mbeanDestroyFail",
-                            resource.getName()), e);
+                        resource.getName()), e);
                 }
             }
             resource.setNamingResources(null);
@@ -913,7 +878,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
                     MBeanUtils.destroyMBean(resourceLink);
                 } catch (Exception e) {
                     log.warn(sm.getString("namingResources.mbeanDestroyFail",
-                            resourceLink.getName()), e);
+                        resourceLink.getName()), e);
                 }
             }
             resourceLink.setNamingResources(null);
@@ -957,7 +922,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
                 MBeanUtils.createMBean(cr);
             } catch (Exception e) {
                 log.warn(sm.getString(
-                        "namingResources.mbeanCreateFail", cr.getName()), e);
+                    "namingResources.mbeanCreateFail", cr.getName()), e);
             }
         }
 
@@ -966,7 +931,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
                 MBeanUtils.createMBean(ce);
             } catch (Exception e) {
                 log.warn(sm.getString(
-                        "namingResources.mbeanCreateFail", ce.getName()), e);
+                    "namingResources.mbeanCreateFail", ce.getName()), e);
             }
         }
 
@@ -975,7 +940,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
                 MBeanUtils.createMBean(crl);
             } catch (Exception e) {
                 log.warn(sm.getString(
-                        "namingResources.mbeanCreateFail", crl.getName()), e);
+                    "namingResources.mbeanCreateFail", crl.getName()), e);
             }
         }
     }
@@ -1012,21 +977,21 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
             }
         } catch (NamingException e) {
             log.warn(sm.getString("namingResources.cleanupNoContext",
-                    container), e);
+                container), e);
             return;
         }
-        for (ContextResource cr: resources.values()) {
+        for (ContextResource cr : resources.values()) {
             if (cr.getSingleton()) {
                 String closeMethod = cr.getCloseMethod();
                 if (closeMethod != null && closeMethod.length() > 0) {
                     String name = cr.getName();
                     Object resource;
                     try {
-                         resource = ctxt.lookup(name);
+                        resource = ctxt.lookup(name);
                     } catch (NamingException e) {
                         log.warn(sm.getString(
-                                "namingResources.cleanupNoResource",
-                                cr.getName(), container), e);
+                            "namingResources.cleanupNoResource",
+                            cr.getName(), container), e);
                         continue;
                     }
                     cleanUp(resource, name, closeMethod);
@@ -1042,7 +1007,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
      * will happen on GC but that leaves db connections open that may cause
      * issues.
      *
-     * @param resource  The resource to close.
+     * @param resource The resource to close.
      */
     private void cleanUp(Object resource, String name, String closeMethod) {
         // Look for a zero-arg close() method
@@ -1051,23 +1016,23 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
             m = resource.getClass().getMethod(closeMethod, (Class<?>[]) null);
         } catch (SecurityException e) {
             log.debug(sm.getString("namingResources.cleanupCloseSecurity",
-                    closeMethod, name, container));
+                closeMethod, name, container));
             return;
         } catch (NoSuchMethodException e) {
             log.debug(sm.getString("namingResources.cleanupNoClose",
-                    name, container, closeMethod));
+                name, container, closeMethod));
             return;
         }
         try {
             m.invoke(resource, (Object[]) null);
         } catch (IllegalArgumentException | IllegalAccessException e) {
             log.warn(sm.getString("namingResources.cleanupCloseFailed",
-                    closeMethod, name, container), e);
+                closeMethod, name, container), e);
         } catch (InvocationTargetException e) {
             Throwable t = ExceptionUtils.unwrapInvocationTargetException(e);
             ExceptionUtils.handleThrowable(t);
             log.warn(sm.getString("namingResources.cleanupCloseFailed",
-                    closeMethod, name, container), t);
+                closeMethod, name, container), t);
         }
     }
 
@@ -1084,7 +1049,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
                 MBeanUtils.destroyMBean(crl);
             } catch (Exception e) {
                 log.warn(sm.getString(
-                        "namingResources.mbeanDestroyFail", crl.getName()), e);
+                    "namingResources.mbeanDestroyFail", crl.getName()), e);
             }
         }
 
@@ -1093,7 +1058,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
                 MBeanUtils.destroyMBean(ce);
             } catch (Exception e) {
                 log.warn(sm.getString(
-                        "namingResources.mbeanDestroyFail", ce.getName()), e);
+                    "namingResources.mbeanDestroyFail", ce.getName()), e);
             }
         }
 
@@ -1102,7 +1067,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
                 MBeanUtils.destroyMBean(cr);
             } catch (Exception e) {
                 log.warn(sm.getString(
-                        "namingResources.mbeanDestroyFail", cr.getName()), e);
+                    "namingResources.mbeanDestroyFail", cr.getName()), e);
             }
         }
 
@@ -1128,7 +1093,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
         Object c = getContainer();
         if (c instanceof Container) {
             return "type=NamingResources" +
-                    ((Container) c).getMBeanKeyProperties();
+                ((Container) c).getMBeanKeyProperties();
         }
         // Server or just unknown
         return "type=NamingResources";
@@ -1139,12 +1104,11 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
      * consistent with any injection targets and if the type is not specified,
      * tries to configure the type based on the injection targets
      *
-     * @param resource  The resource to check
-     *
-     * @return  <code>true</code> if the type for the resource is now valid (if
-     *          previously <code>null</code> this means it is now set) or
-     *          <code>false</code> if the current resource type is inconsistent
-     *          with the injection targets and/or cannot be determined
+     * @param resource The resource to check
+     * @return <code>true</code> if the type for the resource is now valid (if
+     * previously <code>null</code> this means it is now set) or
+     * <code>false</code> if the current resource type is inconsistent
+     * with the injection targets and/or cannot be determined
      */
     private boolean checkResourceType(ResourceBase resource) {
         if (!(container instanceof Context)) {
@@ -1153,7 +1117,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
         }
 
         if (resource.getInjectionTargets() == null ||
-                resource.getInjectionTargets().size() == 0) {
+            resource.getInjectionTargets().size() == 0) {
             // No injection targets so use the defined type for the resource
             return true;
         }
@@ -1172,7 +1136,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
         }
 
         Class<?> compatibleClass =
-                getCompatibleType(context, resource, typeClass);
+            getCompatibleType(context, resource, typeClass);
         if (compatibleClass == null) {
             // Indicates that a compatible type could not be identified that
             // worked for all injection targets
@@ -1184,13 +1148,13 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
     }
 
     private Class<?> getCompatibleType(Context context,
-            ResourceBase resource, Class<?> typeClass) {
+                                       ResourceBase resource, Class<?> typeClass) {
 
         Class<?> result = null;
 
         for (InjectionTarget injectionTarget : resource.getInjectionTargets()) {
             Class<?> clazz = Introspection.loadClass(
-                    context, injectionTarget.getTargetClass());
+                context, injectionTarget.getTargetClass());
             if (clazz == null) {
                 // Can't load class - therefore ignore this target
                 continue;
@@ -1202,7 +1166,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
             Class<?> targetType = getSetterType(clazz, targetName);
             if (targetType == null) {
                 // Try a field match if no setter match
-                targetType = getFieldType(clazz,targetName);
+                targetType = getFieldType(clazz, targetName);
             }
             if (targetType == null) {
                 // No match - ignore this injection target
@@ -1242,8 +1206,8 @@ public class NamingResourcesImpl extends LifecycleMBeanBase
         if (methods != null && methods.length > 0) {
             for (Method method : methods) {
                 if (Introspection.isValidSetter(method) &&
-                        Introspection.getPropertyName(method).equals(name)) {
-                    return method.getParameterTypes()[0];
+                    Introspection.getPropertyName(method).equals(name)) {
+                    return method.getParameterTypes()[ 0 ];
                 }
             }
         }

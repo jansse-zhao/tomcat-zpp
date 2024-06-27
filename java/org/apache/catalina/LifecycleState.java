@@ -52,8 +52,9 @@ public enum LifecycleState {
      * <li>{@link #STOPPING_PREP}</li>
      * </ul>
      *
-     * @return <code>true</code> if the component is available for use,
-     *         otherwise <code>false</code>
+     * @return <code>true</code> if the component is available for use, otherwise <code>false</code>
+     * <p>
+     * 生命周期状态是否可用
      */
     public boolean isAvailable() {
         return available;

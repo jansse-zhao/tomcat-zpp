@@ -32,16 +32,14 @@ public interface Rules {
      * @return the Digester instance with which this Rules instance is
      * associated.
      */
-    public Digester getDigester();
-
+    Digester getDigester();
 
     /**
      * Set the Digester instance with which this Rules instance is associated.
      *
      * @param digester The newly associated Digester instance
      */
-    public void setDigester(Digester digester);
-
+    void setDigester(Digester digester);
 
     // --------------------------------------------------------- Public Methods
 
@@ -49,16 +47,14 @@ public interface Rules {
      * Register a new Rule instance matching the specified pattern.
      *
      * @param pattern Nesting pattern to be matched for this Rule
-     * @param rule Rule instance to be registered
+     * @param rule    Rule instance to be registered
      */
-    public void add(String pattern, Rule rule);
-
+    void add(String pattern, Rule rule);
 
     /**
      * Clear all existing Rule instance registrations.
      */
-    public void clear();
-
+    void clear();
 
     /**
      * Return a List of all registered Rule instances that match the specified
@@ -68,12 +64,11 @@ public interface Rules {
      * method.
      *
      * @param namespaceURI Namespace URI for which to select matching rules,
-     *  or <code>null</code> to match regardless of namespace URI
-     * @param pattern Nesting pattern to be matched
+     *                     or <code>null</code> to match regardless of namespace URI
+     * @param pattern      Nesting pattern to be matched
      * @return a rules list
      */
-    public List<Rule> match(String namespaceURI, String pattern);
-
+    List<Rule> match(String namespaceURI, String pattern);
 
     /**
      * Return a List of all registered Rule instances, or a zero-length List
@@ -81,7 +76,8 @@ public interface Rules {
      * instance has been registered, they <strong>must</strong> be returned
      * in the order originally registered through the <code>add()</code>
      * method.
+     *
      * @return a rules list
      */
-    public List<Rule> rules();
+    List<Rule> rules();
 }

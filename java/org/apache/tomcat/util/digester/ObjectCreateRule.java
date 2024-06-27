@@ -16,21 +16,16 @@
  */
 package org.apache.tomcat.util.digester;
 
-
 import org.xml.sax.Attributes;
-
 
 /**
  * Rule implementation that creates a new object and pushes it
  * onto the object stack.  When the element is complete, the
  * object will be popped
  */
-
 public class ObjectCreateRule extends Rule {
 
-
     // ----------------------------------------------------------- Constructors
-
 
     /**
      * Construct an object create rule with the specified class name.
@@ -38,28 +33,21 @@ public class ObjectCreateRule extends Rule {
      * @param className Java class name of the object to be created
      */
     public ObjectCreateRule(String className) {
-
         this(className, null);
-
     }
-
 
     /**
      * Construct an object create rule with the specified class name and an
      * optional attribute name containing an override.
      *
-     * @param className Java class name of the object to be created
+     * @param className     Java class name of the object to be created
      * @param attributeName Attribute name which, if present, contains an
-     *  override of the class name to create
+     *                      override of the class name to create
      */
-    public ObjectCreateRule(String className,
-                            String attributeName) {
-
+    public ObjectCreateRule(String className, String attributeName) {
         this.className = className;
         this.attributeName = attributeName;
-
     }
-
 
     // ----------------------------------------------------- Instance Variables
 
@@ -68,30 +56,25 @@ public class ObjectCreateRule extends Rule {
      */
     protected String attributeName = null;
 
-
     /**
      * The Java class name of the object to be created.
      */
     protected String className = null;
 
-
     // --------------------------------------------------------- Public Methods
-
 
     /**
      * Process the beginning of this element.
      *
-     * @param namespace the namespace URI of the matching element, or an
-     *   empty string if the parser is not namespace aware or the element has
-     *   no namespace
-     * @param name the local name if the parser is namespace aware, or just
-     *   the element name otherwise
+     * @param namespace  the namespace URI of the matching element, or an
+     *                   empty string if the parser is not namespace aware or the element has
+     *                   no namespace
+     * @param name       the local name if the parser is namespace aware, or just
+     *                   the element name otherwise
      * @param attributes The attribute list for this element
      */
     @Override
-    public void begin(String namespace, String name, Attributes attributes)
-            throws Exception {
-
+    public void begin(String namespace, String name, Attributes attributes) throws Exception {
         String realClassName = getRealClassName(attributes);
 
         if (realClassName == null) {
@@ -112,9 +95,9 @@ public class ObjectCreateRule extends Rule {
         }
     }
 
-
     /**
      * Return the actual class name of the class to be instantiated.
+     *
      * @param attributes The attribute list for this element
      * @return the class name
      */
@@ -130,27 +113,23 @@ public class ObjectCreateRule extends Rule {
         return realClassName;
     }
 
-
     /**
      * Process the end of this element.
      *
      * @param namespace the namespace URI of the matching element, or an
-     *   empty string if the parser is not namespace aware or the element has
-     *   no namespace
-     * @param name the local name if the parser is namespace aware, or just
-     *   the element name otherwise
+     *                  empty string if the parser is not namespace aware or the element has
+     *                  no namespace
+     * @param name      the local name if the parser is namespace aware, or just
+     *                  the element name otherwise
      */
     @Override
     public void end(String namespace, String name) throws Exception {
-
         Object top = digester.pop();
         if (digester.log.isDebugEnabled()) {
             digester.log.debug("[ObjectCreateRule]{" + digester.match +
-                    "} Pop " + top.getClass().getName());
+                "} Pop " + top.getClass().getName());
         }
-
     }
-
 
     /**
      * Render a printable version of this Rule.
@@ -165,6 +144,5 @@ public class ObjectCreateRule extends Rule {
         sb.append(']');
         return sb.toString();
     }
-
 
 }

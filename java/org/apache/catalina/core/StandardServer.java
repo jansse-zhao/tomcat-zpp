@@ -47,7 +47,6 @@ import java.security.AccessControlException;
 import java.util.Random;
 import java.util.concurrent.*;
 
-
 /**
  * Standard implementation of the <b>Server</b> interface, available for use
  * (but not required) when deploying and starting Catalina.
@@ -59,14 +58,12 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
     private static final Log log = LogFactory.getLog(StandardServer.class);
     private static final StringManager sm = StringManager.getManager(StandardServer.class);
 
-
     // ------------------------------------------------------------ Constructor
 
     /**
      * Construct a default instance of this class.
      */
     public StandardServer() {
-
         super();
 
         globalNamingResources = new NamingResourcesImpl();
@@ -78,30 +75,24 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         } else {
             namingContextListener = null;
         }
-
     }
 
-
     // ----------------------------------------------------- Instance Variables
-
 
     /**
      * Global naming resources context.
      */
     private javax.naming.Context globalNamingContext = null;
 
-
     /**
      * Global naming resources.
      */
     private NamingResourcesImpl globalNamingResources = null;
 
-
     /**
      * The naming context listener for this web application.
      */
     private final NamingContextListener namingContextListener;
-
 
     /**
      * The port number on which we wait for shutdown commands.
@@ -115,26 +106,22 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     private String address = "localhost";
 
-
     /**
      * A random number generator that is <strong>only</strong> used if
      * the shutdown command string is longer than 1024 characters.
      */
     private Random random = null;
 
-
     /**
      * The set of Services associated with this Server.
      */
-    private Service services[] = new Service[ 0 ];
+    private Service[] services = new Service[ 0 ];
     private final Object servicesLock = new Object();
-
 
     /**
      * The shutdown command string we are looking for.
      */
     private String shutdown = "SHUTDOWN";
-
 
     /**
      * The property change support for this component.
@@ -175,6 +162,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
     /**
      * Utility executor with scheduling capabilities.
+     * 具有调度功能的线程执行程序。
      */
     private ScheduledThreadPoolExecutor utilityExecutor = null;
     private final Object utilityExecutorLock = new Object();
@@ -183,7 +171,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      * Utility executor wrapper.
      */
     private ScheduledExecutorService utilityExecutorWrapper = null;
-
 
     /**
      * Controller for the periodic lifecycle event.
@@ -194,6 +181,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
     /**
      * The lifecycle event period in seconds.
+     * 以秒为单位的生命周期事件周期
      */
     protected int periodicEventDelay = 10;
 
@@ -382,15 +370,19 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         this.catalina = catalina;
     }
 
-
+    /**
+     * 获取Service服务中各种实用程序任务（包括重复执行的线程）的线程数
+     */
     @Override
     public int getUtilityThreads() {
         return utilityThreads;
     }
 
-
     /**
      * Handles the special values.
+     * 获取内部进程数计算逻辑：
+     * > 0时，即utilityThreads的值。
+     * <=0时，Runtime.getRuntime().availableProcessors() + result...
      */
     private static int getUtilityThreadsInternal(int utilityThreads) {
         int result = utilityThreads;
@@ -403,21 +395,30 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         return result;
     }
 
-
+    /**
+     * 设置线程数量
+     */
     @Override
     public void setUtilityThreads(int utilityThreads) {
         // Use local copies to ensure thread safety
         int oldUtilityThreads = this.utilityThreads;
+
+        // 设置的线程数 不能小于 默认线程数（2）
         if (getUtilityThreadsInternal(utilityThreads) < getUtilityThreadsInternal(oldUtilityThreads)) {
             return;
         }
+
         this.utilityThreads = utilityThreads;
+
+        // 重新配置具有调度任务功能的线程池
         if (oldUtilityThreads != utilityThreads && utilityExecutor != null) {
             reconfigureUtilityExecutor(getUtilityThreadsInternal(utilityThreads));
         }
     }
 
-
+    /**
+     * 重新配置具有调度任务功能的线程池
+     */
     private void reconfigureUtilityExecutor(int threads) {
         synchronized (utilityExecutorLock) {
             // The ScheduledThreadPoolExecutor doesn't use MaximumPoolSize, only CorePoolSize is available
@@ -436,7 +437,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         }
     }
 
-
     /**
      * Get if the utility threads are daemon threads.
      *
@@ -445,7 +445,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
     public boolean getUtilityThreadsAsDaemon() {
         return utilityThreadsAsDaemon;
     }
-
 
     /**
      * Set the utility threads daemon flag. The default value is true.
@@ -456,14 +455,12 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         this.utilityThreadsAsDaemon = utilityThreadsAsDaemon;
     }
 
-
     /**
      * @return The period between two lifecycle events, in seconds
      */
     public final int getPeriodicEventDelay() {
         return periodicEventDelay;
     }
-
 
     /**
      * Set the new period between two lifecycle events in seconds.
@@ -475,28 +472,29 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         this.periodicEventDelay = periodicEventDelay;
     }
 
-
     // --------------------------------------------------------- Server Methods
-
 
     /**
      * Add a new Service to the set of defined Services.
+     * <p>
+     * 向已定义的服务集添加一个新服务。
      *
      * @param service The Service to be added
      */
     @Override
     public void addService(Service service) {
-
         service.setServer(this);
 
         synchronized (servicesLock) {
-            Service results[] = new Service[ services.length + 1 ];
+            Service[] results = new Service[ services.length + 1 ];
             System.arraycopy(services, 0, results, 0, services.length);
             results[ services.length ] = service;
             services = results;
 
+            // 当前组件状态是否可用？可用状态有：STARTING、STARTED、STOPPING_PREP
             if (getState().isAvailable()) {
                 try {
+                    // 启动新添加的服务
                     service.start();
                 } catch (LifecycleException e) {
                     // Ignore
@@ -506,7 +504,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
             // Report this property change to interested listeners
             support.firePropertyChange("service", null, service);
         }
-
     }
 
     public void stopAwait() {
@@ -667,7 +664,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         }
     }
 
-
     /**
      * @param name Name of the Service to be returned
      * @return the specified Service (if it exists); otherwise return
@@ -687,7 +683,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         }
         return null;
     }
-
 
     /**
      * @return the set of Services defined within this Server.
@@ -717,7 +712,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     @Override
     public void removeService(Service service) {
-
         synchronized (servicesLock) {
             int j = -1;
             for (int i = 0; i < services.length; i++) {
@@ -746,9 +740,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
             // Report this property change to interested listeners
             support.firePropertyChange("service", service, null);
         }
-
     }
-
 
     @Override
     public File getCatalinaBase() {
@@ -879,8 +871,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         boolean useNaming = true;
         // Reading the "catalina.useNaming" environment variable
         String useNamingProperty = System.getProperty("catalina.useNaming");
-        if ((useNamingProperty != null)
-            && (useNamingProperty.equals("false"))) {
+        if ((useNamingProperty != null) && (useNamingProperty.equals("false"))) {
             useNaming = false;
         }
         return useNaming;
@@ -896,7 +887,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     @Override
     protected void startInternal() throws LifecycleException {
-
         fireLifecycleEvent(CONFIGURE_START_EVENT, null);
         setState(LifecycleState.STARTING);
 
@@ -910,6 +900,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         }
 
         if (periodicEventDelay > 0) {
+            // 调用延时线程池每60秒执行一次
             monitorFuture = getUtilityExecutor().scheduleWithFixedDelay(
                 () -> startPeriodicLifecycleEvent(), 0, 60, TimeUnit.SECONDS);
         }
@@ -926,6 +917,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
                     log.error(sm.getString("standardServer.periodicEventError"), e);
                 }
             }
+            // 每10秒调用一次事件监听
             periodicLifecycleEventFuture = getUtilityExecutor().scheduleAtFixedRate(
                 () -> fireLifecycleEvent(Lifecycle.PERIODIC_EVENT, null), periodicEventDelay, periodicEventDelay, TimeUnit.SECONDS);
         }
@@ -941,7 +933,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     @Override
     protected void stopInternal() throws LifecycleException {
-
         setState(LifecycleState.STOPPING);
 
         if (monitorFuture != null) {
@@ -971,28 +962,35 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     @Override
     protected void initInternal() throws LifecycleException {
-
         super.initInternal();
 
         // Initialize utility executor
+        // 初始化线程池
         reconfigureUtilityExecutor(getUtilityThreadsInternal(utilityThreads));
+
+        // 将线程池注册到JMX监控中
         register(utilityExecutor, "type=UtilityExecutor");
 
-        // Register global String cache
+        // Register global String cache = 注册全局字符串缓存
         // Note although the cache is global, if there are multiple Servers
         // present in the JVM (may happen when embedding) then the same cache
         // will be registered under multiple names
+        // 虽然缓存是全局的，但是如果JVM中存在多个服务器(可能在嵌入时发生)，那么相同的缓存将以多个名称注册
+        // 将全局字符串缓存注册到JMX监控中
         onameStringCache = register(new StringCache(), "type=StringCache");
 
         // Register the MBeanFactory
+        // 将自定义MBean注册到JMX监控中
         MBeanFactory factory = new MBeanFactory();
         factory.setContainer(this);
         onameMBeanFactory = register(factory, "type=MBeanFactory");
 
         // Register the naming resources
+        // 全局名称资源组件，随Server的生命周期
         globalNamingResources.init();
 
         // Initialize our defined Services
+        // 初始化服务
         for (Service service : services) {
             service.init();
         }
@@ -1047,7 +1045,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
             this.parentClassLoader);
     }
 
-
     private ObjectName onameStringCache;
     private ObjectName onameMBeanFactory;
 
@@ -1061,7 +1058,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     @Override
     protected String getDomainInternal() {
-
         String domain = null;
 
         Service[] services = findServices();
@@ -1074,7 +1070,9 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         return domain;
     }
 
-
+    /**
+     * Catalina:type=Server
+     */
     @Override
     protected final String getObjectNameKeyProperties() {
         return "type=Server";

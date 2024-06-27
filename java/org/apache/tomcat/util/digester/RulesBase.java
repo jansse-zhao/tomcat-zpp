@@ -45,21 +45,18 @@ public class RulesBase implements Rules {
      * Each value is a List containing the Rules for that pattern, in the
      * order that they were originally registered.
      */
-    protected HashMap<String,List<Rule>> cache = new HashMap<>();
-
+    protected HashMap<String, List<Rule>> cache = new HashMap<>();
 
     /**
      * The Digester instance with which this Rules instance is associated.
      */
     protected Digester digester = null;
 
-
     /**
      * The set of registered Rule instances, in the order that they were
      * originally registered.
      */
     protected ArrayList<Rule> rules = new ArrayList<>();
-
 
     // ------------------------------------------------------------- Properties
 
@@ -71,7 +68,6 @@ public class RulesBase implements Rules {
     public Digester getDigester() {
         return this.digester;
     }
-
 
     /**
      * Set the Digester instance with which this Rules instance is associated.
@@ -86,30 +82,32 @@ public class RulesBase implements Rules {
         }
     }
 
-
     // --------------------------------------------------------- Public Methods
 
     /**
      * Register a new Rule instance matching the specified pattern.
      *
      * @param pattern Nesting pattern to be matched for this Rule
-     * @param rule Rule instance to be registered
+     * @param rule    Rule instance to be registered
      */
     @Override
     public void add(String pattern, Rule rule) {
         // to help users who accidentally add '/' to the end of their patterns
         int patternLength = pattern.length();
-        if (patternLength>1 && pattern.endsWith("/")) {
-            pattern = pattern.substring(0, patternLength-1);
+        // 去掉最后的斜杠“/”
+        if (patternLength > 1 && pattern.endsWith("/")) {
+            pattern = pattern.substring(0, patternLength - 1);
         }
 
+        // HashMap<String, List<Rule>> cache = new HashMap<>()
         cache.computeIfAbsent(pattern, k -> new ArrayList<>()).add(rule);
+
+        // ArrayList<Rule> rules = new ArrayList<>();
         rules.add(rule);
         if (this.digester != null) {
             rule.setDigester(this.digester);
         }
     }
-
 
     /**
      * Clear all existing Rule instance registrations.
@@ -120,7 +118,6 @@ public class RulesBase implements Rules {
         rules.clear();
     }
 
-
     /**
      * Return a List of all registered Rule instances that match the specified
      * nesting pattern, or a zero-length List if there are no matches.  If more
@@ -129,12 +126,11 @@ public class RulesBase implements Rules {
      * method.
      *
      * @param namespaceURI Namespace URI for which to select matching rules,
-     *  or <code>null</code> to match regardless of namespace URI
-     * @param pattern Nesting pattern to be matched
+     *                     or <code>null</code> to match regardless of namespace URI
+     * @param pattern      Nesting pattern to be matched
      */
     @Override
     public List<Rule> match(String namespaceURI, String pattern) {
-
         // List rulesList = (List) this.cache.get(pattern);
         List<Rule> rulesList = lookup(namespaceURI, pattern);
         if ((rulesList == null) || (rulesList.size() < 1)) {
@@ -159,7 +155,6 @@ public class RulesBase implements Rules {
         return rulesList;
     }
 
-
     /**
      * Return a List of all registered Rule instances, or a zero-length List
      * if there are no registered Rule instances.  If more than one Rule
@@ -172,7 +167,6 @@ public class RulesBase implements Rules {
         return this.rules;
     }
 
-
     // ------------------------------------------------------ Protected Methods
 
     /**
@@ -181,8 +175,8 @@ public class RulesBase implements Rules {
      * rules, return <code>null</code>.
      *
      * @param namespaceURI Namespace URI to match, or <code>null</code> to
-     *  select matching rules regardless of namespace URI
-     * @param pattern Pattern to be matched
+     *                     select matching rules regardless of namespace URI
+     * @param pattern      Pattern to be matched
      * @return a rules list
      */
     protected List<Rule> lookup(String namespaceURI, String pattern) {
@@ -198,8 +192,7 @@ public class RulesBase implements Rules {
         // Select only Rules that match on the specified namespace URI
         List<Rule> results = new ArrayList<>();
         for (Rule item : list) {
-            if ((namespaceURI.equals(item.getNamespaceURI())) ||
-                    (item.getNamespaceURI() == null)) {
+            if ((namespaceURI.equals(item.getNamespaceURI())) || (item.getNamespaceURI() == null)) {
                 results.add(item);
             }
         }

@@ -16,45 +16,7 @@
  */
 package org.apache.catalina.core;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.io.File;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import javax.management.ObjectName;
-
-import org.apache.catalina.AccessLog;
-import org.apache.catalina.Cluster;
-import org.apache.catalina.Container;
-import org.apache.catalina.ContainerEvent;
-import org.apache.catalina.ContainerListener;
-import org.apache.catalina.Context;
-import org.apache.catalina.Engine;
-import org.apache.catalina.Globals;
-import org.apache.catalina.Host;
-import org.apache.catalina.Lifecycle;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.LifecycleState;
-import org.apache.catalina.Loader;
-import org.apache.catalina.Pipeline;
-import org.apache.catalina.Realm;
-import org.apache.catalina.Server;
-import org.apache.catalina.Valve;
-import org.apache.catalina.Wrapper;
+import org.apache.catalina.*;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.util.ContextName;
@@ -66,6 +28,19 @@ import org.apache.tomcat.util.MultiThrowable;
 import org.apache.tomcat.util.res.StringManager;
 import org.apache.tomcat.util.threads.InlineExecutorService;
 
+import javax.management.ObjectName;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.io.File;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Abstract implementation of the <b>Container</b> interface, providing common
@@ -152,9 +127,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
 
     }
 
-
     // ----------------------------------------------------- Instance Variables
-
 
     /**
      * The child Containers belonging to this Container, keyed by name.
@@ -187,12 +160,10 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      */
     protected Log logger = null;
 
-
     /**
      * Associated logger name.
      */
     protected String logName = null;
-
 
     /**
      * The cluster with which this Container is associated.
@@ -200,48 +171,40 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     protected Cluster cluster = null;
     private final ReadWriteLock clusterLock = new ReentrantReadWriteLock();
 
-
     /**
      * The human-readable name of this Container.
      */
     protected String name = null;
-
 
     /**
      * The parent Container to which this Container is a child.
      */
     protected Container parent = null;
 
-
     /**
      * The parent class loader to be configured when we install a Loader.
      */
     protected ClassLoader parentClassLoader = null;
-
 
     /**
      * The Pipeline object with which this Container is associated.
      */
     protected final Pipeline pipeline = new StandardPipeline(this);
 
-
     /**
      * The Realm with which this Container is associated.
      */
     private volatile Realm realm = null;
-
 
     /**
      * Lock used to control access to the Realm.
      */
     private final ReadWriteLock realmLock = new ReentrantReadWriteLock();
 
-
     /**
      * The string manager for this package.
      */
     protected static final StringManager sm = StringManager.getManager(ContainerBase.class);
-
 
     /**
      * Will children be started automatically when they are added.
@@ -251,9 +214,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     /**
      * The property change support for this component.
      */
-    protected final PropertyChangeSupport support =
-            new PropertyChangeSupport(this);
-
+    protected final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
     /**
      * The access log to use for requests normally handled by this container
@@ -262,14 +223,14 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     protected volatile AccessLog accessLog = null;
     private volatile boolean accessLogScanComplete = false;
 
-
     /**
      * The number of threads available to process start and stop events for any
      * children associated with this container.
+     * <p>
+     * 用于处理与此容器关联的任何子节点的启动和停止事件的线程数。
      */
     private int startStopThreads = 1;
     protected ExecutorService startStopExecutor;
-
 
     // ------------------------------------------------------------- Properties
 
@@ -289,7 +250,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         }
     }
 
-
     /**
      * Get the delay between the invocation of the backgroundProcess method on
      * this container and its children. Child containers will not be invoked
@@ -304,7 +264,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         return backgroundProcessorDelay;
     }
 
-
     /**
      * Set the delay between the invocation of the execute method on this
      * container and its children.
@@ -316,7 +275,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     public void setBackgroundProcessorDelay(int delay) {
         backgroundProcessorDelay = delay;
     }
-
 
     /**
      * Return the Logger for this Container.
@@ -330,13 +288,11 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         return logger;
     }
 
-
     /**
      * @return the abbreviated name of this container for logging messages
      */
     @Override
     public String getLogName() {
-
         if (logName != null) {
             return logName;
         }
@@ -357,7 +313,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         return logName;
 
     }
-
 
     /**
      * Return the Cluster with which this Container is associated.  If there is
@@ -382,7 +337,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
             readLock.unlock();
         }
     }
-
 
     /*
      * Provide access to just the cluster component attached to this container.
@@ -466,10 +420,9 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      * parent, Container names must be unique.
      *
      * @param name New name of this container
-     *
-     * @exception IllegalStateException if this Container has already been
-     *  added to the children of a parent Container (after which the name
-     *  may not be changed)
+     * @throws IllegalStateException if this Container has already been
+     *                               added to the children of a parent Container (after which the name
+     *                               may not be changed)
      */
     @Override
     public void setName(String name) {
@@ -523,10 +476,9 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      * Container by throwing an exception.
      *
      * @param container Container to which this Container is being added
-     *  as a child
-     *
-     * @exception IllegalArgumentException if this Container refuses to become
-     *  attached to the specified Container
+     *                  as a child
+     * @throws IllegalArgumentException if this Container refuses to become
+     *                                  attached to the specified Container
      */
     @Override
     public void setParent(Container container) {
@@ -561,7 +513,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      * been configured, and the specified value (if non-null) should be
      * passed as an argument to the class loader constructor.
      *
-     *
      * @param parent The new parent class loader
      */
     @Override
@@ -569,7 +520,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         ClassLoader oldParentClassLoader = this.parentClassLoader;
         this.parentClassLoader = parent;
         support.firePropertyChange("parentClassLoader", oldParentClassLoader,
-                                   this.parentClassLoader);
+            this.parentClassLoader);
 
     }
 
@@ -680,19 +631,18 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      * to be attached to the specified Container, in which case it is not added
      *
      * @param child New child Container to be added
-     *
-     * @exception IllegalArgumentException if this exception is thrown by
-     *  the <code>setParent()</code> method of the child Container
-     * @exception IllegalArgumentException if the new child does not have
-     *  a name unique from that of existing children of this Container
-     * @exception IllegalStateException if this Container does not support
-     *  child Containers
+     * @throws IllegalArgumentException if this exception is thrown by
+     *                                  the <code>setParent()</code> method of the child Container
+     * @throws IllegalArgumentException if the new child does not have
+     *                                  a name unique from that of existing children of this Container
+     * @throws IllegalStateException    if this Container does not support
+     *                                  child Containers
      */
     @Override
     public void addChild(Container child) {
+        // 开启安全security
         if (Globals.IS_SECURITY_ENABLED) {
-            PrivilegedAction<Void> dp =
-                new PrivilegedAddChild(child);
+            PrivilegedAction<Void> dp = new PrivilegedAddChild(child);
             AccessController.doPrivileged(dp);
         } else {
             addChildInternal(child);
@@ -700,15 +650,13 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     }
 
     private void addChildInternal(Container child) {
-
         if (log.isDebugEnabled()) {
             log.debug("Add child " + child + " " + this);
         }
 
-        synchronized(children) {
+        synchronized (children) {
             if (children.get(child.getName()) != null) {
-                throw new IllegalArgumentException(
-                        sm.getString("containerBase.child.notUnique", child.getName()));
+                throw new IllegalArgumentException(sm.getString("containerBase.child.notUnique", child.getName()));
             }
             child.setParent(this);  // May throw IAE
             children.put(child.getName(), child);
@@ -720,16 +668,13 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         // Don't do this inside sync block - start can be a slow process and
         // locking the children object can cause problems elsewhere
         try {
-            if ((getState().isAvailable() ||
-                    LifecycleState.STARTING_PREP.equals(getState())) &&
-                    startChildren) {
+            if ((getState().isAvailable() || LifecycleState.STARTING_PREP.equals(getState())) && startChildren) {
                 child.start();
             }
         } catch (LifecycleException e) {
             throw new IllegalStateException(sm.getString("containerBase.child.start"), e);
         }
     }
-
 
     /**
      * Add a container event listener to this component.
@@ -752,7 +697,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         support.addPropertyChangeListener(listener);
     }
 
-
     /**
      * Return the child Container, associated with this Container, with
      * the specified name (if any); otherwise, return <code>null</code>
@@ -769,7 +713,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         }
     }
 
-
     /**
      * Return the set of children Containers associated with this Container.
      * If this Container has no children, a zero-length array is returned.
@@ -777,10 +720,9 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     @Override
     public Container[] findChildren() {
         synchronized (children) {
-            return children.values().toArray(new Container[0]);
+            return children.values().toArray(new Container[ 0 ]);
         }
     }
-
 
     /**
      * Return the set of container listeners associated with this Container.
@@ -789,9 +731,8 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      */
     @Override
     public ContainerListener[] findContainerListeners() {
-        return listeners.toArray(new ContainerListener[0]);
+        return listeners.toArray(new ContainerListener[ 0 ]);
     }
-
 
     /**
      * Remove an existing child Container from association with this parent
@@ -801,7 +742,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      */
     @Override
     public void removeChild(Container child) {
-
         if (child == null) {
             return;
         }
@@ -831,7 +771,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
             fireContainerEvent(REMOVE_CHILD_EVENT, child);
         }
 
-        synchronized(children) {
+        synchronized (children) {
             if (children.get(child.getName()) == null) {
                 return;
             }
@@ -839,7 +779,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         }
 
     }
-
 
     /**
      * Remove a container event listener from this component.
@@ -850,7 +789,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     public void removeContainerListener(ContainerListener listener) {
         listeners.remove(listener);
     }
-
 
     /**
      * Remove a property change listener from this component.
@@ -864,13 +802,12 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
 
     }
 
-
     @Override
     protected void initInternal() throws LifecycleException {
+        // 设置一个线程池来处理子容器启动和关闭事件
         reconfigureStartStopExecutor(getStartStopThreads());
         super.initInternal();
     }
-
 
     private void reconfigureStartStopExecutor(int threads) {
         if (threads == 1) {
@@ -886,13 +823,12 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         }
     }
 
-
     /**
      * Start this component and implement the requirements
      * of {@link org.apache.catalina.util.LifecycleBase#startInternal()}.
      *
-     * @exception LifecycleException if this component detects a fatal error
-     *  that prevents this component from being used
+     * @throws LifecycleException if this component detects a fatal error
+     *                            that prevents this component from being used
      */
     @Override
     protected synchronized void startInternal() throws LifecycleException {
@@ -932,7 +868,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         }
         if (multiThrowable != null) {
             throw new LifecycleException(sm.getString("containerBase.threadedStartFailed"),
-                    multiThrowable.getThrowable());
+                multiThrowable.getThrowable());
         }
 
         // Start the Valves in our pipeline (including the basic), if any
@@ -945,8 +881,8 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         // Start our thread
         if (backgroundProcessorDelay > 0) {
             monitorFuture = Container.getService(ContainerBase.this).getServer()
-                    .getUtilityExecutor().scheduleWithFixedDelay(
-                            new ContainerBackgroundProcessorMonitor(), 0, 60, TimeUnit.SECONDS);
+                .getUtilityExecutor().scheduleWithFixedDelay(
+                    new ContainerBackgroundProcessorMonitor(), 0, 60, TimeUnit.SECONDS);
         }
     }
 
@@ -955,8 +891,8 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      * Stop this component and implement the requirements
      * of {@link org.apache.catalina.util.LifecycleBase#stopInternal()}.
      *
-     * @exception LifecycleException if this component detects a fatal error
-     *  that prevents this component from being used
+     * @throws LifecycleException if this component detects a fatal error
+     *                            that prevents this component from being used
      */
     @Override
     protected synchronized void stopInternal() throws LifecycleException {
@@ -972,7 +908,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
 
         // Stop the Valves in our pipeline (including the basic), if any
         if (pipeline instanceof Lifecycle &&
-                ((Lifecycle) pipeline).getState().isAvailable()) {
+            ((Lifecycle) pipeline).getState().isAvailable()) {
             ((Lifecycle) pipeline).stop();
         }
 
@@ -994,7 +930,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         }
         if (fail) {
             throw new LifecycleException(
-                    sm.getString("containerBase.threadedStopFailed"));
+                sm.getString("containerBase.threadedStopFailed"));
         }
 
         // Stop our subordinate components, if any
@@ -1051,7 +987,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      */
     @Override
     public void logAccess(Request request, Response response, long time,
-            boolean useDefault) {
+                          boolean useDefault) {
 
         boolean logged = false;
 
@@ -1104,13 +1040,12 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      * use.
      *
      * @param valve Valve to be added
-     *
-     * @exception IllegalArgumentException if this Container refused to
-     *  accept the specified Valve
-     * @exception IllegalArgumentException if the specified Valve refuses to be
-     *  associated with this Container
-     * @exception IllegalStateException if the specified Valve is already
-     *  associated with a different Container
+     * @throws IllegalArgumentException if this Container refused to
+     *                                  accept the specified Valve
+     * @throws IllegalArgumentException if the specified Valve refuses to be
+     *                                  associated with this Container
+     * @throws IllegalStateException    if the specified Valve is already
+     *                                  associated with a different Container
      */
     public synchronized void addValve(Valve valve) {
 
@@ -1136,7 +1071,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
                 cluster.backgroundProcess();
             } catch (Exception e) {
                 log.warn(sm.getString("containerBase.backgroundProcess.cluster",
-                        cluster), e);
+                    cluster), e);
             }
         }
         Realm realm = getRealmInternal();
@@ -1236,7 +1171,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
             } else if (c instanceof Context) {
                 keyProperties.insert(0, ",context=");
                 ContextName cn = new ContextName(c.getName(), false);
-                keyProperties.insert(9,cn.getDisplayName());
+                keyProperties.insert(9, cn.getDisplayName());
             } else if (c instanceof Host) {
                 keyProperties.insert(0, ",host=");
                 keyProperties.insert(6, c.getName());
@@ -1265,7 +1200,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
                 names.add(next.getObjectName());
             }
         }
-        return names.toArray(new ObjectName[0]);
+        return names.toArray(new ObjectName[ 0 ]);
     }
 
 
@@ -1277,8 +1212,8 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      */
     protected void threadStart() {
         if (backgroundProcessorDelay > 0
-                && (getState().isAvailable() || LifecycleState.STARTING_PREP.equals(getState()))
-                && (backgroundProcessorFuture == null || backgroundProcessorFuture.isDone())) {
+            && (getState().isAvailable() || LifecycleState.STARTING_PREP.equals(getState()))
+            && (backgroundProcessorFuture == null || backgroundProcessorFuture.isDone())) {
             if (backgroundProcessorFuture != null && backgroundProcessorFuture.isDone()) {
                 // There was an error executing the scheduled task, get it and log it
                 try {
@@ -1288,9 +1223,9 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
                 }
             }
             backgroundProcessorFuture = Container.getService(this).getServer().getUtilityExecutor()
-                    .scheduleWithFixedDelay(new ContainerBackgroundProcessor(),
-                            backgroundProcessorDelay, backgroundProcessorDelay,
-                            TimeUnit.SECONDS);
+                .scheduleWithFixedDelay(new ContainerBackgroundProcessor(),
+                    backgroundProcessorDelay, backgroundProcessorDelay,
+                    TimeUnit.SECONDS);
         }
     }
 
@@ -1376,7 +1311,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
             }
         }
     }
-
 
     // ---------------------------- Inner classes used with start/stop Executor
 

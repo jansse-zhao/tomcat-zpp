@@ -188,15 +188,15 @@ public interface Lifecycle {
     // --------------------------------------------------------- Methods
 
     /**
-     * addLifecycleListener(LifecycleListener listener)
-     * findLifecycleListeners()
-     * removeLifecycleListener(LifecycleListener listener)
-     * init()
-     * start()
-     * stop()
-     * destroy()
-     * getState()
-     * getStateName()
+     * addLifecycleListener(LifecycleListener listener)  --->  添加监听器
+     * findLifecycleListeners()   --->   获取所以监听器
+     * removeLifecycleListener(LifecycleListener listener)   --->   移除某个监听器
+     * init()   --->   初始化方法
+     * start()   --->   启动方法
+     * stop()   --->   停止方法，和start对应
+     * destroy()   --->   销毁方法，和init对应
+     * getState()   --->   获取生命周期状态
+     * getStateName()   --->   获取字符串类型的生命周期状态
      */
 
     /**

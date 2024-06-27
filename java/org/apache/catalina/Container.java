@@ -24,7 +24,6 @@ import javax.management.ObjectName;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 
-
 /**
  * A <b>Container</b> is an object that can execute requests received from
  * a client, and return responses based on those requests.  A Container may
@@ -81,6 +80,23 @@ import java.io.File;
  */
 public interface Container extends Lifecycle {
 
+    /**
+     * Container的层次结构方法：
+     * 1. 查找父容器的方法：getParent、setParent
+     * 2. 查找Service方法：通过Engine查找Service，getService
+     * 3. Parent方法，那肯定也child方法：addChild、findChildren、removeChild
+     * 4. Container事件监听相关方法：addContainerListener、findContainerListeners、removeContainerListener
+     * 5. 属性级别监听方法：removePropertyChangeListener、addPropertyChangeListener
+     * 6. 事件触发方法：fireContainerEvent
+     *
+     * Container功能支撑方法：Loader, Logger, Manager, Realm, Resources等支撑功能
+     * 1. Loader：getParentClassLoader、setParentClassLoader
+     * 2. Logger：getLogger、getLogName
+     * 3. Manager：getObjectName、getDomain、getMBeanKeyProperties、getStartStopThreads
+     * 4. Realm：getRealm、setRealm
+     * 5. Cluster：getCluster、setCluster
+     */
+
     // ----------------------------------------------------- Manifest Constants
 
     /**
@@ -107,7 +123,6 @@ public interface Container extends Lifecycle {
      */
     String REMOVE_VALVE_EVENT = "removeValve";
 
-
     // ------------------------------------------------------------- Properties
 
     /**
@@ -117,24 +132,21 @@ public interface Container extends Lifecycle {
      * no associated Logger, return the Logger associated with the
      * parent Container (if any); otherwise return <code>null</code>.
      */
-    public Log getLogger();
-
+    Log getLogger();
 
     /**
      * Return the logger name that the container will use.
      *
      * @return the abbreviated name of this container for logging messages
      */
-    public String getLogName();
-
+    String getLogName();
 
     /**
      * Obtain the JMX name for this container.
      *
      * @return the JMX name associated with this container.
      */
-    public ObjectName getObjectName();
-
+    ObjectName getObjectName();
 
     /**
      * Obtain the JMX domain under which this container will be / has been
@@ -142,8 +154,7 @@ public interface Container extends Lifecycle {
      *
      * @return The JMX domain name
      */
-    public String getDomain();
-
+    String getDomain();
 
     /**
      * Calculate the key properties string to be added to an object's
@@ -151,8 +162,7 @@ public interface Container extends Lifecycle {
      *
      * @return A string suitable for appending to the ObjectName
      */
-    public String getMBeanKeyProperties();
-
+    String getMBeanKeyProperties();
 
     /**
      * Return the Pipeline object that manages the Valves associated with
@@ -160,8 +170,7 @@ public interface Container extends Lifecycle {
      *
      * @return The Pipeline
      */
-    public Pipeline getPipeline();
-
+    Pipeline getPipeline();
 
     /**
      * Get the Cluster for this container.
@@ -170,14 +179,14 @@ public interface Container extends Lifecycle {
      * no associated Cluster, return the Cluster associated with our
      * parent Container (if any); otherwise return <code>null</code>.
      */
-    public Cluster getCluster();
+    Cluster getCluster();
 
     /**
      * Set the Cluster with which this Container is associated.
      *
      * @param cluster the Cluster with which this Container is associated.
      */
-    public void setCluster(Cluster cluster);
+    void setCluster(Cluster cluster);
 
     /**
      * Get the delay between the invocation of the backgroundProcess method on
@@ -193,7 +202,7 @@ public interface Container extends Lifecycle {
      * indicates that background processing will be managed by the
      * parent.
      */
-    public int getBackgroundProcessorDelay();
+    int getBackgroundProcessorDelay();
 
     /**
      * Set the delay between the invocation of the execute method on this
@@ -202,7 +211,7 @@ public interface Container extends Lifecycle {
      * @param delay The delay in seconds between the invocation of
      *              backgroundProcess methods
      */
-    public void setBackgroundProcessorDelay(int delay);
+    void setBackgroundProcessorDelay(int delay);
 
     /**
      * Return a name string (suitable for use by humans) that describes this
@@ -211,7 +220,7 @@ public interface Container extends Lifecycle {
      *
      * @return The human readable name of this container.
      */
-    public String getName();
+    String getName();
 
     /**
      * Set a name string (suitable for use by humans) that describes this
@@ -223,7 +232,7 @@ public interface Container extends Lifecycle {
      *                               added to the children of a parent Container (after which the name
      *                               may not be changed)
      */
-    public void setName(String name);
+    void setName(String name);
 
     /**
      * Get the parent container.
@@ -232,7 +241,7 @@ public interface Container extends Lifecycle {
      * there is one. If there is no defined parent, return
      * <code>null</code>.
      */
-    public Container getParent();
+    Container getParent();
 
     /**
      * Set the parent Container to which this Container is being added as a
@@ -244,7 +253,7 @@ public interface Container extends Lifecycle {
      * @throws IllegalArgumentException if this Container refuses to become
      *                                  attached to the specified Container
      */
-    public void setParent(Container container);
+    void setParent(Container container);
 
     /**
      * Get the parent class loader.
@@ -253,7 +262,7 @@ public interface Container extends Lifecycle {
      * {@link #getParent()}.{@link #getParentClassLoader()}. If no
      * parent has been set, return the system class loader.
      */
-    public ClassLoader getParentClassLoader();
+    ClassLoader getParentClassLoader();
 
     /**
      * Set the parent class loader for this component. For {@link Context}s
@@ -263,7 +272,7 @@ public interface Container extends Lifecycle {
      *
      * @param parent The new parent class loader
      */
-    public void setParentClassLoader(ClassLoader parent);
+    void setParentClassLoader(ClassLoader parent);
 
     /**
      * Obtain the Realm with which this Container is associated.
@@ -272,14 +281,14 @@ public interface Container extends Lifecycle {
      * Realm associated with the parent Container (if any); otherwise
      * return <code>null</code>.
      */
-    public Realm getRealm();
+    Realm getRealm();
 
     /**
      * Set the Realm with which this Container is associated.
      *
      * @param realm The newly associated Realm
      */
-    public void setRealm(Realm realm);
+    void setRealm(Realm realm);
 
     /**
      * Find the configuration path where a configuration resource
@@ -289,7 +298,7 @@ public interface Container extends Lifecycle {
      * @param resourceName The resource file name
      * @return the configuration path
      */
-    public static String getConfigPath(Container container, String resourceName) {
+    static String getConfigPath(Container container, String resourceName) {
         StringBuilder result = new StringBuilder();
         Container host = null;
         Container engine = null;
@@ -319,11 +328,13 @@ public interface Container extends Lifecycle {
 
     /**
      * Return the Service to which this container belongs.
+     * <p>
+     * 找到Engine容器，从中获取绑定的Service对象
      *
      * @param container The container to start from
      * @return the Service, or null if not found
      */
-    public static Service getService(Container container) {
+    static Service getService(Container container) {
         while (container != null && !(container instanceof Engine)) {
             container = container.getParent();
         }
@@ -340,7 +351,7 @@ public interface Container extends Lifecycle {
      * invoked inside the classloading context of this container. Unexpected
      * throwables will be caught and logged.
      */
-    public void backgroundProcess();
+    void backgroundProcess();
 
     /**
      * Add a new child Container to those associated with this Container,
@@ -358,21 +369,21 @@ public interface Container extends Lifecycle {
      * @throws IllegalStateException    if this Container does not support
      *                                  child Containers
      */
-    public void addChild(Container child);
+    void addChild(Container child);
 
     /**
      * Add a container event listener to this component.
      *
      * @param listener The listener to add
      */
-    public void addContainerListener(ContainerListener listener);
+    void addContainerListener(ContainerListener listener);
 
     /**
      * Add a property change listener to this component.
      *
      * @param listener The listener to add
      */
-    public void addPropertyChangeListener(PropertyChangeListener listener);
+    void addPropertyChangeListener(PropertyChangeListener listener);
 
     /**
      * Obtain a child Container by name.
@@ -381,7 +392,7 @@ public interface Container extends Lifecycle {
      * @return The child Container with the given name or <code>null</code> if
      * no such child exists.
      */
-    public Container findChild(String name);
+    Container findChild(String name);
 
     /**
      * Obtain the child Containers associated with this Container.
@@ -389,7 +400,7 @@ public interface Container extends Lifecycle {
      * @return An array containing all children of this container. If this
      * Container has no children, a zero-length array is returned.
      */
-    public Container[] findChildren();
+    Container[] findChildren();
 
     /**
      * Obtain the container listeners associated with this Container.
@@ -398,7 +409,7 @@ public interface Container extends Lifecycle {
      * Container. If this Container has no registered container
      * listeners, a zero-length array is returned.
      */
-    public ContainerListener[] findContainerListeners();
+    ContainerListener[] findContainerListeners();
 
     /**
      * Remove an existing child Container from association with this parent
@@ -406,21 +417,21 @@ public interface Container extends Lifecycle {
      *
      * @param child Existing child Container to be removed
      */
-    public void removeChild(Container child);
+    void removeChild(Container child);
 
     /**
      * Remove a container event listener from this component.
      *
      * @param listener The listener to remove
      */
-    public void removeContainerListener(ContainerListener listener);
+    void removeContainerListener(ContainerListener listener);
 
     /**
      * Remove a property change listener from this component.
      *
      * @param listener The listener to remove
      */
-    public void removePropertyChangeListener(PropertyChangeListener listener);
+    void removePropertyChangeListener(PropertyChangeListener listener);
 
     /**
      * Notify all container event listeners that a particular event has
@@ -430,7 +441,7 @@ public interface Container extends Lifecycle {
      * @param type Event type
      * @param data Event data
      */
-    public void fireContainerEvent(String type, Object data);
+    void fireContainerEvent(String type, Object data);
 
     /**
      * Log a request/response that was destined for this container but has been
@@ -444,8 +455,7 @@ public interface Container extends Lifecycle {
      * @param useDefault Flag that indicates that the request/response should
      *                   be logged in the engine's default access log
      */
-    public void logAccess(Request request, Response response, long time,
-                          boolean useDefault);
+    void logAccess(Request request, Response response, long time, boolean useDefault);
 
     /**
      * Obtain the AccessLog to use to log a request/response that is destined
@@ -456,7 +466,7 @@ public interface Container extends Lifecycle {
      * @return The AccessLog to use for a request/response destined for this
      * container
      */
-    public AccessLog getAccessLog();
+    AccessLog getAccessLog();
 
     /**
      * Obtain the number of threads available for starting and stopping any
@@ -466,7 +476,7 @@ public interface Container extends Lifecycle {
      * @return The currently configured number of threads used to start/stop
      * children associated with this container
      */
-    public int getStartStopThreads();
+    int getStartStopThreads();
 
     /**
      * Sets the number of threads available for starting and stopping any
@@ -475,19 +485,19 @@ public interface Container extends Lifecycle {
      *
      * @param startStopThreads The new number of threads to be used
      */
-    public void setStartStopThreads(int startStopThreads);
+    void setStartStopThreads(int startStopThreads);
 
     /**
      * Obtain the location of CATALINA_BASE.
      *
      * @return The location of CATALINA_BASE.
      */
-    public File getCatalinaBase();
+    File getCatalinaBase();
 
     /**
      * Obtain the location of CATALINA_HOME.
      *
      * @return The location of CATALINA_HOME.
      */
-    public File getCatalinaHome();
+    File getCatalinaHome();
 }

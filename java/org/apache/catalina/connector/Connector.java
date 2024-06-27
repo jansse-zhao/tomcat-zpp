@@ -75,8 +75,7 @@ public class Connector extends LifecycleMBeanBase {
         try {
             p = ProtocolHandler.create(protocol);
         } catch (Exception e) {
-            log.error(sm.getString(
-                "coyoteConnector.protocolHandlerInstantiationFailed"), e);
+            log.error(sm.getString("coyoteConnector.protocolHandlerInstantiationFailed"), e);
         }
         if (p != null) {
             protocolHandler = p;

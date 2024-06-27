@@ -27,6 +27,26 @@ import org.apache.tomcat.util.res.StringManager;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+/**
+ * 生命周期抽象对象：
+ * 几个主要生命周期组件：
+ * 1. WebappLoader
+ * 2. Connector
+ * 3. StandardServer
+ * 4. StandardService
+ * 5. ContainerBase
+ * 5.1 StandardEngine
+ * 5.2 StandardWrapper
+ * 5.3 StandardContext
+ * 5.4 StandardHost
+ * <p>
+ * <p>
+ * LifecycleMBeanBase包含两块，一个是Lifecycle的接口实现，一个是Jmx接口封装实现。
+ * 该抽象类提供的对MBeanRegistration的抽象实现类，运用抽象模板模式将所有容器统一注册到JMX。
+ * ContainerBase、StandardServer、StandardService、WebappLoader、Connector、StandardContext、
+ * StandardEngine、StandardHost、StandardWrapper等容器都继承了LifecycleMBeanBase，
+ * 因此这些容器都具有了同样的生命周期并可以通过JMX进行管理。
+ */
 public abstract class LifecycleMBeanBase extends LifecycleBase implements JmxEnabled {
 
     private static final Log log = LogFactory.getLog(LifecycleMBeanBase.class);
@@ -219,8 +239,7 @@ public abstract class LifecycleMBeanBase extends LifecycleBase implements JmxEna
      * {@link MBeanServer} and/or {@link ObjectName}.
      */
     @Override
-    public final ObjectName preRegister(MBeanServer server, ObjectName name)
-        throws Exception {
+    public final ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
 
         this.oname = name;
         this.domain = name.getDomain().intern();

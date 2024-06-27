@@ -72,7 +72,7 @@ public final class Globals {
      * remote IP address claimed to be associated with this request when a
      * request is received via one or more proxies. It is typically provided via
      * the X-Forwarded-For HTTP header.
-     *
+     * <p>
      * Duplicated here for neater code in the catalina packages.
      */
     public static final String REMOTE_ADDR_ATTRIBUTE = org.apache.coyote.Constants.REMOTE_ADDR_ATTRIBUTE;
@@ -89,7 +89,7 @@ public final class Globals {
     /**
      * The request attribute that is set to the value of {@code Boolean.TRUE}
      * if connector processing this request supports use of sendfile.
-     *
+     * <p>
      * Duplicated here for neater code in the catalina packages.
      */
     public static final String SENDFILE_SUPPORTED_ATTR = org.apache.coyote.Constants.SENDFILE_SUPPORTED_ATTR;
@@ -100,7 +100,7 @@ public final class Globals {
      * to the connector the name of the file that is to be served
      * by sendfile. The value should be {@code java.lang.String}
      * that is {@code File.getCanonicalPath()} of the file to be served.
-     *
+     * <p>
      * Duplicated here for neater code in the catalina packages.
      */
     public static final String SENDFILE_FILENAME_ATTR = org.apache.coyote.Constants.SENDFILE_FILENAME_ATTR;
@@ -112,7 +112,7 @@ public final class Globals {
      * that is to be served by sendfile. The value should be
      * {@code java.lang.Long}. To serve complete file
      * the value should be {@code Long.valueOf(0)}.
-     *
+     * <p>
      * Duplicated here for neater code in the catalina packages.
      */
     public static final String SENDFILE_FILE_START_ATTR = org.apache.coyote.Constants.SENDFILE_FILE_START_ATTR;
@@ -124,7 +124,7 @@ public final class Globals {
      * of a file that is to be served by sendfile. The value should be
      * {@code java.lang.Long}. To serve complete file
      * the value should be equal to the length of the file.
-     *
+     * <p>
      * Duplicated here for neater code in the catalina packages.
      */
     public static final String SENDFILE_FILE_END_ATTR = org.apache.coyote.Constants.SENDFILE_FILE_END_ATTR;
@@ -189,7 +189,7 @@ public final class Globals {
      * for our application class loader (as an object of type String),
      * delimited with the appropriate path delimiter for this platform.
      */
-    public static final String CLASS_PATH_ATTR =  "org.apache.catalina.jsp_classpath";
+    public static final String CLASS_PATH_ATTR = "org.apache.catalina.jsp_classpath";
 
 
     /**
@@ -259,14 +259,13 @@ public final class Globals {
      * this flag to {@code true} will change the defaults for other settings.
      */
     public static final boolean STRICT_SERVLET_COMPLIANCE =
-            Boolean.parseBoolean(System.getProperty("org.apache.catalina.STRICT_SERVLET_COMPLIANCE", "false"));
-
+        Boolean.parseBoolean(System.getProperty("org.apache.catalina.STRICT_SERVLET_COMPLIANCE", "false"));
 
     /**
      * Has security been turned on?
+     * 是否开启安全security
      */
     public static final boolean IS_SECURITY_ENABLED = (System.getSecurityManager() != null);
-
 
     /**
      * Default domain for MBeans if none can be determined

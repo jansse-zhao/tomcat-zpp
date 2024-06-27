@@ -21,6 +21,8 @@ import java.util.EventObject;
 /**
  * General event for notifying listeners of significant changes on a component
  * that implements the Lifecycle interface.
+ * <p>
+ * 生命周期监听事件
  *
  * @author Craig R. McClanahan
  */

@@ -16,26 +16,18 @@
  */
 package org.apache.catalina.core;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
-import javax.management.ObjectName;
-
-import org.apache.catalina.Contained;
-import org.apache.catalina.Container;
-import org.apache.catalina.JmxEnabled;
-import org.apache.catalina.Lifecycle;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.LifecycleState;
-import org.apache.catalina.Pipeline;
-import org.apache.catalina.Valve;
+import org.apache.catalina.*;
 import org.apache.catalina.util.LifecycleBase;
 import org.apache.catalina.util.ToStringUtil;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
+
+import javax.management.ObjectName;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Standard implementation of a processing <b>Pipeline</b> that will invoke
@@ -61,11 +53,8 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
      * Construct a new StandardPipeline instance with no associated Container.
      */
     public StandardPipeline() {
-
         this(null);
-
     }
-
 
     /**
      * Construct a new StandardPipeline instance that is associated with the
@@ -74,51 +63,43 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
      * @param container The container we should be associated with
      */
     public StandardPipeline(Container container) {
-
         super();
         setContainer(container);
-
     }
 
-
     // ----------------------------------------------------- Instance Variables
-
 
     /**
      * The basic Valve (if any) associated with this Pipeline.
      */
     protected Valve basic = null;
 
-
     /**
      * The Container with which this Pipeline is associated.
      */
     protected Container container = null;
-
 
     /**
      * The first valve associated with this Pipeline.
      */
     protected Valve first = null;
 
-
     // --------------------------------------------------------- Public Methods
 
     @Override
     public boolean isAsyncSupported() {
-        Valve valve = (first!=null)?first:basic;
+        Valve valve = (first != null) ? first : basic;
         boolean supported = true;
-        while (supported && valve!=null) {
+        while (supported && valve != null) {
             supported = supported & valve.isAsyncSupported();
             valve = valve.getNext();
         }
         return supported;
     }
 
-
     @Override
     public void findNonAsyncValves(Set<String> result) {
-        Valve valve = (first!=null) ? first : basic;
+        Valve valve = (first != null) ? first : basic;
         while (valve != null) {
             if (!valve.isAsyncSupported()) {
                 result.add(valve.getClass().getName());
@@ -126,7 +107,6 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
             valve = valve.getNext();
         }
     }
-
 
     // ------------------------------------------------------ Contained Methods
 
@@ -138,7 +118,6 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
         return this.container;
     }
 
-
     /**
      * Set the Container with which this Pipeline is associated.
      *
@@ -148,7 +127,6 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
     public void setContainer(Container container) {
         this.container = container;
     }
-
 
     @Override
     protected void initInternal() {
@@ -160,8 +138,8 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
      * Start {@link Valve}s) in this pipeline and implement the requirements
      * of {@link LifecycleBase#startInternal()}.
      *
-     * @exception LifecycleException if this component detects a fatal error
-     *  that prevents this component from being used
+     * @throws LifecycleException if this component detects a fatal error
+     *                            that prevents this component from being used
      */
     @Override
     protected synchronized void startInternal() throws LifecycleException {
@@ -186,8 +164,8 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
      * Stop {@link Valve}s) in this pipeline and implement the requirements
      * of {@link LifecycleBase#stopInternal()}.
      *
-     * @exception LifecycleException if this component detects a fatal error
-     *  that prevents this component from being used
+     * @throws LifecycleException if this component detects a fatal error
+     *                            that prevents this component from being used
      */
     @Override
     protected synchronized void stopInternal() throws LifecycleException {
@@ -320,13 +298,12 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
      * if it is already associated with a different Container.</p>
      *
      * @param valve Valve to be added
-     *
-     * @exception IllegalArgumentException if this Container refused to
-     *  accept the specified Valve
-     * @exception IllegalArgumentException if the specified Valve refuses to be
-     *  associated with this Container
-     * @exception IllegalStateException if the specified Valve is already
-     *  associated with a different Container
+     * @throws IllegalArgumentException if this Container refused to
+     *                                  accept the specified Valve
+     * @throws IllegalArgumentException if the specified Valve refuses to be
+     *                                  associated with this Container
+     * @throws IllegalStateException    if the specified Valve is already
+     *                                  associated with a different Container
      */
     @Override
     public void addValve(Valve valve) {
@@ -385,7 +362,7 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
             current = current.getNext();
         }
 
-        return valveList.toArray(new Valve[0]);
+        return valveList.toArray(new Valve[ 0 ]);
 
     }
 
@@ -403,7 +380,7 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
             current = current.getNext();
         }
 
-        return valveList.toArray(new ObjectName[0]);
+        return valveList.toArray(new ObjectName[ 0 ]);
 
     }
 
@@ -419,7 +396,7 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
     public void removeValve(Valve valve) {
 
         Valve current;
-        if(first == valve) {
+        if (first == valve) {
             first = first.getNext();
             current = null;
         } else {
