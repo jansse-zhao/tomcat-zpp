@@ -16,12 +16,11 @@
  */
 package org.apache.catalina;
 
-import java.io.IOException;
-
 import jakarta.servlet.ServletException;
-
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
+
+import java.io.IOException;
 
 /**
  * <p>A <b>Valve</b> is a request processing component associated with a
@@ -53,7 +52,7 @@ public interface Valve {
      *
      * @param valve The new next valve, or <code>null</code> if none
      */
-    public void setNext(Valve valve);
+    void setNext(Valve valve);
 
 
     //---------------------------------------------------------- Public Methods
@@ -64,7 +63,7 @@ public interface Valve {
      * invoked inside the classloading context of this container. Unexpected
      * throwables will be caught and logged.
      */
-    public void backgroundProcess();
+    void backgroundProcess();
 
 
     /**
@@ -106,17 +105,16 @@ public interface Valve {
      *     returned.
      * </ul>
      *
-     * @param request The servlet request to be processed
+     * @param request  The servlet request to be processed
      * @param response The servlet response to be created
-     *
-     * @exception IOException if an input/output error occurs, or is thrown
-     *  by a subsequently invoked Valve, Filter, or Servlet
-     * @exception ServletException if a servlet error occurs, or is thrown
-     *  by a subsequently invoked Valve, Filter, or Servlet
+     * @throws IOException      if an input/output error occurs, or is thrown
+     *                          by a subsequently invoked Valve, Filter, or Servlet
+     * @throws ServletException if a servlet error occurs, or is thrown
+     *                          by a subsequently invoked Valve, Filter, or Servlet
      */
-    public void invoke(Request request, Response response)
+    void invoke(Request request, Response response)
         throws IOException, ServletException;
 
 
-    public boolean isAsyncSupported();
+    boolean isAsyncSupported();
 }

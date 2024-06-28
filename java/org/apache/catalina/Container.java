@@ -73,10 +73,10 @@ import java.io.File;
  * @author Remy Maucherat
  * <p>
  * Container: 表示容器，可以看做Servlet容器；引擎(Engine)、主机(Host)、上下文(Context)和Wraper均继承自Container接口，所以它们都是容器。
- * Engine -- 引擎
- * Host -- 主机
- * Context -- 上下文
- * Wrapper -- 包装器
+ * Engine -- 表示整个catalina的servlet引擎，多数情况下包含一个或多个子容器，这些子容器要么是Host，要么是Context实现，或者是其他自定义组。
+ * Host -- 表示包含多个Context的虚拟主机的。
+ * Context -- 表示一个ServletContext，表示一个webapp，它通常包含一个或多个wrapper。
+ * Wrapper -- 表示一个servlet定义的（如果servlet本身实现了SingleThreadModel，则可能支持多个servlet实例）。
  */
 public interface Container extends Lifecycle {
 

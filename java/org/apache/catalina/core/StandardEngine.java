@@ -62,7 +62,6 @@ public class StandardEngine extends ContainerBase implements Engine {
      */
     private String defaultHost = null;
 
-
     /**
      * The <code>Service</code> that owns this Engine, if any.
      */
@@ -243,11 +242,11 @@ public class StandardEngine extends ContainerBase implements Engine {
      * Engine, look for one in the Engine's default host and then the default
      * host's ROOT context. If still none is found, return the default NoOp
      * access log.
+     * <p>
+     * 记录请求日志
      */
     @Override
-    public void logAccess(Request request, Response response, long time,
-                          boolean useDefault) {
-
+    public void logAccess(Request request, Response response, long time, boolean useDefault) {
         boolean logged = false;
 
         if (getAccessLog() != null) {
@@ -255,34 +254,33 @@ public class StandardEngine extends ContainerBase implements Engine {
             logged = true;
         }
 
+        // 没找到且使用useDefault，表示从下层容器中获取accessLog
         if (!logged && useDefault) {
             AccessLog newDefaultAccessLog = defaultAccessLog.get();
             if (newDefaultAccessLog == null) {
                 // If we reached this point, this Engine can't have an AccessLog
                 // Look in the defaultHost
+                // 如果没有默认的accessLog，则获取默认Host的accessLog
                 Host host = (Host) findChild(getDefaultHost());
                 Context context = null;
                 if (host != null && host.getState().isAvailable()) {
                     newDefaultAccessLog = host.getAccessLog();
 
                     if (newDefaultAccessLog != null) {
-                        if (defaultAccessLog.compareAndSet(null,
-                            newDefaultAccessLog)) {
-                            AccessLogListener l = new AccessLogListener(this,
-                                host, null);
+                        if (defaultAccessLog.compareAndSet(null, newDefaultAccessLog)) {
+                            AccessLogListener l = new AccessLogListener(this, host, null);
+                            // 注册AccessLog监听器至当前Engine
                             l.install();
                         }
                     } else {
                         // Try the ROOT context of default host
+                        // 如果仍然没有找到，则获取默认host的ROOT Context的accessLog
                         context = (Context) host.findChild("");
-                        if (context != null &&
-                            context.getState().isAvailable()) {
+                        if (context != null && context.getState().isAvailable()) {
                             newDefaultAccessLog = context.getAccessLog();
                             if (newDefaultAccessLog != null) {
-                                if (defaultAccessLog.compareAndSet(null,
-                                    newDefaultAccessLog)) {
-                                    AccessLogListener l = new AccessLogListener(
-                                        this, null, context);
+                                if (defaultAccessLog.compareAndSet(null, newDefaultAccessLog)) {
+                                    AccessLogListener l = new AccessLogListener(this, null, context);
                                     l.install();
                                 }
                             }
@@ -291,16 +289,16 @@ public class StandardEngine extends ContainerBase implements Engine {
                 }
 
                 if (newDefaultAccessLog == null) {
+                    // 这个其实是一个空模式，以便采用统一方式调用（不用判空了）
                     newDefaultAccessLog = new NoopAccessLog();
-                    if (defaultAccessLog.compareAndSet(null,
-                        newDefaultAccessLog)) {
-                        AccessLogListener l = new AccessLogListener(this, host,
-                            context);
+                    if (defaultAccessLog.compareAndSet(null, newDefaultAccessLog)) {
+                        AccessLogListener l = new AccessLogListener(this, host, context);
                         l.install();
                     }
                 }
             }
 
+            // 最后记录日志，（上面最后有空模式实现，所以可以直接调用，不用判空）
             newDefaultAccessLog.log(request, response, time);
         }
     }

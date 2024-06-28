@@ -71,21 +71,25 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
 
     /**
      * The basic Valve (if any) associated with this Pipeline.
+     * 与此管道相关联的基本value(如果有的话)。
      */
     protected Valve basic = null;
 
     /**
      * The Container with which this Pipeline is associated.
+     * 与此管道相关联的容器。
      */
     protected Container container = null;
 
     /**
      * The first valve associated with this Pipeline.
+     * 与此管道关联的第一个value。
      */
     protected Valve first = null;
 
     // --------------------------------------------------------- Public Methods
 
+    // 是否支持异步
     @Override
     public boolean isAsyncSupported() {
         Valve valve = (first != null) ? first : basic;
@@ -169,7 +173,6 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
      */
     @Override
     protected synchronized void stopInternal() throws LifecycleException {
-
         setState(LifecycleState.STOPPING);
 
         // Stop the Valves in our pipeline (including the basic), if any
@@ -185,7 +188,6 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
         }
     }
 
-
     @Override
     protected void destroyInternal() {
         Valve[] valves = getValves();
@@ -194,7 +196,6 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
         }
     }
 
-
     /**
      * Return a String representation of this component.
      */
@@ -202,7 +203,6 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
     public String toString() {
         return ToStringUtil.toString(this);
     }
-
 
     // ------------------------------------------------------- Pipeline Methods
 
@@ -215,7 +215,6 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
     public Valve getBasic() {
         return this.basic;
     }
-
 
     /**
      * <p>Set the Valve instance that has been distinguished as the basic
@@ -231,7 +230,6 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
      */
     @Override
     public void setBasic(Valve valve) {
-
         // Change components if necessary
         Valve oldBasic = this.basic;
         if (oldBasic == valve) {
@@ -283,7 +281,6 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
         }
 
         this.basic = valve;
-
     }
 
 
@@ -307,7 +304,6 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
      */
     @Override
     public void addValve(Valve valve) {
-
         // Validate that we can add this Valve
         if (valve instanceof Contained) {
             ((Contained) valve).setContainer(this.container);
@@ -351,7 +347,6 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
      */
     @Override
     public Valve[] getValves() {
-
         List<Valve> valveList = new ArrayList<>();
         Valve current = first;
         if (current == null) {
@@ -363,11 +358,9 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
         }
 
         return valveList.toArray(new Valve[ 0 ]);
-
     }
 
     public ObjectName[] getValveObjectNames() {
-
         List<ObjectName> valveList = new ArrayList<>();
         Valve current = first;
         if (current == null) {
@@ -381,7 +374,6 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
         }
 
         return valveList.toArray(new ObjectName[ 0 ]);
-
     }
 
     /**
@@ -394,7 +386,6 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
      */
     @Override
     public void removeValve(Valve valve) {
-
         Valve current;
         if (first == valve) {
             first = first.getNext();

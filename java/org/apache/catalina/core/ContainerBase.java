@@ -558,7 +558,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         }
     }
 
-
     protected Realm getRealmInternal() {
         Lock l = realmLock.readLock();
         l.lock();
@@ -661,12 +660,13 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
             child.setParent(this);  // May throw IAE
             children.put(child.getName(), child);
         }
-
+        // 触发容器事件
         fireContainerEvent(ADD_CHILD_EVENT, child);
 
         // Start child
         // Don't do this inside sync block - start can be a slow process and
         // locking the children object can cause problems elsewhere
+        // 启动子容器
         try {
             if ((getState().isAvailable() || LifecycleState.STARTING_PREP.equals(getState())) && startChildren) {
                 child.start();
@@ -832,7 +832,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      */
     @Override
     protected synchronized void startInternal() throws LifecycleException {
-
         // Start our subordinate components, if any
         logger = null;
         getLogger();
@@ -879,6 +878,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         setState(LifecycleState.STARTING);
 
         // Start our thread
+        // 看这个，本质是调用最上层server的utilityExecutorWrapper 线程池去执行 ContainerBackgroundProcessorMonitor 任务
         if (backgroundProcessorDelay > 0) {
             monitorFuture = Container.getService(ContainerBase.this).getServer()
                 .getUtilityExecutor().scheduleWithFixedDelay(
@@ -946,7 +946,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
 
     @Override
     protected void destroyInternal() throws LifecycleException {
-
         Realm realm = getRealmInternal();
         if (realm instanceof Lifecycle) {
             ((Lifecycle) realm).destroy();
@@ -1005,7 +1004,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
 
     @Override
     public AccessLog getAccessLog() {
-
         if (accessLogScanComplete) {
             return accessLog;
         }
@@ -1129,7 +1127,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      */
     @Override
     public void fireContainerEvent(String type, Object data) {
-
         if (listeners.size() < 1) {
             return;
         }
@@ -1315,7 +1312,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     // ---------------------------- Inner classes used with start/stop Executor
 
     private static class StartChild implements Callable<Void> {
-
         private Container child;
 
         public StartChild(Container child) {
