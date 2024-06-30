@@ -459,7 +459,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         support.firePropertyChange("startChildren", oldStartChildren, this.startChildren);
     }
 
-
     /**
      * Return the Container for which this Container is a child, if there is
      * one.  If there is no defined parent, return <code>null</code>.
@@ -468,7 +467,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     public Container getParent() {
         return parent;
     }
-
 
     /**
      * Set the parent Container to which this Container is being added as a
@@ -482,13 +480,10 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      */
     @Override
     public void setParent(Container container) {
-
         Container oldParent = this.parent;
         this.parent = container;
         support.firePropertyChange("parent", oldParent, this.parent);
-
     }
-
 
     /**
      * Return the parent class loader (if any) for this web application.
@@ -505,7 +500,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         }
         return ClassLoader.getSystemClassLoader();
     }
-
 
     /**
      * Set the parent class loader (if any) for this web application.
@@ -720,7 +714,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     @Override
     public Container[] findChildren() {
         synchronized (children) {
-            return children.values().toArray(new Container[ 0 ]);
+            return children.values().toArray(new Container[0]);
         }
     }
 
@@ -731,7 +725,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      */
     @Override
     public ContainerListener[] findContainerListeners() {
-        return listeners.toArray(new ContainerListener[ 0 ]);
+        return listeners.toArray(new ContainerListener[0]);
     }
 
     /**
@@ -848,6 +842,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         Container children[] = findChildren();
         List<Future<Void>> results = new ArrayList<>();
         for (Container child : children) {
+            // 异步启动子容器
             results.add(startStopExecutor.submit(new StartChild(child)));
         }
 
@@ -1197,7 +1192,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
                 names.add(next.getObjectName());
             }
         }
-        return names.toArray(new ObjectName[ 0 ]);
+        return names.toArray(new ObjectName[0]);
     }
 
 

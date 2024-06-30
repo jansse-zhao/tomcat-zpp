@@ -510,7 +510,6 @@ public class Connector extends LifecycleMBeanBase {
      * @param methods Comma separated list of HTTP method names
      */
     public void setParseBodyMethods(String methods) {
-
         HashSet<String> methodSet = new HashSet<>();
 
         if (null != methods) {
@@ -949,42 +948,42 @@ public class Connector extends LifecycleMBeanBase {
 
     @Override
     protected void initInternal() throws LifecycleException {
-
         super.initInternal();
 
         if (protocolHandler == null) {
-            throw new LifecycleException(
-                sm.getString("coyoteConnector.protocolHandlerInstantiationFailed"));
+            throw new LifecycleException(sm.getString("coyoteConnector.protocolHandlerInstantiationFailed"));
         }
 
         // Initialize adapter
+        // 初始化 adapter
         adapter = new CoyoteAdapter(this);
+        // 交给protocolHandler
         protocolHandler.setAdapter(adapter);
         if (service != null) {
             protocolHandler.setUtilityExecutor(service.getServer().getUtilityExecutor());
         }
 
         // Make sure parseBodyMethodsSet has a default
+        // 设置parseBody的方法，默认为POST
         if (null == parseBodyMethodsSet) {
             setParseBodyMethods(getParseBodyMethods());
         }
 
         if (AprStatus.isAprAvailable() && AprStatus.getUseOpenSSL() &&
             protocolHandler instanceof AbstractHttp11Protocol) {
-            AbstractHttp11Protocol<?> jsseProtocolHandler =
-                (AbstractHttp11Protocol<?>) protocolHandler;
-            if (jsseProtocolHandler.isSSLEnabled() &&
-                jsseProtocolHandler.getSslImplementationName() == null) {
+            AbstractHttp11Protocol<?> jsseProtocolHandler = (AbstractHttp11Protocol<?>) protocolHandler;
+            if (jsseProtocolHandler.isSSLEnabled() && jsseProtocolHandler.getSslImplementationName() == null) {
                 // OpenSSL is compatible with the JSSE configuration, so use it if APR is available
                 jsseProtocolHandler.setSslImplementationName(OpenSSLImplementation.class.getName());
             }
         }
 
         try {
+            // 调用protocolHandler的init
+            // protocolHandler的init本质上调用了AbstractEndpoint的init方法
             protocolHandler.init();
         } catch (Exception e) {
-            throw new LifecycleException(
-                sm.getString("coyoteConnector.protocolHandlerInitializationFailed"), e);
+            throw new LifecycleException(sm.getString("coyoteConnector.protocolHandlerInitializationFailed"), e);
         }
     }
 
@@ -996,21 +995,19 @@ public class Connector extends LifecycleMBeanBase {
      */
     @Override
     protected void startInternal() throws LifecycleException {
-
         // Validate settings before starting
         String id = (protocolHandler != null) ? protocolHandler.getId() : null;
         if (id == null && getPortWithOffset() < 0) {
-            throw new LifecycleException(sm.getString(
-                "coyoteConnector.invalidPort", Integer.valueOf(getPortWithOffset())));
+            throw new LifecycleException(sm.getString("coyoteConnector.invalidPort", Integer.valueOf(getPortWithOffset())));
         }
 
         setState(LifecycleState.STARTING);
 
         try {
+            // 本质上是调用protocolHandler的start方法
             protocolHandler.start();
         } catch (Exception e) {
-            throw new LifecycleException(
-                sm.getString("coyoteConnector.protocolHandlerStartFailed"), e);
+            throw new LifecycleException(sm.getString("coyoteConnector.protocolHandlerStartFailed"), e);
         }
     }
 

@@ -367,7 +367,9 @@ public class Catalina {
     /**
      * Create and configure the Digester we will be using for startup.
      * <p>
-     * 创建并配置我们将用于启动的消化器。
+     * 创建并配置Digester，这个类用于解析server.xml，
+     * 将里面的xml节点解析成对应的Server、Service、Engine、Listener、Connector等实例对象组件
+     * 因为server.xml文件中配置的有Server、Listener、Service、Engine、Connector等节点
      *
      * @return the main digester to parse server.xml
      */
@@ -632,7 +634,6 @@ public class Catalina {
     }
 
     public void stopServer(String[] arguments) {
-
         if (arguments != null) {
             arguments(arguments);
         }

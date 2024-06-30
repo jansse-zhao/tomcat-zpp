@@ -41,7 +41,6 @@ public class StandardEngine extends ContainerBase implements Engine {
 
     private static final Log log = LogFactory.getLog(StandardEngine.class);
 
-
     // ----------------------------------------------------------- Constructors
 
     /**
@@ -52,7 +51,6 @@ public class StandardEngine extends ContainerBase implements Engine {
         // By default, the engine will hold the reloading thread
         backgroundProcessorDelay = 10;
     }
-
 
     // ----------------------------------------------------- Instance Variables
 
@@ -101,7 +99,6 @@ public class StandardEngine extends ContainerBase implements Engine {
         return configured;
     }
 
-
     /**
      * Return the default host.
      */
@@ -110,15 +107,15 @@ public class StandardEngine extends ContainerBase implements Engine {
         return defaultHost;
     }
 
-
     /**
      * Set the default host.
+     * <p>
+     * server.xml配置的defaultHost属性，将在Catalina.load()->parseServerXml()->createStartDigester()方法中调用该方法
      *
      * @param host The new default host
      */
     @Override
     public void setDefaultHost(String host) {
-
         String oldDefaultHost = this.defaultHost;
         if (host == null) {
             this.defaultHost = null;
@@ -128,11 +125,8 @@ public class StandardEngine extends ContainerBase implements Engine {
         if (getState().isAvailable()) {
             service.getMapper().setDefaultHostName(host);
         }
-        support.firePropertyChange("defaultHost", oldDefaultHost,
-            this.defaultHost);
-
+        support.firePropertyChange("defaultHost", oldDefaultHost, this.defaultHost);
     }
-
 
     /**
      * Set the cluster-wide unique identifier for this Engine.
@@ -145,7 +139,6 @@ public class StandardEngine extends ContainerBase implements Engine {
         jvmRouteId = routeId;
     }
 
-
     /**
      * Retrieve the cluster-wide unique identifier for this Engine.
      * This value is only useful in a load-balancing scenario.
@@ -155,7 +148,6 @@ public class StandardEngine extends ContainerBase implements Engine {
         return jvmRouteId;
     }
 
-
     /**
      * Return the <code>Service</code> with which we are associated (if any).
      */
@@ -163,7 +155,6 @@ public class StandardEngine extends ContainerBase implements Engine {
     public Service getService() {
         return this.service;
     }
-
 
     /**
      * Set the <code>Service</code> with which we are associated (if any).
@@ -176,7 +167,6 @@ public class StandardEngine extends ContainerBase implements Engine {
     }
 
     // --------------------------------------------------------- Public Methods
-
 
     /**
      * Add a child Container, only if the proposed child is an implementation
@@ -207,7 +197,6 @@ public class StandardEngine extends ContainerBase implements Engine {
 
     }
 
-
     @Override
     protected void initInternal() throws LifecycleException {
         // Ensure that a Realm is present before any attempt is made to start
@@ -215,7 +204,6 @@ public class StandardEngine extends ContainerBase implements Engine {
         getRealm();
         super.initInternal();
     }
-
 
     /**
      * Start this component and implement the requirements
@@ -226,7 +214,6 @@ public class StandardEngine extends ContainerBase implements Engine {
      */
     @Override
     protected synchronized void startInternal() throws LifecycleException {
-
         // Log our server identification information
         if (log.isInfoEnabled()) {
             log.info(sm.getString("standardEngine.start", ServerInfo.getServerInfo()));
@@ -235,7 +222,6 @@ public class StandardEngine extends ContainerBase implements Engine {
         // Standard container startup
         super.startInternal();
     }
-
 
     /**
      * Override the default implementation. If no access log is defined for the
@@ -303,7 +289,6 @@ public class StandardEngine extends ContainerBase implements Engine {
         }
     }
 
-
     /**
      * Return the parent class loader for this component.
      */
@@ -317,7 +302,6 @@ public class StandardEngine extends ContainerBase implements Engine {
         }
         return ClassLoader.getSystemClassLoader();
     }
-
 
     @Override
     public File getCatalinaBase() {
@@ -333,7 +317,6 @@ public class StandardEngine extends ContainerBase implements Engine {
         // Fall-back
         return super.getCatalinaBase();
     }
-
 
     @Override
     public File getCatalinaHome() {
@@ -383,9 +366,7 @@ public class StandardEngine extends ContainerBase implements Engine {
         }
     }
 
-    protected static final class AccessLogListener
-        implements PropertyChangeListener, LifecycleListener,
-        ContainerListener {
+    protected static final class AccessLogListener implements PropertyChangeListener, LifecycleListener, ContainerListener {
 
         private final StandardEngine engine;
         private final Host host;

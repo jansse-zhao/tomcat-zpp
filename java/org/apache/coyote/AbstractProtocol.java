@@ -16,28 +16,8 @@
  */
 package org.apache.coyote;
 
-import java.net.InetAddress;
-import java.nio.ByteBuffer;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanRegistration;
-import javax.management.MBeanRegistrationException;
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-
 import jakarta.servlet.http.HttpUpgradeHandler;
 import jakarta.servlet.http.WebConnection;
-
 import org.apache.coyote.http11.upgrade.InternalHttpUpgradeHandler;
 import org.apache.juli.logging.Log;
 import org.apache.tomcat.InstanceManager;
@@ -50,21 +30,26 @@ import org.apache.tomcat.util.net.SocketEvent;
 import org.apache.tomcat.util.net.SocketWrapperBase;
 import org.apache.tomcat.util.res.StringManager;
 
-public abstract class AbstractProtocol<S> implements ProtocolHandler,
-        MBeanRegistration {
+import javax.management.*;
+import java.net.InetAddress;
+import java.nio.ByteBuffer;
+import java.util.Set;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
+public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegistration {
 
     /**
      * The string manager for this package.
      */
     private static final StringManager sm = StringManager.getManager(AbstractProtocol.class);
 
-
     /**
      * Counter used to generate unique JMX names for connectors using automatic
      * port binding.
      */
     private static final AtomicInteger nameCounter = new AtomicInteger(0);
-
 
     /**
      * Unique ID for this connector. Only used if the connector is configured
@@ -73,17 +58,14 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
      */
     private int nameIndex = 0;
 
-
     /**
      * Endpoint that provides low-level network I/O - must be matched to the
      * ProtocolHandler implementation (ProtocolHandler using NIO, requires NIO
      * Endpoint etc.).
      */
-    private final AbstractEndpoint<S,?> endpoint;
-
+    private final AbstractEndpoint<S, ?> endpoint;
 
     private Handler<S> handler;
-
 
     private final Set<Processor> waitingProcessors = ConcurrentHashMap.newKeySet();
 
@@ -93,7 +75,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
     private ScheduledFuture<?> timeoutFuture = null;
     private ScheduledFuture<?> monitorFuture;
 
-    public AbstractProtocol(AbstractEndpoint<S,?> endpoint) {
+    public AbstractProtocol(AbstractEndpoint<S, ?> endpoint) {
         this.endpoint = endpoint;
         ConnectionHandler<S> cHandler = new ConnectionHandler<>(this);
         getEndpoint().setHandler(cHandler);
@@ -101,7 +83,6 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         setConnectionLinger(Constants.DEFAULT_CONNECTION_LINGER);
         setTcpNoDelay(Constants.DEFAULT_TCP_NO_DELAY);
     }
-
 
     // ----------------------------------------------- Generic property handling
 
@@ -114,27 +95,23 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
      *
      * @param name  The name of the property to set
      * @param value The value, in string form, to set for the property
-     *
      * @return <code>true</code> if the property was set successfully, otherwise
-     *         <code>false</code>
+     * <code>false</code>
      */
     public boolean setProperty(String name, String value) {
         return endpoint.setProperty(name, value);
     }
-
 
     /**
      * Generic property getter used by the digester. Other code should not need
      * to use this.
      *
      * @param name The name of the property to get
-     *
      * @return The value of the property converted to a string
      */
     public String getProperty(String name) {
         return endpoint.getProperty(name);
     }
-
 
     // ------------------------------- Properties managed by the ProtocolHandler
 
@@ -142,6 +119,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
      * Name of MBean for the Global Request Processor.
      */
     protected ObjectName rgOname = null;
+
     public ObjectName getGlobalRequestProcessorMBeanName() {
         return rgOname;
     }
@@ -151,11 +129,16 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
      * connector.
      */
     protected Adapter adapter;
-    @Override
-    public void setAdapter(Adapter adapter) { this.adapter = adapter; }
-    @Override
-    public Adapter getAdapter() { return adapter; }
 
+    @Override
+    public void setAdapter(Adapter adapter) {
+        this.adapter = adapter;
+    }
+
+    @Override
+    public Adapter getAdapter() {
+        return adapter;
+    }
 
     /**
      * The maximum number of idle processors that will be retained in the cache
@@ -165,13 +148,17 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
      * usually be closer to {@link #getMaxThreads()}.
      */
     protected int processorCache = 200;
-    public int getProcessorCache() { return this.processorCache; }
+
+    public int getProcessorCache() {
+        return this.processorCache;
+    }
+
     public void setProcessorCache(int processorCache) {
         this.processorCache = processorCache;
     }
 
-
     private String clientCertProvider = null;
+
     /**
      * When client certificate information is presented in a form other than
      * instances of {@link java.security.cert.X509Certificate} it needs to be
@@ -183,87 +170,111 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
      *
      * @return The name of the JSSE provider to use
      */
-    public String getClientCertProvider() { return clientCertProvider; }
-    public void setClientCertProvider(String s) { this.clientCertProvider = s; }
+    public String getClientCertProvider() {
+        return clientCertProvider;
+    }
 
+    public void setClientCertProvider(String s) {
+        this.clientCertProvider = s;
+    }
 
     private int maxHeaderCount = 100;
+
     public int getMaxHeaderCount() {
         return maxHeaderCount;
     }
+
     public void setMaxHeaderCount(int maxHeaderCount) {
         this.maxHeaderCount = maxHeaderCount;
     }
-
 
     @Override
     public boolean isSendfileSupported() {
         return endpoint.getUseSendfile();
     }
 
-
     @Override
     public String getId() {
         return endpoint.getId();
     }
 
-
     // ---------------------- Properties that are passed through to the EndPoint
 
     @Override
-    public Executor getExecutor() { return endpoint.getExecutor(); }
+    public Executor getExecutor() {
+        return endpoint.getExecutor();
+    }
+
     @Override
     public void setExecutor(Executor executor) {
         endpoint.setExecutor(executor);
     }
 
-
     @Override
-    public ScheduledExecutorService getUtilityExecutor() { return endpoint.getUtilityExecutor(); }
+    public ScheduledExecutorService getUtilityExecutor() {
+        return endpoint.getUtilityExecutor();
+    }
+
     @Override
     public void setUtilityExecutor(ScheduledExecutorService utilityExecutor) {
         endpoint.setUtilityExecutor(utilityExecutor);
     }
 
+    public int getMaxThreads() {
+        return endpoint.getMaxThreads();
+    }
 
-    public int getMaxThreads() { return endpoint.getMaxThreads(); }
     public void setMaxThreads(int maxThreads) {
         endpoint.setMaxThreads(maxThreads);
     }
 
-    public int getMaxConnections() { return endpoint.getMaxConnections(); }
+    public int getMaxConnections() {
+        return endpoint.getMaxConnections();
+    }
+
     public void setMaxConnections(int maxConnections) {
         endpoint.setMaxConnections(maxConnections);
     }
 
+    public int getMinSpareThreads() {
+        return endpoint.getMinSpareThreads();
+    }
 
-    public int getMinSpareThreads() { return endpoint.getMinSpareThreads(); }
     public void setMinSpareThreads(int minSpareThreads) {
         endpoint.setMinSpareThreads(minSpareThreads);
     }
 
+    public int getThreadPriority() {
+        return endpoint.getThreadPriority();
+    }
 
-    public int getThreadPriority() { return endpoint.getThreadPriority(); }
     public void setThreadPriority(int threadPriority) {
         endpoint.setThreadPriority(threadPriority);
     }
 
+    public int getAcceptCount() {
+        return endpoint.getAcceptCount();
+    }
 
-    public int getAcceptCount() { return endpoint.getAcceptCount(); }
-    public void setAcceptCount(int acceptCount) { endpoint.setAcceptCount(acceptCount); }
+    public void setAcceptCount(int acceptCount) {
+        endpoint.setAcceptCount(acceptCount);
+    }
 
+    public boolean getTcpNoDelay() {
+        return endpoint.getTcpNoDelay();
+    }
 
-    public boolean getTcpNoDelay() { return endpoint.getTcpNoDelay(); }
     public void setTcpNoDelay(boolean tcpNoDelay) {
         endpoint.setTcpNoDelay(tcpNoDelay);
     }
 
+    public int getConnectionLinger() {
+        return endpoint.getConnectionLinger();
+    }
 
-    public int getConnectionLinger() { return endpoint.getConnectionLinger(); }
     public void setConnectionLinger(int connectionLinger) {
         endpoint.setConnectionLinger(connectionLinger);
     }
-
 
     /**
      * The time Tomcat will wait for a subsequent request before closing the
@@ -271,33 +282,45 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
      *
      * @return The timeout in milliseconds
      */
-    public int getKeepAliveTimeout() { return endpoint.getKeepAliveTimeout(); }
+    public int getKeepAliveTimeout() {
+        return endpoint.getKeepAliveTimeout();
+    }
+
     public void setKeepAliveTimeout(int keepAliveTimeout) {
         endpoint.setKeepAliveTimeout(keepAliveTimeout);
     }
 
-    public InetAddress getAddress() { return endpoint.getAddress(); }
+    public InetAddress getAddress() {
+        return endpoint.getAddress();
+    }
+
     public void setAddress(InetAddress ia) {
         endpoint.setAddress(ia);
     }
 
+    public int getPort() {
+        return endpoint.getPort();
+    }
 
-    public int getPort() { return endpoint.getPort(); }
     public void setPort(int port) {
         endpoint.setPort(port);
     }
 
+    public int getPortOffset() {
+        return endpoint.getPortOffset();
+    }
 
-    public int getPortOffset() { return endpoint.getPortOffset(); }
     public void setPortOffset(int portOffset) {
         endpoint.setPortOffset(portOffset);
     }
 
+    public int getPortWithOffset() {
+        return endpoint.getPortWithOffset();
+    }
 
-    public int getPortWithOffset() { return endpoint.getPortWithOffset(); }
-
-
-    public int getLocalPort() { return endpoint.getLocalPort(); }
+    public int getLocalPort() {
+        return endpoint.getLocalPort();
+    }
 
     /*
      * When Tomcat expects data from the client, this is the time Tomcat will
@@ -306,6 +329,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
     public int getConnectionTimeout() {
         return endpoint.getConnectionTimeout();
     }
+
     public void setConnectionTimeout(int timeout) {
         endpoint.setConnectionTimeout(timeout);
     }
@@ -317,10 +341,10 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
     public void setAcceptorThreadPriority(int threadPriority) {
         endpoint.setAcceptorThreadPriority(threadPriority);
     }
-    public int getAcceptorThreadPriority() {
-      return endpoint.getAcceptorThreadPriority();
-    }
 
+    public int getAcceptorThreadPriority() {
+        return endpoint.getAcceptorThreadPriority();
+    }
 
     // ---------------------------------------------------------- Public methods
 
@@ -332,18 +356,16 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         return nameIndex;
     }
 
-
     /**
      * The name will be prefix-address-port if address is non-null and
      * prefix-port if the address is null.
      *
      * @return A name for this protocol instance that is appropriately quoted
-     *         for use in an ObjectName.
+     * for use in an ObjectName.
      */
     public String getName() {
         return ObjectName.quote(getNameInternal());
     }
-
 
     private String getNameInternal() {
         StringBuilder name = new StringBuilder(getNamePrefix());
@@ -373,7 +395,6 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         return name.toString();
     }
 
-
     public void addWaitingProcessor(Processor processor) {
         if (getLog().isDebugEnabled()) {
             getLog().debug(sm.getString("abstractProtocol.waitingProcessor.add", processor));
@@ -381,14 +402,12 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         waitingProcessors.add(processor);
     }
 
-
     public void removeWaitingProcessor(Processor processor) {
         if (getLog().isDebugEnabled()) {
             getLog().debug(sm.getString("abstractProtocol.waitingProcessor.remove", processor));
         }
         waitingProcessors.remove(processor);
     }
-
 
     /*
      * Primarily for debugging and testing. Could be exposed via JMX if
@@ -398,13 +417,11 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         return waitingProcessors.size();
     }
 
-
     // ----------------------------------------------- Accessors for sub-classes
 
-    protected AbstractEndpoint<S,?> getEndpoint() {
+    protected AbstractEndpoint<S, ?> getEndpoint() {
         return endpoint;
     }
-
 
     protected Handler<S> getHandler() {
         return handler;
@@ -414,20 +431,20 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         this.handler = handler;
     }
 
-
     // -------------------------------------------------------- Abstract methods
 
     /**
      * Concrete implementations need to provide access to their logger to be
      * used by the abstract classes.
+     *
      * @return the logger
      */
     protected abstract Log getLog();
 
-
     /**
      * Obtain the prefix to be used when construction a name for this protocol
      * handler. The name will be prefix-address-port.
+     *
      * @return the prefix
      */
     protected abstract String getNamePrefix();
@@ -435,6 +452,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
 
     /**
      * Obtain the name of the protocol, (Http, Ajp, etc.). Used with JMX.
+     *
      * @return the protocol name
      */
     protected abstract String getProtocolName();
@@ -443,9 +461,10 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
     /**
      * Find a suitable handler for the protocol negotiated
      * at the network layer.
+     *
      * @param name The name of the requested negotiated protocol.
      * @return The instance where {@link UpgradeProtocol#getAlpnName()} matches
-     *         the requested protocol
+     * the requested protocol
      */
     protected abstract UpgradeProtocol getNegotiatedProtocol(String name);
 
@@ -453,9 +472,10 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
     /**
      * Find a suitable handler for the protocol upgraded name specified. This
      * is used for direct connection protocol selection.
+     *
      * @param name The name of the requested negotiated protocol.
      * @return The instance where {@link UpgradeProtocol#getAlpnName()} matches
-     *         the requested protocol
+     * the requested protocol
      */
     protected abstract UpgradeProtocol getUpgradeProtocol(String name);
 
@@ -468,11 +488,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
      */
     protected abstract Processor createProcessor();
 
-
-    protected abstract Processor createUpgradeProcessor(
-            SocketWrapperBase<?> socket,
-            UpgradeToken upgradeToken);
-
+    protected abstract Processor createUpgradeProcessor(SocketWrapperBase<?> socket, UpgradeToken upgradeToken);
 
     // ----------------------------------------------------- JMX related methods
 
@@ -490,7 +506,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
 
     @Override
     public ObjectName preRegister(MBeanServer server, ObjectName name)
-            throws Exception {
+        throws Exception {
         oname = name;
         mserver = server;
         domain = name.getDomain();
@@ -564,17 +580,15 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         if (this.domain != null) {
             ObjectName rgOname = new ObjectName(domain + ":type=GlobalRequestProcessor,name=" + getName());
             this.rgOname = rgOname;
-            Registry.getRegistry(null, null).registerComponent(
-                    getHandler().getGlobal(), rgOname, null);
+            Registry.getRegistry(null, null).registerComponent(getHandler().getGlobal(), rgOname, null);
         }
 
         String endpointName = getName();
-        endpoint.setName(endpointName.substring(1, endpointName.length()-1));
+        endpoint.setName(endpointName.substring(1, endpointName.length() - 1));
         endpoint.setDomain(domain);
 
         endpoint.init();
     }
-
 
     @Override
     public void start() throws Exception {
@@ -583,13 +597,12 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
             logPortOffset();
         }
 
+        // 本质是调用endpoint的start方法
         endpoint.start();
-        monitorFuture = getUtilityExecutor().scheduleWithFixedDelay(
-                () -> {
-                    startAsyncTimeout();
-                }, 0, 60, TimeUnit.SECONDS);
-    }
 
+        // 启动一个异步的线程，处理startAsyncTimeout方法，每隔60秒执行一次
+        monitorFuture = getUtilityExecutor().scheduleWithFixedDelay(() -> startAsyncTimeout(), 0, 60, TimeUnit.SECONDS);
+    }
 
     /**
      * Note: The name of this method originated with the Servlet 3.0
@@ -607,12 +620,12 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 }
             }
             timeoutFuture = getUtilityExecutor().scheduleAtFixedRate(
-                    () -> {
-                        long now = System.currentTimeMillis();
-                        for (Processor processor : waitingProcessors) {
-                            processor.timeoutAsync(now);
-                        }
-                    }, 1, 1, TimeUnit.SECONDS);
+                () -> {
+                    long now = System.currentTimeMillis();
+                    for (Processor processor : waitingProcessors) {
+                        processor.timeoutAsync(now);
+                    }
+                }, 1, 1, TimeUnit.SECONDS);
         }
     }
 
@@ -640,7 +653,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
 
     @Override
     public void resume() throws Exception {
-        if(getLog().isInfoEnabled()) {
+        if (getLog().isInfoEnabled()) {
             getLog().info(sm.getString("abstractProtocolHandler.resume", getName()));
         }
 
@@ -650,7 +663,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
 
     @Override
     public void stop() throws Exception {
-        if(getLog().isInfoEnabled()) {
+        if (getLog().isInfoEnabled()) {
             getLog().info(sm.getString("abstractProtocolHandler.stop", getName()));
             logPortOffset();
         }
@@ -671,7 +684,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
 
     @Override
     public void destroy() throws Exception {
-        if(getLog().isInfoEnabled()) {
+        if (getLog().isInfoEnabled()) {
             getLog().info(sm.getString("abstractProtocolHandler.destroy", getName()));
             logPortOffset();
         }
@@ -688,7 +701,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                         mserver.unregisterMBean(oname);
                     } catch (MBeanRegistrationException | InstanceNotFoundException e) {
                         getLog().info(sm.getString("abstractProtocol.mbeanDeregistrationFailed",
-                                oname, mserver));
+                            oname, mserver));
                     }
                 }
             }
@@ -710,7 +723,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
     @Override
     public long awaitConnectionsClose(long waitMillis) {
         getLog().info(sm.getString("abstractProtocol.closeConnectionsAwait",
-                Long.valueOf(waitMillis), getName()));
+            Long.valueOf(waitMillis), getName()));
         return endpoint.awaitConnectionsClose(waitMillis);
     }
 
@@ -718,10 +731,9 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
     private void logPortOffset() {
         if (getPort() != getPortWithOffset()) {
             getLog().info(sm.getString("abstractProtocolHandler.portOffset", getName(),
-                    String.valueOf(getPort()), String.valueOf(getPortOffset())));
+                String.valueOf(getPort()), String.valueOf(getPortOffset())));
         }
     }
-
 
     // ------------------------------------------- Connection handler base class
 
@@ -758,8 +770,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         @Override
         public SocketState process(SocketWrapperBase<S> wrapper, SocketEvent status) {
             if (getLog().isDebugEnabled()) {
-                getLog().debug(sm.getString("abstractConnectionHandler.process",
-                        wrapper.getSocket(), status));
+                getLog().debug(sm.getString("abstractConnectionHandler.process", wrapper.getSocket(), status));
             }
             if (wrapper == null) {
                 // Nothing to do. Socket has been closed.
@@ -774,8 +785,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
             // method returns.
             Processor processor = (Processor) wrapper.takeCurrentProcessor();
             if (getLog().isDebugEnabled()) {
-                getLog().debug(sm.getString("abstractConnectionHandler.connectionsGet",
-                        processor, socket));
+                getLog().debug(sm.getString("abstractConnectionHandler.connectionsGet", processor, socket));
             }
 
             // Timeouts are calculated on a dedicated thread and then
@@ -783,8 +793,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
             // timeout may no longer be required. Check here and avoid
             // unnecessary processing.
             if (SocketEvent.TIMEOUT == status &&
-                    (processor == null ||
-                    !processor.isAsync() && !processor.isUpgrade() ||
+                (processor == null || !processor.isAsync() && !processor.isUpgrade() ||
                     processor.isAsync() && !processor.checkAsyncTimeoutGeneration())) {
                 // This is effectively a NO-OP
                 return SocketState.OPEN;
@@ -824,7 +833,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                             // block.
                             if (getLog().isDebugEnabled()) {
                                 getLog().debug(sm.getString("abstractConnectionHandler.negotiatedProcessor.fail",
-                                        negotiatedProtocol));
+                                    negotiatedProtocol));
                             }
                             return SocketState.CLOSED;
                             /*
@@ -856,6 +865,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
 
                 SocketState state = SocketState.CLOSED;
                 do {
+                    // 处理http协议
                     state = processor.process(wrapper, status);
 
                     if (state == SocketState.UPGRADING) {
@@ -890,7 +900,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                             processor = getProtocol().createUpgradeProcessor(wrapper, upgradeToken);
                             if (getLog().isDebugEnabled()) {
                                 getLog().debug(sm.getString("abstractConnectionHandler.upgradeCreate",
-                                        processor, wrapper));
+                                    processor, wrapper));
                             }
                             // Initialise the upgrade handler (which may trigger
                             // some IO using the new protocol which is why the lines
@@ -916,7 +926,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                             }
                         }
                     }
-                } while ( state == SocketState.UPGRADING);
+                } while (state == SocketState.UPGRADING);
 
                 if (state == SocketState.LONG) {
                     // In the middle of processing a request/response. Keep the
@@ -988,19 +998,19 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                     wrapper.setCurrentProcessor(processor);
                 }
                 return state;
-            } catch(java.net.SocketException e) {
+            } catch (java.net.SocketException e) {
                 // SocketExceptions are normal
                 getLog().debug(sm.getString(
-                        "abstractConnectionHandler.socketexception.debug"), e);
+                    "abstractConnectionHandler.socketexception.debug"), e);
             } catch (java.io.IOException e) {
                 // IOExceptions are normal
                 getLog().debug(sm.getString(
-                        "abstractConnectionHandler.ioexception.debug"), e);
+                    "abstractConnectionHandler.ioexception.debug"), e);
             } catch (ProtocolException e) {
                 // Protocol exceptions normally mean the client sent invalid or
                 // incomplete data.
                 getLog().debug(sm.getString(
-                        "abstractConnectionHandler.protocolexception.debug"), e);
+                    "abstractConnectionHandler.protocolexception.debug"), e);
             }
             // Future developers: if you discover any other
             // rare-but-nonfatal exceptions, catch them here, and log as
@@ -1090,11 +1100,10 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 synchronized (this) {
                     try {
                         long count = registerCount.incrementAndGet();
-                        RequestInfo rp =
-                            processor.getRequest().getRequestProcessor();
+                        RequestInfo rp = processor.getRequest().getRequestProcessor();
                         rp.setGlobalProcessor(global);
                         ObjectName rpName = new ObjectName(
-                                getProtocol().getDomain() +
+                            getProtocol().getDomain() +
                                 ":type=RequestProcessor,worker="
                                 + getProtocol().getName() +
                                 ",name=" + getProtocol().getProtocolName() +
@@ -1103,7 +1112,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                             getLog().debug("Register [" + processor + "] as [" + rpName + "]");
                         }
                         Registry.getRegistry(null, null).registerComponent(rp,
-                                rpName, null);
+                            rpName, null);
                         rp.setRpName(rpName);
                     } catch (Exception e) {
                         getLog().warn(sm.getString("abstractProtocol.processorRegisterError"), e);
@@ -1128,7 +1137,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                             getLog().debug("Unregister [" + rpName + "]");
                         }
                         Registry.getRegistry(null, null).unregisterComponent(
-                                rpName);
+                            rpName);
                         rp.setRpName(null);
                     } catch (Exception e) {
                         getLog().warn(sm.getString("abstractProtocol.processorUnregisterError"), e);

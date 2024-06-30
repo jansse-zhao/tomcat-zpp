@@ -38,28 +38,22 @@ public class SetNextRule extends Rule {
      * Construct a "set next" rule with the specified method name.
      *
      * @param methodName Method name of the parent method to call
-     * @param paramType Java class of the parent method's argument
-     *  (if you wish to use a primitive type, specify the corresponding
-     *  Java wrapper class instead, such as <code>java.lang.Boolean</code>
-     *  for a <code>boolean</code> parameter)
+     * @param paramType  Java class of the parent method's argument
+     *                   (if you wish to use a primitive type, specify the corresponding
+     *                   Java wrapper class instead, such as <code>java.lang.Boolean</code>
+     *                   for a <code>boolean</code> parameter)
      */
-    public SetNextRule(String methodName,
-                       String paramType) {
-
+    public SetNextRule(String methodName, String paramType) {
         this.methodName = methodName;
         this.paramType = paramType;
-
     }
 
-
     // ----------------------------------------------------- Instance Variables
-
 
     /**
      * The method name to call on the parent object.
      */
     protected String methodName = null;
-
 
     /**
      * The Java class name of the parameter type expected by the method.
@@ -68,11 +62,11 @@ public class SetNextRule extends Rule {
 
     /**
      * Should we use exact matching. Default is no.
+     * 是否使用精确匹配
      */
     protected boolean useExactMatch = false;
 
     // --------------------------------------------------------- Public Methods
-
 
     /**
      * <p>Is exact matching being used.</p>
@@ -95,7 +89,6 @@ public class SetNextRule extends Rule {
      * @since Digester Release 1.1.1
      */
     public boolean isExactMatch() {
-
         return useExactMatch;
     }
 
@@ -108,7 +101,6 @@ public class SetNextRule extends Rule {
      * @since Digester Release 1.1.1
      */
     public void setExactMatch(boolean useExactMatch) {
-
         this.useExactMatch = useExactMatch;
     }
 
@@ -116,32 +108,26 @@ public class SetNextRule extends Rule {
      * Process the end of this element.
      *
      * @param namespace the namespace URI of the matching element, or an
-     *   empty string if the parser is not namespace aware or the element has
-     *   no namespace
-     * @param name the local name if the parser is namespace aware, or just
-     *   the element name otherwise
+     *                  empty string if the parser is not namespace aware or the element has
+     *                  no namespace
+     * @param name      the local name if the parser is namespace aware, or just
+     *                  the element name otherwise
      */
     @Override
     public void end(String namespace, String name) throws Exception {
-
         // Identify the objects to be used
         Object child = digester.peek(0);
         Object parent = digester.peek(1);
         if (digester.log.isDebugEnabled()) {
             if (parent == null) {
-                digester.log.debug("[SetNextRule]{" + digester.match +
-                        "} Call [NULL PARENT]." +
-                        methodName + "(" + child + ")");
+                digester.log.debug("[SetNextRule]{" + digester.match + "} Call [NULL PARENT]." + methodName + "(" + child + ")");
             } else {
-                digester.log.debug("[SetNextRule]{" + digester.match +
-                        "} Call " + parent.getClass().getName() + "." +
-                        methodName + "(" + child + ")");
+                digester.log.debug("[SetNextRule]{" + digester.match + "} Call " + parent.getClass().getName() + "." + methodName + "(" + child + ")");
             }
         }
 
         // Call the specified method
-        IntrospectionUtils.callMethod1(parent, methodName,
-                child, paramType, digester.getClassLoader());
+        IntrospectionUtils.callMethod1(parent, methodName, child, paramType, digester.getClassLoader());
 
         StringBuilder code = digester.getGeneratedCode();
         if (code != null) {
@@ -150,7 +136,6 @@ public class SetNextRule extends Rule {
             code.append(System.lineSeparator());
         }
     }
-
 
     /**
      * Render a printable version of this Rule.
@@ -165,6 +150,5 @@ public class SetNextRule extends Rule {
         sb.append(']');
         return sb.toString();
     }
-
 
 }

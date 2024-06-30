@@ -56,6 +56,10 @@ import java.util.*;
  * <p><strong>IMPLEMENTATION NOTE</strong> - A bug in Xerces 2.0.2 prevents
  * the support of XML schema. You need Xerces 2.1/2.3 and up to make
  * this class working with XML schema</p>
+ * <p>
+ * 解析XML，生成对象实例对象
+ * 实现DefaultHandler的startDocument、startElement、endDocument、endElement等方法，实现对xml文件的解析，
+ * 以及实例对象的属性填充和方法调用
  */
 public class Digester extends DefaultHandler2 {
 
@@ -86,7 +90,7 @@ public class Digester extends DefaultHandler2 {
                     }
                 }
             }
-            sources = sourcesList.toArray(new IntrospectionUtils.PropertySource[ 0 ]);
+            sources = sourcesList.toArray(new IntrospectionUtils.PropertySource[0]);
         }
         if (sources != null) {
             propertySources = sources;
@@ -99,8 +103,8 @@ public class Digester extends DefaultHandler2 {
 
     public static void setPropertySource(IntrospectionUtils.PropertySource propertySource) {
         if (!propertySourcesSet) {
-            propertySources = new IntrospectionUtils.PropertySource[ 1 ];
-            propertySources[ 0 ] = propertySource;
+            propertySources = new IntrospectionUtils.PropertySource[1];
+            propertySources[0] = propertySource;
             propertySourcesSet = true;
         }
     }
@@ -119,7 +123,7 @@ public class Digester extends DefaultHandler2 {
     }
 
     public static String[] getGeneratedClasses() {
-        return generatedClasses.toArray(new String[ 0 ]);
+        return generatedClasses.toArray(new String[0]);
     }
 
     public interface GeneratedCodeLoader {
@@ -270,6 +274,7 @@ public class Digester extends DefaultHandler2 {
 
     /**
      * The object stack being constructed.
+     * 对象栈
      */
     protected ArrayStack<Object> stack = new ArrayStack<>();
 
@@ -325,7 +330,7 @@ public class Digester extends DefaultHandler2 {
         if (!systemPropertySourceFound) {
             sourcesList.add(new SystemPropertySource());
         }
-        source = sourcesList.toArray(new IntrospectionUtils.PropertySource[ 0 ]);
+        source = sourcesList.toArray(new IntrospectionUtils.PropertySource[0]);
     }
 
     public static void replaceSystemProperties() {
@@ -838,13 +843,11 @@ public class Digester extends DefaultHandler2 {
      */
     @Override
     public void characters(char buffer[], int start, int length) throws SAXException {
-
         if (saxLog.isDebugEnabled()) {
             saxLog.debug("characters(" + new String(buffer, start, length) + ")");
         }
 
         bodyText.append(buffer, start, length);
-
     }
 
     /**
@@ -854,7 +857,6 @@ public class Digester extends DefaultHandler2 {
      */
     @Override
     public void endDocument() throws SAXException {
-
         if (saxLog.isDebugEnabled()) {
             if (getCount() > 1) {
                 saxLog.debug("endDocument():  " + getCount() + " elements left");
@@ -882,7 +884,6 @@ public class Digester extends DefaultHandler2 {
 
         // Perform final cleanup
         clear();
-
     }
 
     /**
@@ -891,10 +892,13 @@ public class Digester extends DefaultHandler2 {
      * @param namespaceURI - The Namespace URI, or the empty string if the
      *                     element has no Namespace URI or if Namespace processing is not
      *                     being performed.
+     *                     名称空间URI，如果元素没有名称空间URI，或者没有执行名称空间处理，则使用空字符串。
      * @param localName    - The local name (without prefix), or the empty
      *                     string if Namespace processing is not being performed.
+     *                     本地名称(不带前缀)，如果未执行命名空间处理，则为空字符串。
      * @param qName        - The qualified XML 1.0 name (with prefix), or the
      *                     empty string if qualified names are not available.
+     *                     限定的XML 1.0名称(带前缀)，如果没有限定的名称，则使用空字符串。
      * @throws SAXException if a parsing error is to be reported
      */
     @Override
@@ -977,9 +981,7 @@ public class Digester extends DefaultHandler2 {
         } else {
             match = "";
         }
-
     }
-
 
     /**
      * Process notification that a namespace prefix is going out of scope.
@@ -989,7 +991,6 @@ public class Digester extends DefaultHandler2 {
      */
     @Override
     public void endPrefixMapping(String prefix) throws SAXException {
-
         if (saxLog.isDebugEnabled()) {
             saxLog.debug("endPrefixMapping(" + prefix + ")");
         }
@@ -1007,9 +1008,7 @@ public class Digester extends DefaultHandler2 {
         } catch (EmptyStackException e) {
             throw createSAXException(sm.getString("digester.emptyStackError"));
         }
-
     }
-
 
     /**
      * Process notification of ignorable whitespace received from the body of
@@ -1022,15 +1021,12 @@ public class Digester extends DefaultHandler2 {
      */
     @Override
     public void ignorableWhitespace(char buffer[], int start, int len) throws SAXException {
-
         if (saxLog.isDebugEnabled()) {
             saxLog.debug("ignorableWhitespace(" + new String(buffer, start, len) + ")");
         }
 
         // No processing required
-
     }
-
 
     /**
      * Process notification of a processing instruction that was encountered.
@@ -1041,15 +1037,12 @@ public class Digester extends DefaultHandler2 {
      */
     @Override
     public void processingInstruction(String target, String data) throws SAXException {
-
         if (saxLog.isDebugEnabled()) {
             saxLog.debug("processingInstruction('" + target + "','" + data + "')");
         }
 
         // No processing is required
-
     }
-
 
     /**
      * Gets the document locator associated with our parser.
@@ -1057,9 +1050,7 @@ public class Digester extends DefaultHandler2 {
      * @return the Locator supplied by the document parser
      */
     public Locator getDocumentLocator() {
-
         return locator;
-
     }
 
     /**
@@ -1069,15 +1060,12 @@ public class Digester extends DefaultHandler2 {
      */
     @Override
     public void setDocumentLocator(Locator locator) {
-
         if (saxLog.isDebugEnabled()) {
             saxLog.debug("setDocumentLocator(" + locator + ")");
         }
 
         this.locator = locator;
-
     }
-
 
     /**
      * Process notification of a skipped entity.
@@ -1087,15 +1075,12 @@ public class Digester extends DefaultHandler2 {
      */
     @Override
     public void skippedEntity(String name) throws SAXException {
-
         if (saxLog.isDebugEnabled()) {
             saxLog.debug("skippedEntity(" + name + ")");
         }
 
         // No processing required
-
     }
-
 
     /**
      * Process notification of the beginning of the document being reached.
@@ -1104,7 +1089,6 @@ public class Digester extends DefaultHandler2 {
      */
     @Override
     public void startDocument() throws SAXException {
-
         if (saxLog.isDebugEnabled()) {
             saxLog.debug("startDocument()");
         }
@@ -1128,7 +1112,6 @@ public class Digester extends DefaultHandler2 {
         configure();
     }
 
-
     /**
      * Process notification of the start of an XML element being reached.
      *
@@ -1143,8 +1126,7 @@ public class Digester extends DefaultHandler2 {
      * @throws SAXException if a parsing error is to be reported
      */
     @Override
-    public void startElement(String namespaceURI, String localName, String qName, Attributes list)
-        throws SAXException {
+    public void startElement(String namespaceURI, String localName, String qName, Attributes list) throws SAXException {
         boolean debug = log.isDebugEnabled();
 
         if (saxLog.isDebugEnabled()) {
@@ -1200,9 +1182,7 @@ public class Digester extends DefaultHandler2 {
                 log.debug(sm.getString("digester.noRulesFound", match));
             }
         }
-
     }
-
 
     /**
      * Process notification that a namespace prefix is coming in to scope.
@@ -1213,7 +1193,6 @@ public class Digester extends DefaultHandler2 {
      */
     @Override
     public void startPrefixMapping(String prefix, String namespaceURI) throws SAXException {
-
         if (saxLog.isDebugEnabled()) {
             saxLog.debug("startPrefixMapping(" + prefix + "," + namespaceURI + ")");
         }
@@ -1225,12 +1204,9 @@ public class Digester extends DefaultHandler2 {
             namespaces.put(prefix, stack);
         }
         stack.push(namespaceURI);
-
     }
 
-
     // ----------------------------------------------------- DTDHandler Methods
-
 
     /**
      * Receive notification of a notation declaration event.
@@ -1241,13 +1217,10 @@ public class Digester extends DefaultHandler2 {
      */
     @Override
     public void notationDecl(String name, String publicId, String systemId) {
-
         if (saxLog.isDebugEnabled()) {
             saxLog.debug("notationDecl(" + name + "," + publicId + "," + systemId + ")");
         }
-
     }
-
 
     /**
      * Receive notification of an unparsed entity declaration event.
@@ -1259,14 +1232,11 @@ public class Digester extends DefaultHandler2 {
      */
     @Override
     public void unparsedEntityDecl(String name, String publicId, String systemId, String notation) {
-
         if (saxLog.isDebugEnabled()) {
             saxLog.debug("unparsedEntityDecl(" + name + "," + publicId + "," + systemId + ","
                 + notation + ")");
         }
-
     }
-
 
     // ----------------------------------------------- EntityResolver Methods
 
@@ -1281,7 +1251,6 @@ public class Digester extends DefaultHandler2 {
         this.entityResolver = entityResolver;
     }
 
-
     /**
      * Return the Entity Resolver used by the SAX parser.
      *
@@ -1292,12 +1261,9 @@ public class Digester extends DefaultHandler2 {
     }
 
     @Override
-    public InputSource resolveEntity(String name, String publicId, String baseURI, String systemId)
-        throws SAXException, IOException {
-
+    public InputSource resolveEntity(String name, String publicId, String baseURI, String systemId) throws SAXException, IOException {
         if (saxLog.isDebugEnabled()) {
-            saxLog.debug(
-                "resolveEntity('" + publicId + "', '" + systemId + "', '" + baseURI + "')");
+            saxLog.debug("resolveEntity('" + publicId + "', '" + systemId + "', '" + baseURI + "')");
         }
 
         // Has this system identifier been registered?
@@ -1313,7 +1279,6 @@ public class Digester extends DefaultHandler2 {
                     log.debug(" Cannot resolve entity: '" + publicId + "'");
                 }
                 return null;
-
             } else {
                 // try to resolve using system ID
                 if (log.isDebugEnabled()) {
@@ -1348,14 +1313,12 @@ public class Digester extends DefaultHandler2 {
         }
     }
 
-
     // ----------------------------------------------- LexicalHandler Methods
 
     @Override
     public void startDTD(String name, String publicId, String systemId) throws SAXException {
         setPublicId(publicId);
     }
-
 
     // ------------------------------------------------- ErrorHandler Methods
 
@@ -1375,7 +1338,6 @@ public class Digester extends DefaultHandler2 {
         }
     }
 
-
     /**
      * Forward notification of a fatal parsing error to the application
      * supplied error handler (if any).
@@ -1392,7 +1354,6 @@ public class Digester extends DefaultHandler2 {
         }
     }
 
-
     /**
      * Forward notification of a parse warning to the application supplied
      * error handler (if any).
@@ -1407,9 +1368,7 @@ public class Digester extends DefaultHandler2 {
         if (errorHandler != null) {
             errorHandler.warning(exception);
         }
-
     }
-
 
     // ------------------------------------------------------- Public Methods
 
@@ -1486,12 +1445,10 @@ public class Digester extends DefaultHandler2 {
      * @param entityURL The URL to use for reading this DTD
      */
     public void register(String publicId, String entityURL) {
-
         if (log.isDebugEnabled()) {
             log.debug("register('" + publicId + "', '" + entityURL + "'");
         }
         entityValidator.put(publicId, entityURL);
-
     }
 
     // --------------------------------------------------------- Rule Methods
@@ -1627,14 +1584,10 @@ public class Digester extends DefaultHandler2 {
     }
 
     public void addSetProperties(String pattern, String[] excludes) {
-
         addRule(pattern, new SetPropertiesRule(excludes));
-
     }
 
-
     // --------------------------------------------------- Object Stack Methods
-
 
     /**
      * Clear the current contents of the object stack.
@@ -1645,7 +1598,6 @@ public class Digester extends DefaultHandler2 {
      * each document to be parsed.
      */
     public void clear() {
-
         match = "";
         bodyTexts.clear();
         params.clear();
@@ -1654,9 +1606,7 @@ public class Digester extends DefaultHandler2 {
         log = null;
         saxLog = null;
         configured = false;
-
     }
-
 
     public void reset() {
         root = null;
@@ -1680,7 +1630,6 @@ public class Digester extends DefaultHandler2 {
         }
     }
 
-
     /**
      * Return the n'th object down the stack, where 0 is the top element
      * and [getCount()-1] is the bottom element.  If the specified index
@@ -1698,7 +1647,6 @@ public class Digester extends DefaultHandler2 {
             return null;
         }
     }
-
 
     /**
      * Pop the top object off of the stack, and return it.  If there are
@@ -1758,7 +1706,6 @@ public class Digester extends DefaultHandler2 {
      * </p>
      */
     protected void configure() {
-
         // Do not configure more than once
         if (configured) {
             return;
@@ -1823,7 +1770,6 @@ public class Digester extends DefaultHandler2 {
             log.trace("Pushing params");
         }
         params.push(object);
-
     }
 
     /**
@@ -1907,7 +1853,6 @@ public class Digester extends DefaultHandler2 {
      * replaced by the appropriate value from the system property.
      */
     private Attributes updateAttributes(Attributes list) {
-
         if (list.getLength() == 0) {
             return list;
         }
@@ -1950,7 +1895,6 @@ public class Digester extends DefaultHandler2 {
     }
 
     private static class EntityResolverWrapper implements EntityResolver {
-
         private final EntityResolver entityResolver;
         private final PropertySource[] source;
         private final ClassLoader classLoader;
@@ -1979,7 +1923,6 @@ public class Digester extends DefaultHandler2 {
     }
 
     private static class EntityResolver2Wrapper extends EntityResolverWrapper implements EntityResolver2 {
-
         private final EntityResolver2 entityResolver2;
 
         public EntityResolver2Wrapper(EntityResolver2 entityResolver, PropertySource[] source,

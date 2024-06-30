@@ -18,6 +18,8 @@ package org.apache.catalina;
 
 /**
  * Global constants that are applicable to multiple packages within Catalina.
+ * <p>
+ * 适用于Catalina中的多个包的全局常量。
  *
  * @author Craig R. McClanahan
  */
@@ -27,28 +29,23 @@ public final class Globals {
 
     public static final String ASYNC_SUPPORTED_ATTR = "org.apache.catalina.ASYNC_SUPPORTED";
 
-
     public static final String GSS_CREDENTIAL_ATTR = "org.apache.catalina.realm.GSS_CREDENTIAL";
-
 
     /**
      * Request dispatcher state.
      */
     public static final String DISPATCHER_TYPE_ATTR = "org.apache.catalina.core.DISPATCHER_TYPE";
 
-
     /**
      * Request dispatcher path.
      */
     public static final String DISPATCHER_REQUEST_PATH_ATTR = "org.apache.catalina.core.DISPATCHER_REQUEST_PATH";
-
 
     /**
      * The request attribute under which we store the servlet name on a
      * named dispatcher request.
      */
     public static final String NAMED_DISPATCHER_ATTR = "org.apache.catalina.NAMED";
-
 
     /**
      * The request attribute that is set to {@code Boolean.TRUE} if some request
@@ -59,12 +56,10 @@ public final class Globals {
      */
     public static final String PARAMETER_PARSE_FAILED_ATTR = "org.apache.catalina.parameter_parse_failed";
 
-
     /**
      * The reason that the parameter parsing failed.
      */
     public static final String PARAMETER_PARSE_FAILED_REASON_ATTR = "org.apache.catalina.parameter_parse_failed_reason";
-
 
     /**
      * The request attribute set by the RemoteIpFilter, RemoteIpValve (and may
@@ -77,14 +72,12 @@ public final class Globals {
      */
     public static final String REMOTE_ADDR_ATTRIBUTE = org.apache.coyote.Constants.REMOTE_ADDR_ATTRIBUTE;
 
-
     /**
      * The request attribute that is set to the value of {@code Boolean.TRUE}
      * by the RemoteIpFilter, RemoteIpValve (and other similar components) that identifies
      * a request which been forwarded via one or more proxies.
      */
     public static final String REQUEST_FORWARDED_ATTRIBUTE = "org.apache.tomcat.request.forwarded";
-
 
     /**
      * The request attribute that is set to the value of {@code Boolean.TRUE}
@@ -93,7 +86,6 @@ public final class Globals {
      * Duplicated here for neater code in the catalina packages.
      */
     public static final String SENDFILE_SUPPORTED_ATTR = org.apache.coyote.Constants.SENDFILE_SUPPORTED_ATTR;
-
 
     /**
      * The request attribute that can be used by a servlet to pass
@@ -104,7 +96,6 @@ public final class Globals {
      * Duplicated here for neater code in the catalina packages.
      */
     public static final String SENDFILE_FILENAME_ATTR = org.apache.coyote.Constants.SENDFILE_FILENAME_ATTR;
-
 
     /**
      * The request attribute that can be used by a servlet to pass
@@ -117,7 +108,6 @@ public final class Globals {
      */
     public static final String SENDFILE_FILE_START_ATTR = org.apache.coyote.Constants.SENDFILE_FILE_START_ATTR;
 
-
     /**
      * The request attribute that can be used by a servlet to pass
      * to the connector the end offset (not including) of the part
@@ -129,14 +119,12 @@ public final class Globals {
      */
     public static final String SENDFILE_FILE_END_ATTR = org.apache.coyote.Constants.SENDFILE_FILE_END_ATTR;
 
-
     /**
      * The request attribute under which we store the array of X509Certificate
      * objects representing the certificate chain presented by our client,
      * if any.
      */
     public static final String CERTIFICATES_ATTR = "jakarta.servlet.request.X509Certificate";
-
 
     /**
      * The request attribute under which we store the name of the cipher suite
@@ -145,13 +133,11 @@ public final class Globals {
      */
     public static final String CIPHER_SUITE_ATTR = "jakarta.servlet.request.cipher_suite";
 
-
     /**
      * The request attribute under which we store the key size being used for
      * this SSL connection (as an object of type java.lang.Integer).
      */
     public static final String KEY_SIZE_ATTR = "jakarta.servlet.request.key_size";
-
 
     /**
      * The request attribute under which we store the session id being used
@@ -159,13 +145,11 @@ public final class Globals {
      */
     public static final String SSL_SESSION_ID_ATTR = "jakarta.servlet.request.ssl_session_id";
 
-
     /**
      * The request attribute key for the session manager.
      * This one is a Tomcat extension to the Servlet spec.
      */
     public static final String SSL_SESSION_MGR_ATTR = "jakarta.servlet.request.ssl_session_mgr";
-
 
     // ------------------------------------------------- Session attribute names
 
@@ -173,7 +157,6 @@ public final class Globals {
      * The subject under which the AccessControlContext is running.
      */
     public static final String SUBJECT_ATTR = "javax.security.auth.subject";
-
 
     // ------------------------------------------ ServletContext attribute names
 
@@ -183,14 +166,12 @@ public final class Globals {
      */
     public static final String ALT_DD_ATTR = "org.apache.catalina.deploy.alt_dd";
 
-
     /**
      * The servlet context attribute under which we store the class path
      * for our application class loader (as an object of type String),
      * delimited with the appropriate path delimiter for this platform.
      */
     public static final String CLASS_PATH_ATTR = "org.apache.catalina.jsp_classpath";
-
 
     /**
      * Name of the ServletContext attribute under which we store the context
@@ -199,13 +180,11 @@ public final class Globals {
      */
     public static final String CREDENTIAL_HANDLER = "org.apache.catalina.CredentialHandler";
 
-
     /**
      * The WebResourceRoot which is associated with the context. This can be
      * used to manipulate static files.
      */
     public static final String RESOURCES_ATTR = "org.apache.catalina.resources";
-
 
     /**
      * Name of the ServletContext attribute under which we store the web
@@ -213,7 +192,6 @@ public final class Globals {
      * deployment is used).
      */
     public static final String WEBAPP_VERSION = "org.apache.catalina.webappVersion";
-
 
     // --------------------------- ServletContext initialisation parameter names
 
@@ -225,7 +203,6 @@ public final class Globals {
      */
     public static final String JASPER_XML_VALIDATION_TLD_INIT_PARAM = "org.apache.jasper.XML_VALIDATE_TLD";
 
-
     /**
      * Name of the ServletContext init-param that determines if the JSP engine
      * will block external entities from being used in *.tld, *.jspx, *.tagx and
@@ -235,7 +212,6 @@ public final class Globals {
      */
     public static final String JASPER_XML_BLOCK_EXTERNAL_INIT_PARAM = "org.apache.jasper.XML_BLOCK_EXTERNAL";
 
-
     // --------------------------------------------------- System property names
 
     /**
@@ -244,13 +220,11 @@ public final class Globals {
      */
     public static final String CATALINA_HOME_PROP = org.apache.catalina.startup.Constants.CATALINA_HOME_PROP;
 
-
     /**
      * Name of the system property containing
      * the tomcat instance installation path
      */
     public static final String CATALINA_BASE_PROP = org.apache.catalina.startup.Constants.CATALINA_BASE_PROP;
-
 
     // -------------------------------------------------------- Global constants
 

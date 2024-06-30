@@ -16,30 +16,9 @@
  */
 package org.apache.coyote.http11;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
-
-import javax.management.ObjectInstance;
-import javax.management.ObjectName;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpUpgradeHandler;
-
-import org.apache.coyote.AbstractProtocol;
-import org.apache.coyote.CompressionConfig;
-import org.apache.coyote.ContinueResponseTiming;
-import org.apache.coyote.Processor;
-import org.apache.coyote.Request;
-import org.apache.coyote.Response;
-import org.apache.coyote.UpgradeProtocol;
-import org.apache.coyote.UpgradeToken;
+import org.apache.coyote.*;
 import org.apache.coyote.http11.upgrade.InternalHttpUpgradeHandler;
 import org.apache.coyote.http11.upgrade.UpgradeGroupInfo;
 import org.apache.coyote.http11.upgrade.UpgradeProcessorExternal;
@@ -53,19 +32,22 @@ import org.apache.tomcat.util.net.SocketWrapperBase;
 import org.apache.tomcat.util.net.openssl.OpenSSLImplementation;
 import org.apache.tomcat.util.res.StringManager;
 
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
+
 public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
 
-    protected static final StringManager sm =
-            StringManager.getManager(AbstractHttp11Protocol.class);
+    protected static final StringManager sm = StringManager.getManager(AbstractHttp11Protocol.class);
 
     private final CompressionConfig compressionConfig = new CompressionConfig();
 
-
-    public AbstractHttp11Protocol(AbstractEndpoint<S,?> endpoint) {
+    public AbstractHttp11Protocol(AbstractEndpoint<S, ?> endpoint) {
         super(endpoint);
         setConnectionTimeout(Constants.DEFAULT_CONNECTION_TIMEOUT);
     }
-
 
     @Override
     public void init() throws Exception {
@@ -86,7 +68,6 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
         }
     }
 
-
     @Override
     public void destroy() throws Exception {
         // There may be upgrade protocols with their own MBeans. These need to
@@ -104,12 +85,10 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
         super.destroy();
     }
 
-
     @Override
     protected String getProtocolName() {
         return "Http";
     }
-
 
     /**
      * {@inheritDoc}
@@ -117,64 +96,70 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
      * Over-ridden here to make the method visible to nested classes.
      */
     @Override
-    protected AbstractEndpoint<S,?> getEndpoint() {
+    protected AbstractEndpoint<S, ?> getEndpoint() {
         return super.getEndpoint();
     }
-
 
     // ------------------------------------------------ HTTP specific properties
     // ------------------------------------------ managed in the ProtocolHandler
 
     private ContinueResponseTiming continueResponseTiming = ContinueResponseTiming.IMMEDIATELY;
+
     public String getContinueResponseTiming() {
         return continueResponseTiming.toString();
     }
+
     public void setContinueResponseTiming(String continueResponseTiming) {
         this.continueResponseTiming = ContinueResponseTiming.fromString(continueResponseTiming);
     }
+
     public ContinueResponseTiming getContinueResponseTimingInternal() {
         return continueResponseTiming;
     }
 
-
     private boolean useKeepAliveResponseHeader = true;
+
     public boolean getUseKeepAliveResponseHeader() {
         return useKeepAliveResponseHeader;
     }
+
     public void setUseKeepAliveResponseHeader(boolean useKeepAliveResponseHeader) {
         this.useKeepAliveResponseHeader = useKeepAliveResponseHeader;
     }
 
-
     private String relaxedPathChars = null;
+
     public String getRelaxedPathChars() {
         return relaxedPathChars;
     }
+
     public void setRelaxedPathChars(String relaxedPathChars) {
         this.relaxedPathChars = relaxedPathChars;
     }
 
-
     private String relaxedQueryChars = null;
+
     public String getRelaxedQueryChars() {
         return relaxedQueryChars;
     }
+
     public void setRelaxedQueryChars(String relaxedQueryChars) {
         this.relaxedQueryChars = relaxedQueryChars;
     }
 
-
     private boolean allowHostHeaderMismatch = false;
+
     /**
      * Will Tomcat accept an HTTP 1.1 request where the host header does not
      * agree with the host specified (if any) in the request line?
      *
      * @return {@code true} if Tomcat will allow such requests, otherwise
-     *         {@code false}
+     * {@code false}
      */
     public boolean getAllowHostHeaderMismatch() {
         return allowHostHeaderMismatch;
     }
+
     /**
      * Will Tomcat accept an HTTP 1.1 request where the host header does not
      * agree with the host specified (if any) in the request line?
@@ -186,39 +171,45 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
         this.allowHostHeaderMismatch = allowHostHeaderMismatch;
     }
 
-
     private boolean rejectIllegalHeader = true;
+
     /**
      * If an HTTP request is received that contains an illegal header name or
      * value (e.g. the header name is not a token) will the request be rejected
      * (with a 400 response) or will the illegal header be ignored?
      *
      * @return {@code true} if the request will be rejected or {@code false} if
-     *         the header will be ignored
+     * the header will be ignored
      */
-    public boolean getRejectIllegalHeader() { return rejectIllegalHeader; }
+    public boolean getRejectIllegalHeader() {
+        return rejectIllegalHeader;
+    }
+
     /**
      * If an HTTP request is received that contains an illegal header name or
      * value (e.g. the header name is not a token) should the request be
      * rejected (with a 400 response) or should the illegal header be ignored?
      *
-     * @param rejectIllegalHeader   {@code true} to reject requests with illegal
-     *                              header names or values, {@code false} to
-     *                              ignore the header
+     * @param rejectIllegalHeader {@code true} to reject requests with illegal
+     *                            header names or values, {@code false} to
+     *                            ignore the header
      */
     public void setRejectIllegalHeader(boolean rejectIllegalHeader) {
         this.rejectIllegalHeader = rejectIllegalHeader;
     }
 
-
     private int maxSavePostSize = 4 * 1024;
+
     /**
      * Return the maximum size of the post which will be saved during FORM or
      * CLIENT-CERT authentication.
      *
      * @return The size in bytes
      */
-    public int getMaxSavePostSize() { return maxSavePostSize; }
+    public int getMaxSavePostSize() {
+        return maxSavePostSize;
+    }
+
     /**
      * Set the maximum size of a POST which will be buffered during FORM or
      * CLIENT-CERT authentication. When a POST is received where the security
@@ -232,14 +223,18 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
         this.maxSavePostSize = maxSavePostSize;
     }
 
-
     /**
      * Maximum size of the HTTP message header.
      */
     private int maxHttpHeaderSize = 8 * 1024;
-    public int getMaxHttpHeaderSize() { return maxHttpHeaderSize; }
-    public void setMaxHttpHeaderSize(int valueI) { maxHttpHeaderSize = valueI; }
 
+    public int getMaxHttpHeaderSize() {
+        return maxHttpHeaderSize;
+    }
+
+    public void setMaxHttpHeaderSize(int valueI) {
+        maxHttpHeaderSize = valueI;
+    }
 
     /**
      * Maximum size of the HTTP request message header.
@@ -254,7 +249,6 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
         maxHttpRequestHeaderSize = valueI;
     }
 
-
     /**
      * Maximum size of the HTTP response message header.
      */
@@ -268,15 +262,18 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
         maxHttpResponseHeaderSize = valueI;
     }
 
-
     private int connectionUploadTimeout = 300000;
+
     /**
      * Specifies a different (usually longer) connection timeout during data
      * upload. Default is 5 minutes as in Apache HTTPD server.
      *
      * @return The timeout in milliseconds
      */
-    public int getConnectionUploadTimeout() { return connectionUploadTimeout; }
+    public int getConnectionUploadTimeout() {
+        return connectionUploadTimeout;
+    }
+
     /**
      * Set the upload timeout.
      *
@@ -286,8 +283,8 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
         connectionUploadTimeout = timeout;
     }
 
-
     private boolean disableUploadTimeout = true;
+
     /**
      * Get the flag that controls upload time-outs. If true, the
      * connectionUploadTimeout will be ignored and the regular socket timeout
@@ -295,7 +292,10 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
      *
      * @return {@code true} if the separate upload timeout is disabled
      */
-    public boolean getDisableUploadTimeout() { return disableUploadTimeout; }
+    public boolean getDisableUploadTimeout() {
+        return disableUploadTimeout;
+    }
+
     /**
      * Set the flag to control whether a separate connection timeout is used
      * during upload of a request body.
@@ -311,9 +311,11 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     public void setCompression(String compression) {
         compressionConfig.setCompression(compression);
     }
+
     public String getCompression() {
         return compressionConfig.getCompression();
     }
+
     protected int getCompressionLevel() {
         return compressionConfig.getCompressionLevel();
     }
@@ -322,9 +324,11 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     public String getNoCompressionUserAgents() {
         return compressionConfig.getNoCompressionUserAgents();
     }
+
     protected Pattern getNoCompressionUserAgentsPattern() {
         return compressionConfig.getNoCompressionUserAgentsPattern();
     }
+
     public void setNoCompressionUserAgents(String noCompressionUserAgents) {
         compressionConfig.setNoCompressionUserAgents(noCompressionUserAgents);
     }
@@ -333,9 +337,11 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     public String getCompressibleMimeType() {
         return compressionConfig.getCompressibleMimeType();
     }
+
     public void setCompressibleMimeType(String valueS) {
         compressionConfig.setCompressibleMimeType(valueS);
     }
+
     public String[] getCompressibleMimeTypes() {
         return compressionConfig.getCompressibleMimeTypes();
     }
@@ -344,6 +350,7 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     public int getCompressionMinSize() {
         return compressionConfig.getCompressionMinSize();
     }
+
     public void setCompressionMinSize(int compressionMinSize) {
         compressionConfig.setCompressionMinSize(compressionMinSize);
     }
@@ -355,6 +362,7 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
 
 
     private Pattern restrictedUserAgents = null;
+
     /**
      * Get the string form of the regular expression that defines the User
      * agents which should be restricted to HTTP/1.0 support.
@@ -368,9 +376,11 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
             return restrictedUserAgents.toString();
         }
     }
+
     protected Pattern getRestrictedUserAgentsPattern() {
         return restrictedUserAgents;
     }
+
     /**
      * Set restricted user agent list (which will downgrade the connector
      * to HTTP/1.0 mode). Regular expression as supported by {@link Pattern}.
@@ -389,7 +399,11 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
 
 
     private String server;
-    public String getServer() { return server; }
+
+    public String getServer() {
+        return server;
+    }
+
     /**
      * Set the server header name.
      *
@@ -401,15 +415,19 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
 
 
     private boolean serverRemoveAppProvidedValues = false;
+
     /**
      * Should application provider values for the HTTP Server header be removed.
      * Note that if {@link #server} is set, any application provided value will
      * be over-ridden.
      *
      * @return {@code true} if application provided values should be removed,
-     *         otherwise {@code false}
+     * otherwise {@code false}
      */
-    public boolean getServerRemoveAppProvidedValues() { return serverRemoveAppProvidedValues; }
+    public boolean getServerRemoveAppProvidedValues() {
+        return serverRemoveAppProvidedValues;
+    }
+
     public void setServerRemoveAppProvidedValues(boolean serverRemoveAppProvidedValues) {
         this.serverRemoveAppProvidedValues = serverRemoveAppProvidedValues;
     }
@@ -419,7 +437,11 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
      * Maximum size of trailing headers in bytes
      */
     private int maxTrailerSize = 8192;
-    public int getMaxTrailerSize() { return maxTrailerSize; }
+
+    public int getMaxTrailerSize() {
+        return maxTrailerSize;
+    }
+
     public void setMaxTrailerSize(int maxTrailerSize) {
         this.maxTrailerSize = maxTrailerSize;
     }
@@ -429,7 +451,11 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
      * Maximum size of extension information in chunked encoding
      */
     private int maxExtensionSize = 8192;
-    public int getMaxExtensionSize() { return maxExtensionSize; }
+
+    public int getMaxExtensionSize() {
+        return maxExtensionSize;
+    }
+
     public void setMaxExtensionSize(int maxExtensionSize) {
         this.maxExtensionSize = maxExtensionSize;
     }
@@ -439,7 +465,11 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
      * Maximum amount of request body to swallow.
      */
     private int maxSwallowSize = 2 * 1024 * 1024;
-    public int getMaxSwallowSize() { return maxSwallowSize; }
+
+    public int getMaxSwallowSize() {
+        return maxSwallowSize;
+    }
+
     public void setMaxSwallowSize(int maxSwallowSize) {
         this.maxSwallowSize = maxSwallowSize;
     }
@@ -451,7 +481,11 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
      * behind a reverse proxy.
      */
     private boolean secure;
-    public boolean getSecure() { return secure; }
+
+    public boolean getSecure() {
+        return secure;
+    }
+
     public void setSecure(boolean b) {
         secure = b;
     }
@@ -462,6 +496,7 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
      * chunked encoding. They are stored in lower case.
      */
     private Set<String> allowedTrailerHeaders = ConcurrentHashMap.newKeySet();
+
     public void setAllowedTrailerHeaders(String commaSeparatedHeaders) {
         // Jump through some hoops so we don't end up with an empty set while
         // doing updates.
@@ -479,54 +514,60 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
             allowedTrailerHeaders.removeAll(toRemove);
         }
     }
+
     protected Set<String> getAllowedTrailerHeadersInternal() {
         return allowedTrailerHeaders;
     }
+
     public boolean isTrailerHeaderAllowed(String headerName) {
         return allowedTrailerHeaders.contains(headerName);
     }
+
     public String getAllowedTrailerHeaders() {
         // Chances of a change during execution of this line are small enough
         // that a sync is unnecessary.
         List<String> copy = new ArrayList<>(allowedTrailerHeaders);
         return StringUtils.join(copy);
     }
+
     public void addAllowedTrailerHeader(String header) {
         if (header != null) {
             allowedTrailerHeaders.add(header.trim().toLowerCase(Locale.ENGLISH));
         }
     }
+
     public void removeAllowedTrailerHeader(String header) {
         if (header != null) {
             allowedTrailerHeaders.remove(header.trim().toLowerCase(Locale.ENGLISH));
         }
     }
 
-
     /**
      * The upgrade protocol instances configured.
      */
     private final List<UpgradeProtocol> upgradeProtocols = new ArrayList<>();
+
     @Override
     public void addUpgradeProtocol(UpgradeProtocol upgradeProtocol) {
         upgradeProtocols.add(upgradeProtocol);
     }
+
     @Override
     public UpgradeProtocol[] findUpgradeProtocols() {
         return upgradeProtocols.toArray(new UpgradeProtocol[0]);
     }
 
-
     /**
      * The protocols that are available via internal Tomcat support for access
      * via HTTP upgrade.
      */
-    private final Map<String,UpgradeProtocol> httpUpgradeProtocols = new HashMap<>();
+    private final Map<String, UpgradeProtocol> httpUpgradeProtocols = new HashMap<>();
     /**
      * The protocols that are available via internal Tomcat support for access
      * via ALPN negotiation.
      */
-    private final Map<String,UpgradeProtocol> negotiatedProtocols = new HashMap<>();
+    private final Map<String, UpgradeProtocol> negotiatedProtocols = new HashMap<>();
+
     private void configureUpgradeProtocol(UpgradeProtocol upgradeProtocol) {
         // HTTP Upgrade
         String httpUpgradeName = upgradeProtocol.getHttpUpgradeName(getEndpoint().isSSLEnabled());
@@ -535,7 +576,7 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
             httpUpgradeProtocols.put(httpUpgradeName, upgradeProtocol);
             httpUpgradeConfigured = true;
             getLog().info(sm.getString("abstractHttp11Protocol.httpUpgradeConfigured",
-                    getName(), httpUpgradeName));
+                getName(), httpUpgradeName));
         }
 
 
@@ -547,7 +588,7 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
                 negotiatedProtocols.put(alpnName, upgradeProtocol);
                 getEndpoint().addNegotiatedProtocol(alpnName);
                 getLog().info(sm.getString("abstractHttp11Protocol.alpnConfigured",
-                        getName(), alpnName));
+                    getName(), alpnName));
             } else {
                 if (!httpUpgradeConfigured) {
                     // ALPN is not supported by this connector and the upgrade
@@ -555,15 +596,17 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
                     // upgrade so there is no way available to enable support
                     // for this protocol.
                     getLog().error(sm.getString("abstractHttp11Protocol.alpnWithNoAlpn",
-                            upgradeProtocol.getClass().getName(), alpnName, getName()));
+                        upgradeProtocol.getClass().getName(), alpnName, getName()));
                 }
             }
         }
     }
+
     @Override
     public UpgradeProtocol getNegotiatedProtocol(String negotiatedName) {
         return negotiatedProtocols.get(negotiatedName);
     }
+
     @Override
     public UpgradeProtocol getUpgradeProtocol(String upgradedName) {
         return httpUpgradeProtocols.get(upgradedName);
@@ -578,7 +621,8 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
      * made available for these protocols, a map of protocol name to
      * {@link UpgradeGroupInfo} instances is maintained here.
      */
-    private final Map<String,UpgradeGroupInfo> upgradeProtocolGroupInfos = new ConcurrentHashMap<>();
+    private final Map<String, UpgradeGroupInfo> upgradeProtocolGroupInfos = new ConcurrentHashMap<>();
+
     public UpgradeGroupInfo getUpgradeGroupInfo(String upgradeProtocol) {
         if (upgradeProtocol == null) {
             return null;
@@ -632,24 +676,33 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     // ------------------------------------------------ HTTP specific properties
     // ------------------------------------------ passed through to the EndPoint
 
-    public boolean isSSLEnabled() { return getEndpoint().isSSLEnabled();}
+    public boolean isSSLEnabled() {
+        return getEndpoint().isSSLEnabled();
+    }
+
     public void setSSLEnabled(boolean SSLEnabled) {
         getEndpoint().setSSLEnabled(SSLEnabled);
     }
 
 
-    public boolean getUseSendfile() { return getEndpoint().getUseSendfile(); }
-    public void setUseSendfile(boolean useSendfile) { getEndpoint().setUseSendfile(useSendfile); }
+    public boolean getUseSendfile() {
+        return getEndpoint().getUseSendfile();
+    }
+
+    public void setUseSendfile(boolean useSendfile) {
+        getEndpoint().setUseSendfile(useSendfile);
+    }
 
 
     /**
      * @return The maximum number of requests which can be performed over a
-     *         keep-alive connection. The default is the same as for Apache HTTP
-     *         Server (100).
+     * keep-alive connection. The default is the same as for Apache HTTP
+     * Server (100).
      */
     public int getMaxKeepAliveRequests() {
         return getEndpoint().getMaxKeepAliveRequests();
     }
+
     /**
      * Set the maximum number of Keep-Alive requests to allow.
      * This is to safeguard from DoS attacks. Setting to a negative
@@ -668,64 +721,64 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     public String getDefaultSSLHostConfigName() {
         return getEndpoint().getDefaultSSLHostConfigName();
     }
+
     public void setDefaultSSLHostConfigName(String defaultSSLHostConfigName) {
         getEndpoint().setDefaultSSLHostConfigName(defaultSSLHostConfigName);
     }
-
 
     @Override
     public void addSslHostConfig(SSLHostConfig sslHostConfig) {
         getEndpoint().addSslHostConfig(sslHostConfig);
     }
 
-
     @Override
     public SSLHostConfig[] findSslHostConfigs() {
         return getEndpoint().findSslHostConfigs();
     }
 
-
     public void reloadSslHostConfigs() {
         getEndpoint().reloadSslHostConfigs();
     }
-
 
     public void reloadSslHostConfig(String hostName) {
         getEndpoint().reloadSslHostConfig(hostName);
     }
 
-
     protected String getSslImplementationShortName() {
         if (OpenSSLImplementation.class.getName().equals(getSslImplementationName())) {
             return "openssl";
         }
-        if (getSslImplementationName() != null
-                && getSslImplementationName().endsWith(".panama.OpenSSLImplementation")) {
+        if (getSslImplementationName() != null && getSslImplementationName().endsWith(".panama.OpenSSLImplementation")) {
             return "opensslforeign";
         }
         return "jsse";
     }
 
-    public String getSslImplementationName() { return getEndpoint().getSslImplementationName(); }
-    public void setSslImplementationName(String s) { getEndpoint().setSslImplementationName(s); }
+    public String getSslImplementationName() {
+        return getEndpoint().getSslImplementationName();
+    }
 
+    public void setSslImplementationName(String s) {
+        getEndpoint().setSslImplementationName(s);
+    }
 
-    public int getSniParseLimit() { return getEndpoint().getSniParseLimit(); }
+    public int getSniParseLimit() {
+        return getEndpoint().getSniParseLimit();
+    }
+
     public void setSniParseLimit(int sniParseLimit) {
         getEndpoint().setSniParseLimit(sniParseLimit);
     }
-
 
     // ------------------------------------------------------------- Common code
 
     @Override
     protected abstract Processor createProcessor();
 
-
     @Override
     protected Processor createUpgradeProcessor(
-            SocketWrapperBase<?> socket,
-            UpgradeToken upgradeToken) {
+        SocketWrapperBase<?> socket,
+        UpgradeToken upgradeToken) {
         HttpUpgradeHandler httpUpgradeHandler = upgradeToken.getHttpUpgradeHandler();
         if (httpUpgradeHandler instanceof InternalHttpUpgradeHandler) {
             return new UpgradeProcessorInternal(socket, upgradeToken, getUpgradeGroupInfo(upgradeToken.getProtocol()));
