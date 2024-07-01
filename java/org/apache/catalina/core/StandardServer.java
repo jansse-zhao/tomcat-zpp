@@ -55,6 +55,12 @@ import java.util.concurrent.*;
  */
 public final class StandardServer extends LifecycleMBeanBase implements Server {
 
+    /**
+     * Server 是最顶级的组件,它代表 Tomcat的运行实例,在一个JVM 中只会包含一个 Server。
+     * 在Server的整个生命周期中，不同阶段会有不同的事情要完成。为了方便扩展，它引入了监听器方式，所以它也包含了Listener 组件。
+     * 另外，为了方便在Tomcat中集成JNDI，引入了GlobalNamingResources组件。同时，还包含了Service核心组件。
+     */
+
     private static final Log log = LogFactory.getLog(StandardServer.class);
     private static final StringManager sm = StringManager.getManager(StandardServer.class);
 
@@ -532,6 +538,8 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      * Wait until a proper shutdown command is received, then return.
      * This keeps the main thread alive - the thread pool listening for http
      * connections is daemon threads.
+     * <p>
+     * 初始化ServerSocket，等待连接
      */
     @Override
     public void await() {
@@ -779,11 +787,8 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      * @param listener The listener to add
      */
     public void addPropertyChangeListener(PropertyChangeListener listener) {
-
         support.addPropertyChangeListener(listener);
-
     }
-
 
     /**
      * Remove a property change listener from this component.
@@ -791,11 +796,8 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      * @param listener The listener to remove
      */
     public void removePropertyChangeListener(PropertyChangeListener listener) {
-
         support.removePropertyChangeListener(listener);
-
     }
-
 
     /**
      * Return a String representation of this component.
@@ -807,7 +809,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         sb.append(']');
         return sb.toString();
     }
-
 
     /**
      * Write the configuration information for this entire <code>Server</code>
@@ -833,7 +834,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
             log.error(sm.getString("standardServer.storeConfig.error"), t);
         }
     }
-
 
     /**
      * Write the configuration information for <code>Context</code>

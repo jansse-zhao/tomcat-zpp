@@ -43,6 +43,14 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     private static final StringManager sm = StringManager.getManager(StandardService.class);
 
     /**
+     * Service 是服务的抽象，它代表请求从接收到处理的所有组件的集合。在设计上Server 组件可以包含多个 Service 组件，
+     * 每个 Service 组件都包含了若干用于接收客户端消息的 Connector 组件和处理请求的 Engine 组件。
+     * 其中，不同的Connector 组件使用不同的通信协议，如 HTTP协议和AJP协议，当然还可以有其他的协议A和协议B。
+     * 若干Connector组件和一个客户端请求处理组件Engine组成的集合即为Service。
+     * 此外，Service 组件还包含了若干Executor 组件，每个Executor 都是一个线程池，它可以为Service 内所有组件提供线程池执行任务。
+     */
+
+    /**
      * Service类的几种主要类型的方法：
      * 1. Engine相关属性和方法：getContainer()、setContainer()
      * 2. Connectors相关属性和方法：addConnector()、getConnectorNames()、findConnectors()、removeConnector()
@@ -72,7 +80,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
      * The set of Connectors associated with this Service.
      * 与此服务关联的一组连接器。
      */
-    protected Connector connectors[] = new Connector[0];
+    protected Connector connectors[] = new Connector[ 0 ];
     private final Object connectorsLock = new Object();
 
     /**
@@ -219,9 +227,9 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     public void addConnector(Connector connector) {
         synchronized (connectorsLock) {
             connector.setService(this);
-            Connector results[] = new Connector[connectors.length + 1];
+            Connector results[] = new Connector[ connectors.length + 1 ];
             System.arraycopy(connectors, 0, results, 0, connectors.length);
-            results[connectors.length] = connector;
+            results[ connectors.length ] = connector;
             connectors = results;
         }
 
@@ -241,9 +249,9 @@ public class StandardService extends LifecycleMBeanBase implements Service {
      * 获取连接器Connector在JMX中注册的名称
      */
     public ObjectName[] getConnectorNames() {
-        ObjectName[] results = new ObjectName[connectors.length];
+        ObjectName[] results = new ObjectName[ connectors.length ];
         for (int i = 0; i < results.length; i++) {
-            results[i] = connectors[i].getObjectName();
+            results[ i ] = connectors[ i ].getObjectName();
         }
         return results;
     }
@@ -271,7 +279,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
             // 待删除的连接器的下标
             int j = -1;
             for (int i = 0; i < connectors.length; i++) {
-                if (connector == connectors[i]) {
+                if (connector == connectors[ i ]) {
                     j = i;
                     break;
                 }
@@ -281,23 +289,23 @@ public class StandardService extends LifecycleMBeanBase implements Service {
             }
 
             // 连接器状态可用，则先停止连接器
-            if (connectors[j].getState().isAvailable()) {
+            if (connectors[ j ].getState().isAvailable()) {
                 try {
-                    connectors[j].stop();
+                    connectors[ j ].stop();
                 } catch (LifecycleException e) {
                     log.error(sm.getString(
                         "standardService.connector.stopFailed",
-                        connectors[j]), e);
+                        connectors[ j ]), e);
                 }
             }
             connector.setService(null);
             int k = 0;
 
-            Connector[] results = new Connector[connectors.length - 1];
+            Connector[] results = new Connector[ connectors.length - 1 ];
             for (int i = 0; i < connectors.length; i++) {
                 // 跳过待删除的连接器，将剩余的放到新的连接器数组中
                 if (i != j) {
-                    results[k++] = connectors[i];
+                    results[ k++ ] = connectors[ i ];
                 }
             }
             connectors = results;
@@ -368,7 +376,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     @Override
     public Executor[] findExecutors() {
         synchronized (executors) {
-            return executors.toArray(new Executor[0]);
+            return executors.toArray(new Executor[ 0 ]);
         }
     }
 

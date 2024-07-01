@@ -955,7 +955,7 @@ public class Connector extends LifecycleMBeanBase {
         }
 
         // Initialize adapter
-        // 初始化 adapter
+        // 初始化 adapter，CoyoteAdapter是一个将Connector和Container适配起来的适配器
         adapter = new CoyoteAdapter(this);
         // 交给protocolHandler
         protocolHandler.setAdapter(adapter);

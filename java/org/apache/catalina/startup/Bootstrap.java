@@ -49,6 +49,18 @@ import java.util.regex.Pattern;
  */
 public final class Bootstrap {
 
+    /**
+     * 1. 通过System.getEnv()获取环境变量 - 操作系统级的环境变量
+     * 2. 通过System.getProperty()获取JVM系统属性值 - 虚拟机环境属性
+     * 3. 通过CatalinaProperties类获取catalina.properties属性 - 文件环境属性
+     */
+
+    /**
+     * 如果将Tomcat内核高度抽象,则它可以看成由连接器(Connector)组件和容器(Container)组件组成，
+     * 其中Connector组件负责在服务器端处理客户端连接，包括接收客户端连接、接收客户端的消息报文以及消息报文的解析等工作，
+     * 而Container 组件则负责对客户端的请求进行逻辑处理，并把结果返回给客户端。
+     */
+
     private static final Log log = LogFactory.getLog(Bootstrap.class);
 
     /**

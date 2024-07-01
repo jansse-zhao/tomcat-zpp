@@ -95,6 +95,9 @@ public class CoyoteAdapter implements Adapter {
 
     // -------------------------------------------------------- Adapter Methods
 
+    /**
+     * ######处理客户端请求和响应######
+     */
     @Override
     public boolean asyncDispatch(org.apache.coyote.Request req, org.apache.coyote.Response res, SocketEvent status) throws Exception {
         Request request = (Request) req.getNote(ADAPTER_NOTES);
@@ -217,13 +220,15 @@ public class CoyoteAdapter implements Adapter {
             // if the application doesn't define one)?
             if (!request.isAsyncDispatching() && request.isAsync() &&
                 response.isErrorReportRequired()) {
-                connector.getService().getContainer().getPipeline().getFirst().invoke(
-                    request, response);
+                /**
+                 * 最终调用Connector上绑定的Service的Engine的Pipeline对象的StandardEngineValve对象的invoke方法
+                 * 将包装的Request对象和Response对象传递过去
+                 */
+                connector.getService().getContainer().getPipeline().getFirst().invoke(request, response);
             }
 
             if (request.isAsyncDispatching()) {
-                connector.getService().getContainer().getPipeline().getFirst().invoke(
-                    request, response);
+                connector.getService().getContainer().getPipeline().getFirst().invoke(request, response);
                 Throwable t = (Throwable) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
                 if (t != null) {
                     asyncConImpl.setErrorState(t, true);
@@ -726,7 +731,7 @@ public class CoyoteAdapter implements Adapter {
                 if (contexts != null && sessionID != null) {
                     // Find the context associated with the session
                     for (int i = contexts.length; i > 0; i--) {
-                        Context ctxt = contexts[i - 1];
+                        Context ctxt = contexts[ i - 1 ];
                         if (ctxt.getManager().findSession(sessionID) != null) {
                             // We found a context. Is it the one that has
                             // already been mapped?
@@ -904,7 +909,7 @@ public class CoyoteAdapter implements Adapter {
                 // Extract path param from decoded request URI
                 byte[] buf = uriBC.getBuffer();
                 for (int i = 0; i < end - start - pathParamEnd; i++) {
-                    buf[start + semicolon + i] = buf[start + i + pathParamEnd];
+                    buf[ start + semicolon + i ] = buf[ start + i + pathParamEnd ];
                 }
                 uriBC.setBytes(buf, start, end - start - pathParamEnd + semicolon);
             } else {
@@ -1057,7 +1062,7 @@ public class CoyoteAdapter implements Adapter {
         char[] cbuf = cc.getBuffer();
         int start = bc.getStart();
         for (int i = 0; i < length; i++) {
-            cbuf[i] = (char) (bbuf[i + start] & 0xff);
+            cbuf[ i ] = (char) (bbuf[ i + start ] & 0xff);
         }
         mb.setChars(cbuf, 0, length);
     }
@@ -1088,28 +1093,28 @@ public class CoyoteAdapter implements Adapter {
 
 
         // The URL must start with '/' (or '\' that will be replaced soon)
-        if (b[start] != (byte) '/' && b[start] != (byte) '\\') {
+        if (b[ start ] != (byte) '/' && b[ start ] != (byte) '\\') {
             return false;
         }
 
         // Replace '\' with '/'
         // Check for null byte
         for (pos = start; pos < end; pos++) {
-            if (b[pos] == (byte) '\\') {
+            if (b[ pos ] == (byte) '\\') {
                 if (allowBackslash) {
-                    b[pos] = (byte) '/';
+                    b[ pos ] = (byte) '/';
                 } else {
                     return false;
                 }
-            } else if (b[pos] == (byte) 0) {
+            } else if (b[ pos ] == (byte) 0) {
                 return false;
             }
         }
 
         // Replace "//" with "/"
         for (pos = start; pos < (end - 1); pos++) {
-            if (b[pos] == (byte) '/') {
-                while ((pos + 1 < end) && (b[pos + 1] == (byte) '/')) {
+            if (b[ pos ] == (byte) '/') {
+                while ((pos + 1 < end) && (b[ pos + 1 ] == (byte) '/')) {
                     copyBytes(b, pos, pos + 1, end - pos - 1);
                     end--;
                 }
@@ -1119,11 +1124,11 @@ public class CoyoteAdapter implements Adapter {
         // If the URI ends with "/." or "/..", then we append an extra "/"
         // Note: It is possible to extend the URI by 1 without any side effect
         // as the next character is a non-significant WS.
-        if (((end - start) >= 2) && (b[end - 1] == (byte) '.')) {
-            if ((b[end - 2] == (byte) '/')
-                || ((b[end - 2] == (byte) '.')
-                && (b[end - 3] == (byte) '/'))) {
-                b[end] = (byte) '/';
+        if (((end - start) >= 2) && (b[ end - 1 ] == (byte) '.')) {
+            if ((b[ end - 2 ] == (byte) '/')
+                || ((b[ end - 2 ] == (byte) '.')
+                && (b[ end - 3 ] == (byte) '/'))) {
+                b[ end ] = (byte) '/';
                 end++;
                 appendedSlash = true;
             }
@@ -1158,7 +1163,7 @@ public class CoyoteAdapter implements Adapter {
             }
             int index2 = -1;
             for (pos = start + index - 1; (pos >= 0) && (index2 < 0); pos--) {
-                if (b[pos] == (byte) '/') {
+                if (b[ pos ] == (byte) '/') {
                     index2 = pos;
                 }
             }
@@ -1170,7 +1175,7 @@ public class CoyoteAdapter implements Adapter {
 
         // If a slash was appended to help normalize "/." or "/.." then remove
         // any trailing "/" from the result unless the result is "/".
-        if (appendedSlash && end > 1 && b[end - 1] == '/') {
+        if (appendedSlash && end > 1 && b[ end - 1 ] == '/') {
             uriBC.setEnd(end - 1);
         }
 
@@ -1210,7 +1215,7 @@ public class CoyoteAdapter implements Adapter {
             int pos = start + segmentStart + 1;
 
             // Empty segment other than final segment with path parameters
-            if (segmentEnd > 0 && bytes[pos] == ';') {
+            if (segmentEnd > 0 && bytes[ pos ] == ';') {
                 return true;
             }
 
@@ -1218,19 +1223,19 @@ public class CoyoteAdapter implements Adapter {
             int dotCount = 0;
             boolean encodedDot = false;
             while (pos < end) {
-                if (bytes[pos] == '.') {
+                if (bytes[ pos ] == '.') {
                     dotCount++;
                     pos++;
-                } else if (pos + 2 < end && bytes[pos] == '%' && bytes[pos + 1] == '2' && (bytes[pos + 2] == 'e' || bytes[pos + 2] == 'E')) {
+                } else if (pos + 2 < end && bytes[ pos ] == '%' && bytes[ pos + 1 ] == '2' && (bytes[ pos + 2 ] == 'e' || bytes[ pos + 2 ] == 'E')) {
                     encodedDot = true;
                     dotCount++;
                     pos += 3;
-                } else if (bytes[pos] == ';') {
+                } else if (bytes[ pos ] == ';') {
                     if (dotCount > 0) {
                         return true;
                     }
                     break;
-                } else if (bytes[pos] == '/') {
+                } else if (bytes[ pos ] == '/') {
                     break;
                 } else {
                     dotCount = 0;
@@ -1244,9 +1249,9 @@ public class CoyoteAdapter implements Adapter {
             // %nn encoded controls or '/'
             pos = start + segmentStart + 1;
             while (pos < end) {
-                if (pos + 2 < end && bytes[pos] == '%') {
-                    byte b1 = bytes[pos + 1];
-                    byte b2 = bytes[pos + 2];
+                if (pos + 2 < end && bytes[ pos ] == '%') {
+                    byte b1 = bytes[ pos + 1 ];
+                    byte b2 = bytes[ pos + 2 ];
                     pos += 3;
                     int decoded = (HexUtils.getDec(b1) << 4) + HexUtils.getDec(b2);
                     if (decoded < 20 || decoded == 0x7F || decoded == 0x2F) {

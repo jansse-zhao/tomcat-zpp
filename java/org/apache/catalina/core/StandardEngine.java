@@ -39,6 +39,17 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class StandardEngine extends ContainerBase implements Engine {
 
+    /**
+     * Tomcat 中有4个级别的容器，分别是Engine、Host、Context和Wrapper。
+     * Engine 代表全局Servlet引擎，每个Service组件只能包含一个Engine容器组件，但Engine可以包含多个Host容器组件。
+     * <p>
+     * Listener 组件:可以在 Tomcat 生命周期中完成某些Engine 容器相关工作的监听器。
+     * AccessLog组件:客户端的访问日志，所有客户端访问都会被记录。
+     * Cluster 组件:它提供集群功能，可以将Engine 容器需要共享的数据同步到集群中的其他Tomcat 实例上。
+     * Pipeline组件:Engine容器对请求进行处理的管道。
+     * Realm 组件:提供了Engine 容器级别的用户-密码-权限的数据对象，配合资源认证模块使用。
+     */
+
     private static final Log log = LogFactory.getLog(StandardEngine.class);
 
     // ----------------------------------------------------------- Constructors

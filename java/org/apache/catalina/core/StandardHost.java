@@ -41,6 +41,16 @@ import java.util.regex.Pattern;
  */
 public class StandardHost extends ContainerBase implements Host {
 
+    /**
+     * Host 组件代表虚拟主机，这些虚拟主机可以存放若干 Web应用的抽象(Context容器)。
+     * <p>
+     * Listener 组件:可以在Tomcat生命周期中完成某些Host 容器相关工作的监听器
+     * AccessLog组件:客户端的访问日志，对该虚拟主机上所有 Web应用的访问都会被记录。
+     * Cluster 组件:它提供集群功能，可以将Host容器需要共享的数据同步到集群中的其他Tomcat 实例上。
+     * Pipeline 组件:Host容器对请求进行处理的管道。
+     * Realm 组件:提供了 Host 容器级别的用户-密码-权限的数据对象,配合资源认证模块使用
+     */
+
     private static final Log log = LogFactory.getLog(StandardHost.class);
 
     // ----------------------------------------------------------- Constructors
@@ -58,7 +68,7 @@ public class StandardHost extends ContainerBase implements Host {
     /**
      * The set of aliases for this Host.
      */
-    private String[] aliases = new String[0];
+    private String[] aliases = new String[ 0 ];
 
     private final Object aliasesLock = new Object();
 
@@ -607,7 +617,7 @@ public class StandardHost extends ContainerBase implements Host {
             }
             // Add this alias to the list
             String newAliases[] = Arrays.copyOf(aliases, aliases.length + 1);
-            newAliases[aliases.length] = alias;
+            newAliases[ aliases.length ] = alias;
             aliases = newAliases;
         }
         // Inform interested listeners
@@ -677,7 +687,7 @@ public class StandardHost extends ContainerBase implements Host {
             }
         }
 
-        return result.toArray(new String[0]);
+        return result.toArray(new String[ 0 ]);
     }
 
     /**
@@ -704,7 +714,7 @@ public class StandardHost extends ContainerBase implements Host {
             // Make sure this alias is currently present
             int n = -1;
             for (int i = 0; i < aliases.length; i++) {
-                if (aliases[i].equals(alias)) {
+                if (aliases[ i ].equals(alias)) {
                     n = i;
                     break;
                 }
@@ -715,10 +725,10 @@ public class StandardHost extends ContainerBase implements Host {
 
             // Remove the specified alias
             int j = 0;
-            String results[] = new String[aliases.length - 1];
+            String results[] = new String[ aliases.length - 1 ];
             for (int i = 0; i < aliases.length; i++) {
                 if (i != n) {
-                    results[j++] = aliases[i];
+                    results[ j++ ] = aliases[ i ];
                 }
             }
             aliases = results;
@@ -770,12 +780,12 @@ public class StandardHost extends ContainerBase implements Host {
      */
     public String[] getValveNames() throws Exception {
         Valve[] valves = this.getPipeline().getValves();
-        String[] mbeanNames = new String[valves.length];
+        String[] mbeanNames = new String[ valves.length ];
         for (int i = 0; i < valves.length; i++) {
-            if (valves[i] instanceof JmxEnabled) {
-                ObjectName oname = ((JmxEnabled) valves[i]).getObjectName();
+            if (valves[ i ] instanceof JmxEnabled) {
+                ObjectName oname = ((JmxEnabled) valves[ i ]).getObjectName();
                 if (oname != null) {
-                    mbeanNames[i] = oname.toString();
+                    mbeanNames[ i ] = oname.toString();
                 }
             }
         }

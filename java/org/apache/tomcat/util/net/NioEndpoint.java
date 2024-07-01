@@ -603,6 +603,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
 
     /**
      * Poller class.
+     * 轮询多个客户端连接
      */
     public class Poller implements Runnable {
 
@@ -1642,7 +1643,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
                                     // There is still data inside the main read buffer, it needs to be read first
                                     socketBufferHandler.configureReadBufferForRead();
                                     for (int i = 0; i < length && !socketBufferHandler.isReadBufferEmpty(); i++) {
-                                        nBytes += transfer(socketBufferHandler.getReadBuffer(), buffers[offset + i]);
+                                        nBytes += transfer(socketBufferHandler.getReadBuffer(), buffers[ offset + i ]);
                                     }
                                 }
                                 if (nBytes == 0) {

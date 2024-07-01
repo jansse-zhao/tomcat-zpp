@@ -40,6 +40,13 @@ import java.util.regex.Pattern;
 
 public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
 
+    /**
+     * Http11Protocol组件，是HTTP协议1.1版本的抽象，它包含接收客户端连接、接收客户端消息报文、报文解析处理、对客户端响应等整个过程。
+     * 它主要包含Endpoint 组件和Processor 组件。
+     * 启动时，Endpoint组件内部的Acceptor 组件将启动某个端口的监听，一个请求到来后将被扔进线程池Executor，
+     * 线程池进行任务处理，处理过程中将通过Processor组件对 HTTP协议解析并传递到Engine容器继续处理。
+     */
+
     protected static final StringManager sm = StringManager.getManager(AbstractHttp11Protocol.class);
 
     private final CompressionConfig compressionConfig = new CompressionConfig();
@@ -554,7 +561,7 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
 
     @Override
     public UpgradeProtocol[] findUpgradeProtocols() {
-        return upgradeProtocols.toArray(new UpgradeProtocol[0]);
+        return upgradeProtocols.toArray(new UpgradeProtocol[ 0 ]);
     }
 
     /**
