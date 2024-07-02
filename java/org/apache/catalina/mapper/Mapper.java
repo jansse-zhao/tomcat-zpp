@@ -16,22 +16,8 @@
  */
 package org.apache.catalina.mapper;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import jakarta.servlet.http.MappingMatch;
-
-import org.apache.catalina.Context;
-import org.apache.catalina.Host;
-import org.apache.catalina.WebResource;
-import org.apache.catalina.WebResourceRoot;
-import org.apache.catalina.Wrapper;
+import org.apache.catalina.*;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.buf.Ascii;
@@ -39,9 +25,16 @@ import org.apache.tomcat.util.buf.CharChunk;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.res.StringManager;
 
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 /**
  * Mapper, which implements the servlet API mapping rules (which are derived
  * from the HTTP rules).
+ * <p>
+ * ######StandardService -> Mapper######
  *
  * @author Remy Maucherat
  */
@@ -59,8 +52,7 @@ public final class Mapper {
      * Array containing the virtual hosts definitions.
      */
     // Package private to facilitate testing
-    volatile MappedHost[] hosts = new MappedHost[0];
-
+    volatile MappedHost[] hosts = new MappedHost[ 0 ];
 
     /**
      * Default host name.
@@ -68,13 +60,11 @@ public final class Mapper {
     private volatile String defaultHostName = null;
     private volatile MappedHost defaultHost = null;
 
-
     /**
      * Mapping from Context object to Context version to support
      * RequestDispatcher mappings.
      */
-    private final Map<Context, ContextVersion> contextObjectToContextVersionMap =
-            new ConcurrentHashMap<>();
+    private final Map<Context, ContextVersion> contextObjectToContextVersionMap = new ConcurrentHashMap<>();
 
 
     // --------------------------------------------------------- Public Methods
@@ -97,14 +87,14 @@ public final class Mapper {
     /**
      * Add a new host to the mapper.
      *
-     * @param name Virtual host name
+     * @param name    Virtual host name
      * @param aliases Alias names for the virtual host
-     * @param host Host object
+     * @param host    Host object
      */
     public synchronized void addHost(String name, String[] aliases,
                                      Host host) {
         name = renameWildcardHost(name);
-        MappedHost[] newHosts = new MappedHost[hosts.length + 1];
+        MappedHost[] newHosts = new MappedHost[ hosts.length + 1 ];
         MappedHost newHost = new MappedHost(name, host);
         if (insertMap(hosts, newHosts, newHost)) {
             hosts = newHosts;
@@ -115,7 +105,7 @@ public final class Mapper {
                 log.debug(sm.getString("mapper.addHost.success", name));
             }
         } else {
-            MappedHost duplicate = hosts[find(hosts, name)];
+            MappedHost duplicate = hosts[ find(hosts, name) ];
             if (duplicate.object == host) {
                 // The host is already registered in the mapper.
                 // E.g. it might have been added by addContextVersion()
@@ -125,7 +115,7 @@ public final class Mapper {
                 newHost = duplicate;
             } else {
                 log.error(sm.getString("mapper.duplicateHost", name,
-                        duplicate.getRealHostName()));
+                    duplicate.getRealHostName()));
                 // Do not add aliases, as removeHost(hostName) won't be able to
                 // remove them
                 return;
@@ -159,8 +149,8 @@ public final class Mapper {
         // Remove real host and all its aliases
         int j = 0;
         for (int i = 0; i < newHosts.length; i++) {
-            if (newHosts[i].getRealHost() != host) {
-                newHosts[j++] = newHosts[i];
+            if (newHosts[ i ].getRealHost() != host) {
+                newHosts[ j++ ] = newHosts[ i ];
             }
         }
         hosts = Arrays.copyOf(newHosts, j);
@@ -168,6 +158,7 @@ public final class Mapper {
 
     /**
      * Add an alias to an existing host.
+     *
      * @param name  The name of the host
      * @param alias The alias to add
      */
@@ -186,7 +177,7 @@ public final class Mapper {
     }
 
     private synchronized boolean addHostAliasImpl(MappedHost newAlias) {
-        MappedHost[] newHosts = new MappedHost[hosts.length + 1];
+        MappedHost[] newHosts = new MappedHost[ hosts.length + 1 ];
         if (insertMap(hosts, newHosts, newAlias)) {
             hosts = newHosts;
             if (newAlias.name.equals(defaultHostName)) {
@@ -194,29 +185,30 @@ public final class Mapper {
             }
             if (log.isDebugEnabled()) {
                 log.debug(sm.getString("mapper.addHostAlias.success",
-                        newAlias.name, newAlias.getRealHostName()));
+                    newAlias.name, newAlias.getRealHostName()));
             }
             return true;
         } else {
-            MappedHost duplicate = hosts[find(hosts, newAlias.name)];
+            MappedHost duplicate = hosts[ find(hosts, newAlias.name) ];
             if (duplicate.getRealHost() == newAlias.getRealHost()) {
                 // A duplicate Alias for the same Host.
                 // A harmless redundancy. E.g.
                 // <Host name="localhost"><Alias>localhost</Alias></Host>
                 if (log.isDebugEnabled()) {
                     log.debug(sm.getString("mapper.addHostAlias.sameHost",
-                            newAlias.name, newAlias.getRealHostName()));
+                        newAlias.name, newAlias.getRealHostName()));
                 }
                 return false;
             }
             log.error(sm.getString("mapper.duplicateHostAlias", newAlias.name,
-                    newAlias.getRealHostName(), duplicate.getRealHostName()));
+                newAlias.getRealHostName(), duplicate.getRealHostName()));
             return false;
         }
     }
 
     /**
      * Remove a host alias
+     *
      * @param alias The alias to remove
      */
     public synchronized void removeHostAlias(String alias) {
@@ -226,7 +218,7 @@ public final class Mapper {
         if (hostMapping == null || !hostMapping.isAlias()) {
             return;
         }
-        MappedHost[] newHosts = new MappedHost[hosts.length - 1];
+        MappedHost[] newHosts = new MappedHost[ hosts.length - 1 ];
         if (removeMap(hosts, newHosts, alias)) {
             hosts = newHosts;
             hostMapping.getRealHost().removeAlias(hostMapping);
@@ -239,7 +231,7 @@ public final class Mapper {
      * all its aliases with a new value.
      */
     private void updateContextList(MappedHost realHost,
-            ContextList newContextList) {
+                                   ContextList newContextList) {
 
         realHost.contextList = newContextList;
         for (MappedHost alias : realHost.getAliases()) {
@@ -250,24 +242,24 @@ public final class Mapper {
     /**
      * Add a new Context to an existing Host.
      *
-     * @param hostName Virtual host name this context belongs to
-     * @param host Host object
-     * @param path Context path
-     * @param version Context version
-     * @param context Context object
+     * @param hostName         Virtual host name this context belongs to
+     * @param host             Host object
+     * @param path             Context path
+     * @param version          Context version
+     * @param context          Context object
      * @param welcomeResources Welcome files defined for this context
-     * @param resources Static resources of the context
-     * @param wrappers Information on wrapper mappings
+     * @param resources        Static resources of the context
+     * @param wrappers         Information on wrapper mappings
      */
     public void addContextVersion(String hostName, Host host, String path,
-            String version, Context context, String[] welcomeResources,
-            WebResourceRoot resources, Collection<WrapperMappingInfo> wrappers) {
+                                  String version, Context context, String[] welcomeResources,
+                                  WebResourceRoot resources, Collection<WrapperMappingInfo> wrappers) {
 
         hostName = renameWildcardHost(hostName);
 
-        MappedHost mappedHost  = exactFind(hosts, hostName);
+        MappedHost mappedHost = exactFind(hosts, hostName);
         if (mappedHost == null) {
-            addHost(hostName, new String[0], host);
+            addHost(hostName, new String[ 0 ], host);
             mappedHost = exactFind(hosts, hostName);
             if (mappedHost == null) {
                 log.error(sm.getString("mapper.addContext.noHost", hostName));
@@ -281,7 +273,7 @@ public final class Mapper {
         int slashCount = slashCount(path);
         synchronized (mappedHost) {
             ContextVersion newContextVersion = new ContextVersion(version,
-                    path, slashCount, context, resources, welcomeResources);
+                path, slashCount, context, resources, welcomeResources);
             if (wrappers != null) {
                 addWrappers(newContextVersion, wrappers);
             }
@@ -291,24 +283,24 @@ public final class Mapper {
             if (mappedContext == null) {
                 mappedContext = new MappedContext(path, newContextVersion);
                 ContextList newContextList = contextList.addContext(
-                        mappedContext, slashCount);
+                    mappedContext, slashCount);
                 if (newContextList != null) {
                     updateContextList(mappedHost, newContextList);
                     contextObjectToContextVersionMap.put(context, newContextVersion);
                 }
             } else {
                 ContextVersion[] contextVersions = mappedContext.versions;
-                ContextVersion[] newContextVersions = new ContextVersion[contextVersions.length + 1];
+                ContextVersion[] newContextVersions = new ContextVersion[ contextVersions.length + 1 ];
                 if (insertMap(contextVersions, newContextVersions,
-                        newContextVersion)) {
+                    newContextVersion)) {
                     mappedContext.versions = newContextVersions;
                     contextObjectToContextVersionMap.put(context, newContextVersion);
                 } else {
                     // Re-registration after Context.reload()
                     // Replace ContextVersion with the new one
                     int pos = find(contextVersions, version);
-                    if (pos >= 0 && contextVersions[pos].name.equals(version)) {
-                        contextVersions[pos] = newContextVersion;
+                    if (pos >= 0 && contextVersions[ pos ].name.equals(version)) {
+                        contextVersions[ pos ] = newContextVersion;
                         contextObjectToContextVersionMap.put(context, newContextVersion);
                     }
                 }
@@ -321,13 +313,13 @@ public final class Mapper {
     /**
      * Remove a context from an existing host.
      *
-     * @param ctxt      The actual context
-     * @param hostName  Virtual host name this context belongs to
-     * @param path      Context path
-     * @param version   Context version
+     * @param ctxt     The actual context
+     * @param hostName Virtual host name this context belongs to
+     * @param path     Context path
+     * @param version  Context version
      */
     public void removeContextVersion(Context ctxt, String hostName,
-            String path, String version) {
+                                     String path, String version) {
 
         hostName = renameWildcardHost(hostName);
         contextObjectToContextVersionMap.remove(ctxt);
@@ -346,7 +338,7 @@ public final class Mapper {
 
             ContextVersion[] contextVersions = context.versions;
             ContextVersion[] newContextVersions =
-                new ContextVersion[contextVersions.length - 1];
+                new ContextVersion[ contextVersions.length - 1 ];
             if (removeMap(contextVersions, newContextVersions, version)) {
                 if (newContextVersions.length == 0) {
                     // Remove the context
@@ -366,16 +358,16 @@ public final class Mapper {
      * Mark a context as being reloaded. Reversion of this state is performed
      * by calling <code>addContextVersion(...)</code> when context starts up.
      *
-     * @param ctxt      The actual context
-     * @param hostName  Virtual host name this context belongs to
+     * @param ctxt        The actual context
+     * @param hostName    Virtual host name this context belongs to
      * @param contextPath Context path
-     * @param version   Context version
+     * @param version     Context version
      */
     public void pauseContextVersion(Context ctxt, String hostName,
-            String contextPath, String version) {
+                                    String contextPath, String version) {
         hostName = renameWildcardHost(hostName);
         ContextVersion contextVersion = findContextVersion(hostName,
-                contextPath, version, true);
+            contextPath, version, true);
         if (contextVersion == null || !ctxt.equals(contextVersion.object)) {
             return;
         }
@@ -384,7 +376,7 @@ public final class Mapper {
 
 
     private ContextVersion findContextVersion(String hostName,
-            String contextPath, String version, boolean silent) {
+                                              String contextPath, String version, boolean silent) {
         MappedHost host = exactFind(hosts, hostName);
         if (host == null || host.isAlias()) {
             if (!silent) {
@@ -393,7 +385,7 @@ public final class Mapper {
             return null;
         }
         MappedContext context = exactFind(host.contextList.contexts,
-                contextPath);
+            contextPath);
         if (context == null) {
             if (!silent) {
                 log.error(sm.getString("mapper.findContext.noContext", contextPath));
@@ -416,7 +408,7 @@ public final class Mapper {
                            boolean resourceOnly) {
         hostName = renameWildcardHost(hostName);
         ContextVersion contextVersion = findContextVersion(hostName,
-                contextPath, version, false);
+            contextPath, version, false);
         if (contextVersion == null) {
             return;
         }
@@ -424,10 +416,10 @@ public final class Mapper {
     }
 
     public void addWrappers(String hostName, String contextPath,
-            String version, Collection<WrapperMappingInfo> wrappers) {
+                            String version, Collection<WrapperMappingInfo> wrappers) {
         hostName = renameWildcardHost(hostName);
         ContextVersion contextVersion = findContextVersion(hostName,
-                contextPath, version, false);
+            contextPath, version, false);
         if (contextVersion == null) {
             return;
         }
@@ -438,39 +430,39 @@ public final class Mapper {
      * Adds wrappers to the given context.
      *
      * @param contextVersion The context to which to add the wrappers
-     * @param wrappers Information on wrapper mappings
+     * @param wrappers       Information on wrapper mappings
      */
     private void addWrappers(ContextVersion contextVersion,
-            Collection<WrapperMappingInfo> wrappers) {
+                             Collection<WrapperMappingInfo> wrappers) {
         for (WrapperMappingInfo wrapper : wrappers) {
             addWrapper(contextVersion, wrapper.getMapping(),
-                    wrapper.getWrapper(), wrapper.isJspWildCard(),
-                    wrapper.isResourceOnly());
+                wrapper.getWrapper(), wrapper.isJspWildCard(),
+                wrapper.isResourceOnly());
         }
     }
 
     /**
      * Adds a wrapper to the given context.
      *
-     * @param context The context to which to add the wrapper
-     * @param path Wrapper mapping
-     * @param wrapper The Wrapper object
-     * @param jspWildCard true if the wrapper corresponds to the JspServlet
-     *   and the mapping path contains a wildcard; false otherwise
+     * @param context      The context to which to add the wrapper
+     * @param path         Wrapper mapping
+     * @param wrapper      The Wrapper object
+     * @param jspWildCard  true if the wrapper corresponds to the JspServlet
+     *                     and the mapping path contains a wildcard; false otherwise
      * @param resourceOnly true if this wrapper always expects a physical
      *                     resource to be present (such as a JSP)
      */
     protected void addWrapper(ContextVersion context, String path,
-            Wrapper wrapper, boolean jspWildCard, boolean resourceOnly) {
+                              Wrapper wrapper, boolean jspWildCard, boolean resourceOnly) {
 
         synchronized (context) {
             if (path.endsWith("/*")) {
                 // Wildcard wrapper
                 String name = path.substring(0, path.length() - 2);
                 MappedWrapper newWrapper = new MappedWrapper(name, wrapper,
-                        jspWildCard, resourceOnly);
+                    jspWildCard, resourceOnly);
                 MappedWrapper[] oldWrappers = context.wildcardWrappers;
-                MappedWrapper[] newWrappers = new MappedWrapper[oldWrappers.length + 1];
+                MappedWrapper[] newWrappers = new MappedWrapper[ oldWrappers.length + 1 ];
                 if (insertMap(oldWrappers, newWrappers, newWrapper)) {
                     context.wildcardWrappers = newWrappers;
                     int slashCount = slashCount(newWrapper.name);
@@ -482,17 +474,17 @@ public final class Mapper {
                 // Extension wrapper
                 String name = path.substring(2);
                 MappedWrapper newWrapper = new MappedWrapper(name, wrapper,
-                        jspWildCard, resourceOnly);
+                    jspWildCard, resourceOnly);
                 MappedWrapper[] oldWrappers = context.extensionWrappers;
                 MappedWrapper[] newWrappers =
-                    new MappedWrapper[oldWrappers.length + 1];
+                    new MappedWrapper[ oldWrappers.length + 1 ];
                 if (insertMap(oldWrappers, newWrappers, newWrapper)) {
                     context.extensionWrappers = newWrappers;
                 }
             } else if (path.equals("/")) {
                 // Default wrapper
                 MappedWrapper newWrapper = new MappedWrapper("", wrapper,
-                        jspWildCard, resourceOnly);
+                    jspWildCard, resourceOnly);
                 context.defaultWrapper = newWrapper;
             } else {
                 // Exact wrapper
@@ -505,9 +497,9 @@ public final class Mapper {
                     name = path;
                 }
                 MappedWrapper newWrapper = new MappedWrapper(name, wrapper,
-                        jspWildCard, resourceOnly);
+                    jspWildCard, resourceOnly);
                 MappedWrapper[] oldWrappers = context.exactWrappers;
-                MappedWrapper[] newWrappers = new MappedWrapper[oldWrappers.length + 1];
+                MappedWrapper[] newWrappers = new MappedWrapper[ oldWrappers.length + 1 ];
                 if (insertMap(oldWrappers, newWrappers, newWrapper)) {
                     context.exactWrappers = newWrappers;
                 }
@@ -525,10 +517,10 @@ public final class Mapper {
      * @param path        Wrapper mapping
      */
     public void removeWrapper(String hostName, String contextPath,
-            String version, String path) {
+                              String version, String path) {
         hostName = renameWildcardHost(hostName);
         ContextVersion contextVersion = findContextVersion(hostName,
-                contextPath, version, true);
+            contextPath, version, true);
         if (contextVersion == null || contextVersion.isPaused()) {
             return;
         }
@@ -550,7 +542,7 @@ public final class Mapper {
                     return;
                 }
                 MappedWrapper[] newWrappers =
-                    new MappedWrapper[oldWrappers.length - 1];
+                    new MappedWrapper[ oldWrappers.length - 1 ];
                 if (removeMap(oldWrappers, newWrappers, name)) {
                     // Recalculate nesting
                     context.nesting = 0;
@@ -570,7 +562,7 @@ public final class Mapper {
                     return;
                 }
                 MappedWrapper[] newWrappers =
-                    new MappedWrapper[oldWrappers.length - 1];
+                    new MappedWrapper[ oldWrappers.length - 1 ];
                 if (removeMap(oldWrappers, newWrappers, name)) {
                     context.extensionWrappers = newWrappers;
                 }
@@ -592,7 +584,7 @@ public final class Mapper {
                     return;
                 }
                 MappedWrapper[] newWrappers =
-                    new MappedWrapper[oldWrappers.length - 1];
+                    new MappedWrapper[ oldWrappers.length - 1 ];
                 if (removeMap(oldWrappers, newWrappers, name)) {
                     context.exactWrappers = newWrappers;
                 }
@@ -610,16 +602,16 @@ public final class Mapper {
      * @param welcomeFile The welcome file to add
      */
     public void addWelcomeFile(String hostName, String contextPath, String version,
-            String welcomeFile) {
+                               String welcomeFile) {
         hostName = renameWildcardHost(hostName);
         ContextVersion contextVersion = findContextVersion(hostName, contextPath, version, false);
         if (contextVersion == null) {
             return;
         }
         int len = contextVersion.welcomeResources.length + 1;
-        String[] newWelcomeResources = new String[len];
+        String[] newWelcomeResources = new String[ len ];
         System.arraycopy(contextVersion.welcomeResources, 0, newWelcomeResources, 0, len - 1);
-        newWelcomeResources[len - 1] = welcomeFile;
+        newWelcomeResources[ len - 1 ] = welcomeFile;
         contextVersion.welcomeResources = newWelcomeResources;
     }
 
@@ -633,7 +625,7 @@ public final class Mapper {
      * @param welcomeFile The welcome file to remove
      */
     public void removeWelcomeFile(String hostName, String contextPath,
-            String version, String welcomeFile) {
+                                  String version, String welcomeFile) {
         hostName = renameWildcardHost(hostName);
         ContextVersion contextVersion = findContextVersion(hostName, contextPath, version, false);
         if (contextVersion == null || contextVersion.isPaused()) {
@@ -641,18 +633,18 @@ public final class Mapper {
         }
         int match = -1;
         for (int i = 0; i < contextVersion.welcomeResources.length; i++) {
-            if (welcomeFile.equals(contextVersion.welcomeResources[i])) {
+            if (welcomeFile.equals(contextVersion.welcomeResources[ i ])) {
                 match = i;
                 break;
             }
         }
         if (match > -1) {
             int len = contextVersion.welcomeResources.length - 1;
-            String[] newWelcomeResources = new String[len];
+            String[] newWelcomeResources = new String[ len ];
             System.arraycopy(contextVersion.welcomeResources, 0, newWelcomeResources, 0, match);
             if (match < len) {
                 System.arraycopy(contextVersion.welcomeResources, match + 1,
-                        newWelcomeResources, match, len - match);
+                    newWelcomeResources, match, len - match);
             }
             contextVersion.welcomeResources = newWelcomeResources;
         }
@@ -672,16 +664,16 @@ public final class Mapper {
         if (contextVersion == null) {
             return;
         }
-        contextVersion.welcomeResources = new String[0];
+        contextVersion.welcomeResources = new String[ 0 ];
     }
 
 
     /**
      * Map the specified host name and URI, mutating the given mapping data.
      *
-     * @param host Virtual host name
-     * @param uri URI
-     * @param version The version, if any, included in the request to be mapped
+     * @param host        Virtual host name
+     * @param uri         URI
+     * @param version     The version, if any, included in the request to be mapped
      * @param mappingData This structure will contain the result of the mapping
      *                    operation
      * @throws IOException if the buffers are too small to hold the results of
@@ -708,18 +700,18 @@ public final class Mapper {
      * Map the specified URI relative to the context,
      * mutating the given mapping data.
      *
-     * @param context The actual context
-     * @param uri URI
+     * @param context     The actual context
+     * @param uri         URI
      * @param mappingData This structure will contain the result of the mapping
      *                    operation
      * @throws IOException if the buffers are too small to hold the results of
      *                     the mapping.
      */
     public void map(Context context, MessageBytes uri,
-            MappingData mappingData) throws IOException {
+                    MappingData mappingData) throws IOException {
 
         ContextVersion contextVersion =
-                contextObjectToContextVersionMap.get(context);
+            contextObjectToContextVersionMap.get(context);
         uri.toChars();
         CharChunk uricc = uri.getCharChunk();
         uricc.setLimit(-1);
@@ -731,11 +723,12 @@ public final class Mapper {
 
     /**
      * Map the specified URI.
+     *
      * @throws IOException If an error occurs while manipulating the URI during
-     *         the mapping
+     *                     the mapping
      */
     private final void internalMap(CharChunk host, CharChunk uri,
-            String version, MappingData mappingData) throws IOException {
+                                   String version, MappingData mappingData) throws IOException {
 
         if (mappingData.host != null) {
             // The legacy code (dating down at least to Tomcat 4.1) just
@@ -792,7 +785,7 @@ public final class Mapper {
         boolean found = false;
         MappedContext context = null;
         while (pos >= 0) {
-            context = contexts[pos];
+            context = contexts[ pos ];
             if (uri.startsWith(context.name)) {
                 length = context.name.length();
                 if (uri.getLength() == length) {
@@ -814,8 +807,8 @@ public final class Mapper {
         uri.setEnd(uriEnd);
 
         if (!found) {
-            if (contexts[0].name.equals("")) {
-                context = contexts[0];
+            if (contexts[ 0 ].name.equals("")) {
+                context = contexts[ 0 ];
             } else {
                 context = null;
             }
@@ -828,9 +821,9 @@ public final class Mapper {
         ContextVersion[] contextVersions = context.versions;
         final int versionCount = contextVersions.length;
         if (versionCount > 1) {
-            Context[] contextObjects = new Context[contextVersions.length];
+            Context[] contextObjects = new Context[ contextVersions.length ];
             for (int i = 0; i < contextObjects.length; i++) {
-                contextObjects[i] = contextVersions[i].object;
+                contextObjects[ i ] = contextVersions[ i ].object;
             }
             mappingData.contexts = contextObjects;
             if (version != null) {
@@ -840,7 +833,7 @@ public final class Mapper {
         if (contextVersion == null) {
             // Return the latest version
             // The versions array is known to contain at least one element
-            contextVersion = contextVersions[versionCount - 1];
+            contextVersion = contextVersions[ versionCount - 1 ];
         }
         mappingData.context = contextVersion.object;
         mappingData.contextSlashCount = contextVersion.slashCount;
@@ -855,6 +848,7 @@ public final class Mapper {
 
     /**
      * Wrapper mapping.
+     *
      * @throws IOException if the buffers are too small to hold the results of
      *                     the mapping.
      */
@@ -882,10 +876,10 @@ public final class Mapper {
         MappedWrapper[] wildcardWrappers = contextVersion.wildcardWrappers;
         if (mappingData.wrapper == null) {
             internalMapWildcardWrapper(wildcardWrappers, contextVersion.nesting,
-                                       path, mappingData);
+                path, mappingData);
             if (mappingData.wrapper != null && mappingData.jspWildCard) {
                 char[] buf = path.getBuffer();
-                if (buf[pathEnd - 1] == '/') {
+                if (buf[ pathEnd - 1 ] == '/') {
                     /*
                      * Path ending in '/' was mapped to JSP servlet based on
                      * wildcard match (e.g., as specified in url-pattern of a
@@ -899,14 +893,14 @@ public final class Mapper {
                 } else {
                     // See Bugzilla 27704
                     mappingData.wrapperPath.setChars(buf, path.getStart(),
-                                                     path.getLength());
+                        path.getLength());
                     mappingData.pathInfo.recycle();
                 }
             }
         }
 
-        if(mappingData.wrapper == null && noServletPath &&
-                contextVersion.object.getMapperContextRootRedirectEnabled()) {
+        if (mappingData.wrapper == null && noServletPath &&
+            contextVersion.object.getMapperContextRootRedirectEnabled()) {
             // The path is empty, redirect to "/"
             path.append('/');
             pathEnd = path.getEnd();
@@ -920,7 +914,7 @@ public final class Mapper {
         MappedWrapper[] extensionWrappers = contextVersion.extensionWrappers;
         if (mappingData.wrapper == null && !checkJspWelcomeFiles) {
             internalMapExtensionWrapper(extensionWrappers, path, mappingData,
-                    true);
+                true);
         }
 
         // Rule 4 -- Welcome resources processing for servlets
@@ -928,15 +922,15 @@ public final class Mapper {
             boolean checkWelcomeFiles = checkJspWelcomeFiles;
             if (!checkWelcomeFiles) {
                 char[] buf = path.getBuffer();
-                checkWelcomeFiles = (buf[pathEnd - 1] == '/');
+                checkWelcomeFiles = (buf[ pathEnd - 1 ] == '/');
             }
             if (checkWelcomeFiles) {
                 for (int i = 0; (i < contextVersion.welcomeResources.length)
-                         && (mappingData.wrapper == null); i++) {
+                    && (mappingData.wrapper == null); i++) {
                     path.setOffset(pathOffset);
                     path.setEnd(pathEnd);
-                    path.append(contextVersion.welcomeResources[i], 0,
-                            contextVersion.welcomeResources[i].length());
+                    path.append(contextVersion.welcomeResources[ i ], 0,
+                        contextVersion.welcomeResources[ i ].length());
                     path.setOffset(servletPath);
 
                     // Rule 4a -- Welcome resources processing for exact macth
@@ -946,7 +940,7 @@ public final class Mapper {
                     if (mappingData.wrapper == null) {
                         internalMapWildcardWrapper
                             (wildcardWrappers, contextVersion.nesting,
-                             path, mappingData);
+                                path, mappingData);
                     }
 
                     // Rule 4c -- Welcome resources processing
@@ -955,20 +949,20 @@ public final class Mapper {
                         && contextVersion.resources != null) {
                         String pathStr = path.toString();
                         WebResource file =
-                                contextVersion.resources.getResource(pathStr);
+                            contextVersion.resources.getResource(pathStr);
                         if (file != null && file.isFile()) {
                             internalMapExtensionWrapper(extensionWrappers, path,
-                                                        mappingData, true);
+                                mappingData, true);
                             if (mappingData.wrapper == null
                                 && contextVersion.defaultWrapper != null) {
                                 mappingData.wrapper =
                                     contextVersion.defaultWrapper.object;
                                 mappingData.requestPath.setChars
                                     (path.getBuffer(), path.getStart(),
-                                     path.getLength());
+                                        path.getLength());
                                 mappingData.wrapperPath.setChars
                                     (path.getBuffer(), path.getStart(),
-                                     path.getLength());
+                                        path.getLength());
                                 mappingData.requestPath.setString(pathStr);
                                 mappingData.wrapperPath.setString(pathStr);
                             }
@@ -993,18 +987,18 @@ public final class Mapper {
             boolean checkWelcomeFiles = checkJspWelcomeFiles;
             if (!checkWelcomeFiles) {
                 char[] buf = path.getBuffer();
-                checkWelcomeFiles = (buf[pathEnd - 1] == '/');
+                checkWelcomeFiles = (buf[ pathEnd - 1 ] == '/');
             }
             if (checkWelcomeFiles) {
                 for (int i = 0; (i < contextVersion.welcomeResources.length)
-                         && (mappingData.wrapper == null); i++) {
+                    && (mappingData.wrapper == null); i++) {
                     path.setOffset(pathOffset);
                     path.setEnd(pathEnd);
-                    path.append(contextVersion.welcomeResources[i], 0,
-                                contextVersion.welcomeResources[i].length());
+                    path.append(contextVersion.welcomeResources[ i ], 0,
+                        contextVersion.welcomeResources[ i ].length());
                     path.setOffset(servletPath);
                     internalMapExtensionWrapper(extensionWrappers, path,
-                                                mappingData, false);
+                        mappingData, false);
                 }
 
                 path.setOffset(servletPath);
@@ -1025,7 +1019,7 @@ public final class Mapper {
             }
             // Redirection to a folder
             char[] buf = path.getBuffer();
-            if (contextVersion.resources != null && buf[pathEnd -1 ] != '/') {
+            if (contextVersion.resources != null && buf[ pathEnd - 1 ] != '/') {
                 String pathStr = path.toString();
                 // Note: Check redirect first to save unnecessary getResource()
                 //       call. See BZ 62968.
@@ -1065,7 +1059,7 @@ public final class Mapper {
      * Exact mapping.
      */
     private final void internalMapExactWrapper
-        (MappedWrapper[] wrappers, CharChunk path, MappingData mappingData) {
+    (MappedWrapper[] wrappers, CharChunk path, MappingData mappingData) {
         MappedWrapper wrapper = exactFind(wrappers, path);
         if (wrapper != null) {
             mappingData.requestPath.setString(wrapper.name);
@@ -1087,8 +1081,8 @@ public final class Mapper {
      * Wildcard mapping.
      */
     private final void internalMapWildcardWrapper
-        (MappedWrapper[] wrappers, int nesting, CharChunk path,
-         MappingData mappingData) {
+    (MappedWrapper[] wrappers, int nesting, CharChunk path,
+     MappingData mappingData) {
 
         int pathEnd = path.getEnd();
 
@@ -1098,8 +1092,8 @@ public final class Mapper {
         if (pos != -1) {
             boolean found = false;
             while (pos >= 0) {
-                if (path.startsWith(wrappers[pos].name)) {
-                    length = wrappers[pos].name.length();
+                if (path.startsWith(wrappers[ pos ].name)) {
+                    length = wrappers[ pos ].name.length();
                     if (path.getLength() == length) {
                         found = true;
                         break;
@@ -1118,17 +1112,17 @@ public final class Mapper {
             }
             path.setEnd(pathEnd);
             if (found) {
-                mappingData.wrapperPath.setString(wrappers[pos].name);
+                mappingData.wrapperPath.setString(wrappers[ pos ].name);
                 if (path.getLength() > length) {
                     mappingData.pathInfo.setChars
                         (path.getBuffer(),
-                         path.getOffset() + length,
-                         path.getLength() - length);
+                            path.getOffset() + length,
+                            path.getLength() - length);
                 }
                 mappingData.requestPath.setChars
                     (path.getBuffer(), path.getOffset(), path.getLength());
-                mappingData.wrapper = wrappers[pos].object;
-                mappingData.jspWildCard = wrappers[pos].jspWildCard;
+                mappingData.wrapper = wrappers[ pos ].object;
+                mappingData.jspWildCard = wrappers[ pos ].jspWildCard;
                 mappingData.matchType = MappingMatch.PATH;
             }
         }
@@ -1138,19 +1132,19 @@ public final class Mapper {
     /**
      * Extension mappings.
      *
-     * @param wrappers          Set of wrappers to check for matches
-     * @param path              Path to map
-     * @param mappingData       Mapping data for result
-     * @param resourceExpected  Is this mapping expecting to find a resource
+     * @param wrappers         Set of wrappers to check for matches
+     * @param path             Path to map
+     * @param mappingData      Mapping data for result
+     * @param resourceExpected Is this mapping expecting to find a resource
      */
     private final void internalMapExtensionWrapper(MappedWrapper[] wrappers,
-            CharChunk path, MappingData mappingData, boolean resourceExpected) {
+                                                   CharChunk path, MappingData mappingData, boolean resourceExpected) {
         char[] buf = path.getBuffer();
         int pathEnd = path.getEnd();
         int servletPath = path.getOffset();
         int slash = -1;
         for (int i = pathEnd - 1; i >= servletPath; i--) {
-            if (buf[i] == '/') {
+            if (buf[ i ] == '/') {
                 slash = i;
                 break;
             }
@@ -1158,7 +1152,7 @@ public final class Mapper {
         if (slash >= 0) {
             int period = -1;
             for (int i = pathEnd - 1; i > slash; i--) {
-                if (buf[i] == '.') {
+                if (buf[ i ] == '.') {
                     period = i;
                     break;
                 }
@@ -1168,11 +1162,11 @@ public final class Mapper {
                 path.setEnd(pathEnd);
                 MappedWrapper wrapper = exactFind(wrappers, path);
                 if (wrapper != null
-                        && (resourceExpected || !wrapper.resourceOnly)) {
+                    && (resourceExpected || !wrapper.resourceOnly)) {
                     mappingData.wrapperPath.setChars(buf, servletPath, pathEnd
-                            - servletPath);
+                        - servletPath);
                     mappingData.requestPath.setChars(buf, servletPath, pathEnd
-                            - servletPath);
+                        - servletPath);
                     mappingData.wrapper = wrapper.object;
                     mappingData.matchType = MappingMatch.EXTENSION;
                 }
@@ -1199,7 +1193,7 @@ public final class Mapper {
      * given array.
      */
     private static final <T> int find(MapElement<T>[] map, CharChunk name,
-                                  int start, int end) {
+                                      int start, int end) {
 
         int a = 0;
         int b = map.length - 1;
@@ -1209,7 +1203,7 @@ public final class Mapper {
             return -1;
         }
 
-        if (compare(name, start, end, map[0].name) < 0 ) {
+        if (compare(name, start, end, map[ 0 ].name) < 0) {
             return -1;
         }
         if (b == 0) {
@@ -1219,7 +1213,7 @@ public final class Mapper {
         int i = 0;
         while (true) {
             i = (b + a) >>> 1;
-            int result = compare(name, start, end, map[i].name);
+            int result = compare(name, start, end, map[ i ].name);
             if (result == 1) {
                 a = i;
             } else if (result == 0) {
@@ -1228,7 +1222,7 @@ public final class Mapper {
                 b = i;
             }
             if ((b - a) == 1) {
-                int result2 = compare(name, start, end, map[b].name);
+                int result2 = compare(name, start, end, map[ b ].name);
                 if (result2 < 0) {
                     return a;
                 } else {
@@ -1255,7 +1249,7 @@ public final class Mapper {
      * given array.
      */
     private static final <T> int findIgnoreCase(MapElement<T>[] map, CharChunk name,
-                                  int start, int end) {
+                                                int start, int end) {
 
         int a = 0;
         int b = map.length - 1;
@@ -1264,7 +1258,7 @@ public final class Mapper {
         if (b == -1) {
             return -1;
         }
-        if (compareIgnoreCase(name, start, end, map[0].name) < 0 ) {
+        if (compareIgnoreCase(name, start, end, map[ 0 ].name) < 0) {
             return -1;
         }
         if (b == 0) {
@@ -1274,7 +1268,7 @@ public final class Mapper {
         int i = 0;
         while (true) {
             i = (b + a) >>> 1;
-            int result = compareIgnoreCase(name, start, end, map[i].name);
+            int result = compareIgnoreCase(name, start, end, map[ i ].name);
             if (result == 1) {
                 a = i;
             } else if (result == 0) {
@@ -1283,7 +1277,7 @@ public final class Mapper {
                 b = i;
             }
             if ((b - a) == 1) {
-                int result2 = compareIgnoreCase(name, start, end, map[b].name);
+                int result2 = compareIgnoreCase(name, start, end, map[ b ].name);
                 if (result2 < 0) {
                     return a;
                 } else {
@@ -1299,6 +1293,7 @@ public final class Mapper {
      * Find a map element given its name in a sorted array of map elements.
      * This will return the index for the closest inferior or equal item in the
      * given array.
+     *
      * @see #exactFind(MapElement[], String)
      */
     private static final <T> int find(MapElement<T>[] map, String name) {
@@ -1311,7 +1306,7 @@ public final class Mapper {
             return -1;
         }
 
-        if (name.compareTo(map[0].name) < 0) {
+        if (name.compareTo(map[ 0 ].name) < 0) {
             return -1;
         }
         if (b == 0) {
@@ -1321,7 +1316,7 @@ public final class Mapper {
         int i = 0;
         while (true) {
             i = (b + a) >>> 1;
-            int result = name.compareTo(map[i].name);
+            int result = name.compareTo(map[ i ].name);
             if (result > 0) {
                 a = i;
             } else if (result == 0) {
@@ -1330,7 +1325,7 @@ public final class Mapper {
                 b = i;
             }
             if ((b - a) == 1) {
-                int result2 = name.compareTo(map[b].name);
+                int result2 = name.compareTo(map[ b ].name);
                 if (result2 < 0) {
                     return a;
                 } else {
@@ -1346,13 +1341,14 @@ public final class Mapper {
      * Find a map element given its name in a sorted array of map elements. This
      * will return the element that you were searching for. Otherwise it will
      * return <code>null</code>.
+     *
      * @see #find(MapElement[], String)
      */
     private static final <T, E extends MapElement<T>> E exactFind(E[] map,
-            String name) {
+                                                                  String name) {
         int pos = find(map, name);
         if (pos >= 0) {
-            E result = map[pos];
+            E result = map[ pos ];
             if (name.equals(result.name)) {
                 return result;
             }
@@ -1366,10 +1362,10 @@ public final class Mapper {
      * return <code>null</code>.
      */
     private static final <T, E extends MapElement<T>> E exactFind(E[] map,
-            CharChunk name) {
+                                                                  CharChunk name) {
         int pos = find(map, name);
         if (pos >= 0) {
-            E result = map[pos];
+            E result = map[ pos ];
             if (name.equals(result.name)) {
                 return result;
             }
@@ -1381,13 +1377,14 @@ public final class Mapper {
      * Find a map element given its name in a sorted array of map elements. This
      * will return the element that you were searching for. Otherwise it will
      * return <code>null</code>.
+     *
      * @see #findIgnoreCase(MapElement[], CharChunk)
      */
     private static final <T, E extends MapElement<T>> E exactFindIgnoreCase(
-            E[] map, CharChunk name) {
+        E[] map, CharChunk name) {
         int pos = findIgnoreCase(map, name);
         if (pos >= 0) {
-            E result = map[pos];
+            E result = map[ pos ];
             if (name.equalsIgnoreCase(result.name)) {
                 return result;
             }
@@ -1409,9 +1406,9 @@ public final class Mapper {
             len = end - start;
         }
         for (int i = 0; (i < len) && (result == 0); i++) {
-            if (c[i + start] > compareTo.charAt(i)) {
+            if (c[ i + start ] > compareTo.charAt(i)) {
                 result = 1;
-            } else if (c[i + start] < compareTo.charAt(i)) {
+            } else if (c[ i + start ] < compareTo.charAt(i)) {
                 result = -1;
             }
         }
@@ -1431,7 +1428,7 @@ public final class Mapper {
      * Return -1, 0 or +1 if inferior, equal, or superior to the String.
      */
     private static final int compareIgnoreCase(CharChunk name, int start, int end,
-                                     String compareTo) {
+                                               String compareTo) {
         int result = 0;
         char[] c = name.getBuffer();
         int len = compareTo.length();
@@ -1439,9 +1436,9 @@ public final class Mapper {
             len = end - start;
         }
         for (int i = 0; (i < len) && (result == 0); i++) {
-            if (Ascii.toLower(c[i + start]) > Ascii.toLower(compareTo.charAt(i))) {
+            if (Ascii.toLower(c[ i + start ]) > Ascii.toLower(compareTo.charAt(i))) {
                 result = 1;
-            } else if (Ascii.toLower(c[i + start]) < Ascii.toLower(compareTo.charAt(i))) {
+            } else if (Ascii.toLower(c[ i + start ]) < Ascii.toLower(compareTo.charAt(i))) {
                 result = -1;
             }
         }
@@ -1466,7 +1463,7 @@ public final class Mapper {
         int pos = end;
 
         while (pos > start) {
-            if (c[--pos] == '/') {
+            if (c[ --pos ] == '/') {
                 break;
             }
         }
@@ -1486,7 +1483,7 @@ public final class Mapper {
         int count = 0;
 
         while (pos < end) {
-            if ((c[pos++] == '/') && ((++count) == n)) {
+            if ((c[ pos++ ] == '/') && ((++count) == n)) {
                 pos--;
                 break;
             }
@@ -1514,13 +1511,13 @@ public final class Mapper {
      * duplicates.
      */
     private static final <T> boolean insertMap
-        (MapElement<T>[] oldMap, MapElement<T>[] newMap, MapElement<T> newElement) {
+    (MapElement<T>[] oldMap, MapElement<T>[] newMap, MapElement<T> newElement) {
         int pos = find(oldMap, newElement.name);
-        if ((pos != -1) && (newElement.name.equals(oldMap[pos].name))) {
+        if ((pos != -1) && (newElement.name.equals(oldMap[ pos ].name))) {
             return false;
         }
         System.arraycopy(oldMap, 0, newMap, 0, pos + 1);
-        newMap[pos + 1] = newElement;
+        newMap[ pos + 1 ] = newElement;
         System.arraycopy
             (oldMap, pos + 1, newMap, pos + 2, oldMap.length - pos - 1);
         return true;
@@ -1531,12 +1528,12 @@ public final class Mapper {
      * Insert into the right place in a sorted MapElement array.
      */
     private static final <T> boolean removeMap
-        (MapElement<T>[] oldMap, MapElement<T>[] newMap, String name) {
+    (MapElement<T>[] oldMap, MapElement<T>[] newMap, String name) {
         int pos = find(oldMap, name);
-        if ((pos != -1) && (name.equals(oldMap[pos].name))) {
+        if ((pos != -1) && (name.equals(oldMap[ pos ].name))) {
             System.arraycopy(oldMap, 0, newMap, 0, pos);
             System.arraycopy(oldMap, pos + 1, newMap, pos,
-                             oldMap.length - pos - 1);
+                oldMap.length - pos - 1);
             return true;
         }
         return false;
@@ -1658,7 +1655,7 @@ public final class Mapper {
         public final int nesting;
 
         public ContextList() {
-            this(new MappedContext[0], 0);
+            this(new MappedContext[ 0 ], 0);
         }
 
         private ContextList(MappedContext[] contexts, int nesting) {
@@ -1666,18 +1663,16 @@ public final class Mapper {
             this.nesting = nesting;
         }
 
-        public ContextList addContext(MappedContext mappedContext,
-                int slashCount) {
-            MappedContext[] newContexts = new MappedContext[contexts.length + 1];
+        public ContextList addContext(MappedContext mappedContext, int slashCount) {
+            MappedContext[] newContexts = new MappedContext[ contexts.length + 1 ];
             if (insertMap(contexts, newContexts, mappedContext)) {
-                return new ContextList(newContexts, Math.max(nesting,
-                        slashCount));
+                return new ContextList(newContexts, Math.max(nesting, slashCount));
             }
             return null;
         }
 
         public ContextList removeContext(String path) {
-            MappedContext[] newContexts = new MappedContext[contexts.length - 1];
+            MappedContext[] newContexts = new MappedContext[ contexts.length - 1 ];
             if (removeMap(contexts, newContexts, path)) {
                 int newNesting = 0;
                 for (MappedContext context : newContexts) {
@@ -1689,16 +1684,14 @@ public final class Mapper {
         }
     }
 
-
     // ---------------------------------------------------- Context Inner Class
-
 
     protected static final class MappedContext extends MapElement<Void> {
         public volatile ContextVersion[] versions;
 
         public MappedContext(String name, ContextVersion firstVersion) {
             super(name, null);
-            this.versions = new ContextVersion[] { firstVersion };
+            this.versions = new ContextVersion[]{firstVersion};
         }
     }
 
@@ -1708,15 +1701,15 @@ public final class Mapper {
         public final WebResourceRoot resources;
         public String[] welcomeResources;
         public MappedWrapper defaultWrapper = null;
-        public MappedWrapper[] exactWrappers = new MappedWrapper[0];
-        public MappedWrapper[] wildcardWrappers = new MappedWrapper[0];
-        public MappedWrapper[] extensionWrappers = new MappedWrapper[0];
+        public MappedWrapper[] exactWrappers = new MappedWrapper[ 0 ];
+        public MappedWrapper[] wildcardWrappers = new MappedWrapper[ 0 ];
+        public MappedWrapper[] extensionWrappers = new MappedWrapper[ 0 ];
         public int nesting = 0;
         private volatile boolean paused;
 
         public ContextVersion(String version, String path, int slashCount,
-                Context context, WebResourceRoot resources,
-                String[] welcomeResources) {
+                              Context context, WebResourceRoot resources,
+                              String[] welcomeResources) {
             super(version, context);
             this.path = path;
             this.slashCount = slashCount;
@@ -1735,14 +1728,12 @@ public final class Mapper {
 
     // ---------------------------------------------------- Wrapper Inner Class
 
-
     protected static class MappedWrapper extends MapElement<Wrapper> {
-
         public final boolean jspWildCard;
         public final boolean resourceOnly;
 
         public MappedWrapper(String name, Wrapper wrapper, boolean jspWildCard,
-                boolean resourceOnly) {
+                             boolean resourceOnly) {
             super(name, wrapper);
             this.jspWildCard = jspWildCard;
             this.resourceOnly = resourceOnly;

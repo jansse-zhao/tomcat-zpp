@@ -539,7 +539,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      * This keeps the main thread alive - the thread pool listening for http
      * connections is daemon threads.
      * <p>
-     * 初始化ServerSocket，等待连接
+     * 初始化SHUTDOWN命令的ServerSocket，等待连接
      */
     @Override
     public void await() {
@@ -566,8 +566,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
         // Set up a server socket to wait on
         try {
-            awaitSocket = new ServerSocket(getPortWithOffset(), 1,
-                InetAddress.getByName(address));
+            awaitSocket = new ServerSocket(getPortWithOffset(), 1, InetAddress.getByName(address));
         } catch (IOException e) {
             log.error(sm.getString("standardServer.awaitSocket.fail", address,
                 String.valueOf(getPortWithOffset()), String.valueOf(getPort()),

@@ -969,8 +969,7 @@ public class Connector extends LifecycleMBeanBase {
             setParseBodyMethods(getParseBodyMethods());
         }
 
-        if (AprStatus.isAprAvailable() && AprStatus.getUseOpenSSL() &&
-            protocolHandler instanceof AbstractHttp11Protocol) {
+        if (AprStatus.isAprAvailable() && AprStatus.getUseOpenSSL() && protocolHandler instanceof AbstractHttp11Protocol) {
             AbstractHttp11Protocol<?> jsseProtocolHandler = (AbstractHttp11Protocol<?>) protocolHandler;
             if (jsseProtocolHandler.isSSLEnabled() && jsseProtocolHandler.getSslImplementationName() == null) {
                 // OpenSSL is compatible with the JSSE configuration, so use it if APR is available
@@ -1005,6 +1004,7 @@ public class Connector extends LifecycleMBeanBase {
 
         try {
             // 本质上是调用protocolHandler的start方法
+            // 在这里初始化了Acceptor对象，该对象用于接收客户端连接用
             protocolHandler.start();
         } catch (Exception e) {
             throw new LifecycleException(sm.getString("coyoteConnector.protocolHandlerStartFailed"), e);

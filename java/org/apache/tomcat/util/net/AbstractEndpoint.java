@@ -75,8 +75,7 @@ public abstract class AbstractEndpoint<S, U> {
          * @param status The current socket status
          * @return The state of the socket after processing
          */
-        public SocketState process(SocketWrapperBase<S> socket,
-                                   SocketEvent status);
+        public SocketState process(SocketWrapperBase<S> socket, SocketEvent status);
 
 
         /**
@@ -365,7 +364,7 @@ public abstract class AbstractEndpoint<S, U> {
     }
 
     public SSLHostConfig[] findSslHostConfigs() {
-        return sslHostConfigs.values().toArray(new SSLHostConfig[0]);
+        return sslHostConfigs.values().toArray(new SSLHostConfig[ 0 ]);
     }
 
     /**
@@ -435,7 +434,7 @@ public abstract class AbstractEndpoint<S, U> {
             List<String> commonProtocols = new ArrayList<>(negotiableProtocols);
             commonProtocols.retainAll(clientRequestedApplicationProtocols);
             if (commonProtocols.size() > 0) {
-                String[] commonProtocolsArray = commonProtocols.toArray(new String[0]);
+                String[] commonProtocolsArray = commonProtocols.toArray(new String[ 0 ]);
                 sslParameters.setApplicationProtocols(commonProtocolsArray);
             }
         }
@@ -1371,8 +1370,7 @@ public abstract class AbstractEndpoint<S, U> {
      *                      container thread
      * @return if processing was triggered successfully
      */
-    public boolean processSocket(SocketWrapperBase<S> socketWrapper,
-                                 SocketEvent event, boolean dispatch) {
+    public boolean processSocket(SocketWrapperBase<S> socketWrapper, SocketEvent event, boolean dispatch) {
         try {
             if (socketWrapper == null) {
                 return false;
@@ -1405,10 +1403,7 @@ public abstract class AbstractEndpoint<S, U> {
         return true;
     }
 
-
-    protected abstract SocketProcessorBase<S> createSocketProcessor(
-        SocketWrapperBase<S> socketWrapper, SocketEvent event);
-
+    protected abstract SocketProcessorBase<S> createSocketProcessor(SocketWrapperBase<S> socketWrapper, SocketEvent event);
 
     // ------------------------------------------------------- Lifecycle methods
 

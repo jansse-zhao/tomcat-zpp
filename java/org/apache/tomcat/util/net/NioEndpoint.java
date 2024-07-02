@@ -67,13 +67,10 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, SocketChannel> {
 
-
     // -------------------------------------------------------------- Constants
-
 
     private static final Log log = LogFactory.getLog(NioEndpoint.class);
     private static final Log logHandshake = LogFactory.getLog(NioEndpoint.class.getName() + ".handshake");
-
 
     public static final int OP_REGISTER = 0x100; //register interest op
 
@@ -173,9 +170,9 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
 
     /**
      * The socket poller.
+     * socket轮询器
      */
     private Poller poller = null;
-
 
     // --------------------------------------------------------- Public Methods
 
@@ -193,7 +190,6 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
         }
     }
 
-
     @Override
     public String getId() {
         if (getUseInheritedChannel()) {
@@ -204,7 +200,6 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
             return null;
         }
     }
-
 
     // ----------------------------------------------- Public Lifecycle Methods
 
@@ -265,7 +260,6 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
         serverSock.configureBlocking(true); //mimic APR behavior
     }
 
-
     /**
      * Start the NIO endpoint, creating acceptor, poller threads.
      */
@@ -302,11 +296,10 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
             pollerThread.setDaemon(true);
             pollerThread.start();
 
-            // 启动线程
+            // 启动接收器线程，用于接收客户端连接的线程
             startAcceptorThread();
         }
     }
-
 
     /**
      * Stop the endpoint. This will cause all processing threads to stop.
@@ -349,7 +342,6 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
         }
     }
 
-
     /**
      * Deallocate NIO memory pools, and close server socket.
      */
@@ -378,7 +370,6 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
         }
     }
 
-
     @Override
     protected void doCloseServerSocket() throws IOException {
         try {
@@ -394,9 +385,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
         }
     }
 
-
     // ------------------------------------------------------ Protected Methods
-
 
     @Override
     protected void unlockAccept() {
@@ -430,29 +419,26 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
         }
     }
 
-
     protected SynchronizedStack<NioChannel> getNioChannels() {
         return nioChannels;
     }
-
 
     protected Poller getPoller() {
         return poller;
     }
 
-
     protected CountDownLatch getStopLatch() {
         return stopLatch;
     }
-
 
     protected void setStopLatch(CountDownLatch stopLatch) {
         this.stopLatch = stopLatch;
     }
 
-
     /**
      * Process the specified connection.
+     * <p>
+     * ######处理客户端Socket连接######
      *
      * @param socket The socket channel
      * @return <code>true</code> if the socket was correctly configured
@@ -461,18 +447,23 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
      */
     @Override
     protected boolean setSocketOptions(SocketChannel socket) {
+        // Socket包装器对象
         NioSocketWrapper socketWrapper = null;
         try {
             // Allocate channel and wrapper
             NioChannel channel = null;
+            // nioChannels通道的字节缓冲区分组
             if (nioChannels != null) {
                 channel = nioChannels.pop();
             }
             if (channel == null) {
+                // 重新创建Socket字节缓冲区，设置读写缓冲区大小，直接缓冲区大小
                 SocketBufferHandler bufhandler = new SocketBufferHandler(
                     socketProperties.getAppReadBufSize(),
                     socketProperties.getAppWriteBufSize(),
                     socketProperties.getDirectBuffer());
+
+                // 安全通道和非安全通道
                 if (isSSLEnabled()) {
                     channel = new SecureNioChannel(bufhandler, this);
                 } else {
@@ -481,6 +472,8 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
             }
             NioSocketWrapper newWrapper = new NioSocketWrapper(channel, this);
             channel.reset(socket, newWrapper);
+
+            // 映射包含与套接字匹配的所有当前连接
             connections.put(socket, newWrapper);
             socketWrapper = newWrapper;
 
@@ -494,6 +487,8 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
             socketWrapper.setReadTimeout(getConnectionTimeout());
             socketWrapper.setWriteTimeout(getConnectionTimeout());
             socketWrapper.setKeepAliveLeft(NioEndpoint.this.getMaxKeepAliveRequests());
+
+            // 将客户端Socket连接注册到poller轮询器中
             poller.register(socketWrapper);
             return true;
         } catch (Throwable t) {
@@ -604,12 +599,14 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
     /**
      * Poller class.
      * 轮询多个客户端连接
+     * 在Tomcat启动时，启动该poller线程
+     *
+     * @see this.startInternal() at line 294左右
      */
     public class Poller implements Runnable {
 
         private Selector selector;
-        private final SynchronizedQueue<PollerEvent> events =
-            new SynchronizedQueue<>();
+        private final SynchronizedQueue<PollerEvent> events = new SynchronizedQueue<>();
 
         private volatile boolean close = false;
         // Optimize expiration handling
@@ -793,8 +790,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
                     continue;
                 }
 
-                Iterator<SelectionKey> iterator =
-                    keyCount > 0 ? selector.selectedKeys().iterator() : null;
+                Iterator<SelectionKey> iterator = keyCount > 0 ? selector.selectedKeys().iterator() : null;
                 // Walk through the collection of ready keys and dispatch
                 // any active event.
                 while (iterator != null && iterator.hasNext()) {
@@ -837,7 +833,15 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
                                         socketWrapper.readBlocking = false;
                                         socketWrapper.readLock.notify();
                                     }
-                                } else if (!processSocket(socketWrapper, SocketEvent.OPEN_READ, true)) {
+                                }
+                                // processSocket方法调用
+                                // createSocketProcessor的
+                                // SocketProcessor的
+                                // doRun的
+                                // getHandler().process()方法处理客户端Socket的读取事件
+                                // getHandler()将获取Http11Processor对象的process方法，所以整个流程中
+                                // ######实际用来处理http协议的方法就是Http11Processor.process()方法######
+                                else if (!processSocket(socketWrapper, SocketEvent.OPEN_READ, true)) {
                                     closeSocket = true;
                                 }
                             }
@@ -1808,9 +1812,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
                 }
             }
         }
-
     }
-
 
     // ----------------------------------------------- SendfileData Inner Class
 

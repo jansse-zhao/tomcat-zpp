@@ -16,30 +16,6 @@
  */
 package org.apache.tomcat.util.net;
 
-import java.io.EOFException;
-import java.io.File;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.net.SocketTimeoutException;
-import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousChannelGroup;
-import java.nio.channels.AsynchronousCloseException;
-import java.nio.channels.AsynchronousServerSocketChannel;
-import java.nio.channels.AsynchronousSocketChannel;
-import java.nio.channels.CompletionHandler;
-import java.nio.channels.FileChannel;
-import java.nio.channels.NetworkChannel;
-import java.nio.file.StandardOpenOption;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import javax.net.ssl.SSLEngine;
-
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
@@ -49,10 +25,22 @@ import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.Acceptor.AcceptorState;
 import org.apache.tomcat.util.net.jsse.JSSESupport;
 
+import javax.net.ssl.SSLEngine;
+import java.io.EOFException;
+import java.io.File;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.net.SocketTimeoutException;
+import java.nio.ByteBuffer;
+import java.nio.channels.*;
+import java.nio.file.StandardOpenOption;
+import java.util.concurrent.*;
+
 /**
  * NIO2 endpoint.
  */
-public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,AsynchronousSocketChannel> {
+public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel, AsynchronousSocketChannel> {
 
 
     // -------------------------------------------------------------- Constants
@@ -147,13 +135,13 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
 
             if (socketProperties.getProcessorCache() != 0) {
                 processorCache = new SynchronizedStack<>(SynchronizedStack.DEFAULT_SIZE,
-                        socketProperties.getProcessorCache());
+                    socketProperties.getProcessorCache());
             }
             int actualBufferPool =
-                    socketProperties.getActualBufferPool(isSSLEnabled() ? getSniParseLimit() * 2 : 0);
+                socketProperties.getActualBufferPool(isSSLEnabled() ? getSniParseLimit() * 2 : 0);
             if (actualBufferPool != 0) {
                 nioChannels = new SynchronizedStack<>(SynchronizedStack.DEFAULT_SIZE,
-                        actualBufferPool);
+                    actualBufferPool);
             }
             // Create worker collection
             if (getExecutor() == null) {
@@ -287,10 +275,13 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
 
     /**
      * Process the specified connection.
+     * <p>
+     * 处理Acceptor传过来的客户端Socket连接
+     *
      * @param socket The socket channel
      * @return <code>true</code> if the socket was correctly configured
-     *  and processing may continue, <code>false</code> if the socket needs to be
-     *  close immediately
+     * and processing may continue, <code>false</code> if the socket needs to be
+     * close immediately
      */
     @Override
     protected boolean setSocketOptions(AsynchronousSocketChannel socket) {
@@ -303,9 +294,9 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
             }
             if (channel == null) {
                 SocketBufferHandler bufhandler = new SocketBufferHandler(
-                        socketProperties.getAppReadBufSize(),
-                        socketProperties.getAppWriteBufSize(),
-                        socketProperties.getDirectBuffer());
+                    socketProperties.getAppReadBufSize(),
+                    socketProperties.getAppWriteBufSize(),
+                    socketProperties.getDirectBuffer());
                 if (isSSLEnabled()) {
                     channel = new SecureNio2Channel(bufhandler, this);
                 } else {
@@ -349,11 +340,9 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
         }
     }
 
-
     protected SynchronizedStack<Nio2Channel> getNioChannels() {
         return nioChannels;
     }
-
 
     @Override
     protected NetworkChannel getServerSocket() {
@@ -370,7 +359,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
             SocketAddress currentRemoteAddress = result.getRemoteAddress();
             long currentNanoTime = System.nanoTime();
             if (currentRemoteAddress.equals(previousAcceptedSocketRemoteAddress) &&
-                    currentNanoTime - previousAcceptedSocketNanoTime < 1000) {
+                currentNanoTime - previousAcceptedSocketNanoTime < 1000) {
                 throw new IOException(sm.getString("endpoint.err.duplicateAccept"));
             }
             previousAcceptedSocketRemoteAddress = currentRemoteAddress;
@@ -380,7 +369,6 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
         return result;
     }
 
-
     @Override
     protected Log getLog() {
         return log;
@@ -389,10 +377,9 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
 
     @Override
     protected SocketProcessorBase<Nio2Channel> createSocketProcessor(
-            SocketWrapperBase<Nio2Channel> socketWrapper, SocketEvent event) {
+        SocketWrapperBase<Nio2Channel> socketWrapper, SocketEvent event) {
         return new SocketProcessor(socketWrapper, event);
     }
-
 
     protected class Nio2Acceptor extends Acceptor<AsynchronousSocketChannel>
         implements CompletionHandler<AsynchronousSocketChannel, Void> {
@@ -429,7 +416,6 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
          * Signals the Acceptor to stop.
          *
          * @param waitSeconds Ignored for NIO2.
-         *
          */
         @Override
         public void stop(int waitSeconds) {
@@ -437,8 +423,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
         }
 
         @Override
-        public void completed(AsynchronousSocketChannel socket,
-                Void attachment) {
+        public void completed(AsynchronousSocketChannel socket, Void attachment) {
             // Successful accept, reset the error delay
             errorDelay = 0;
             // Continue processing the socket on the current thread
@@ -535,21 +520,21 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
                             attachment.doneInline = true;
                         } else {
                             switch (attachment.keepAliveState) {
-                            case NONE: {
-                                getEndpoint().processSocket(Nio2SocketWrapper.this,
+                                case NONE: {
+                                    getEndpoint().processSocket(Nio2SocketWrapper.this,
                                         SocketEvent.DISCONNECT, false);
-                                break;
-                            }
-                            case PIPELINED: {
-                                if (!getEndpoint().processSocket(Nio2SocketWrapper.this, SocketEvent.OPEN_READ, true)) {
-                                    close();
+                                    break;
                                 }
-                                break;
-                            }
-                            case OPEN: {
-                                registerReadInterest();
-                                break;
-                            }
+                                case PIPELINED: {
+                                    if (!getEndpoint().processSocket(Nio2SocketWrapper.this, SocketEvent.OPEN_READ, true)) {
+                                        close();
+                                    }
+                                    break;
+                                }
+                                case OPEN: {
+                                    registerReadInterest();
+                                    break;
+                                }
                             }
                         }
                         return;
@@ -623,6 +608,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
                         getEndpoint().processSocket(Nio2SocketWrapper.this, SocketEvent.OPEN_READ, false);
                     }
                 }
+
                 @Override
                 public void failed(Throwable exc, ByteBuffer attachment) {
                     IOException ioe;
@@ -656,12 +642,12 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
                             // Continue writing data using a gathering write
                             ByteBuffer[] array = nonBlockingWriteBuffer.toArray(attachment);
                             getSocket().write(array, 0, array.length,
-                                    toTimeout(getWriteTimeout()), TimeUnit.MILLISECONDS,
-                                    array, gatheringWriteCompletionHandler);
+                                toTimeout(getWriteTimeout()), TimeUnit.MILLISECONDS,
+                                array, gatheringWriteCompletionHandler);
                         } else if (attachment.hasRemaining()) {
                             // Regular write
                             getSocket().write(attachment, toTimeout(getWriteTimeout()),
-                                    TimeUnit.MILLISECONDS, attachment, writeCompletionHandler);
+                                TimeUnit.MILLISECONDS, attachment, writeCompletionHandler);
                         } else {
                             // All data has been written
                             if (writeInterest && !Nio2Endpoint.isInline()) {
@@ -682,6 +668,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
                         }
                     }
                 }
+
                 @Override
                 public void failed(Throwable exc, ByteBuffer attachment) {
                     IOException ioe;
@@ -710,8 +697,8 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
                             // Continue writing data using a gathering write
                             ByteBuffer[] array = nonBlockingWriteBuffer.toArray(attachment);
                             getSocket().write(array, 0, array.length,
-                                    toTimeout(getWriteTimeout()), TimeUnit.MILLISECONDS,
-                                    array, gatheringWriteCompletionHandler);
+                                toTimeout(getWriteTimeout()), TimeUnit.MILLISECONDS,
+                                array, gatheringWriteCompletionHandler);
                         } else {
                             // All data has been written
                             if (writeInterest && !Nio2Endpoint.isInline()) {
@@ -732,6 +719,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
                         }
                     }
                 }
+
                 @Override
                 public void failed(Throwable exc, ByteBuffer[] attachment) {
                     IOException ioe;
@@ -745,14 +733,19 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
                     if (!endpoint.processSocket(Nio2SocketWrapper.this, SocketEvent.ERROR, true)) {
                         close();
                     }
-               }
+                }
             };
 
         }
 
 
-        public void setSendfileData(SendfileData sf) { this.sendfileData = sf; }
-        public SendfileData getSendfileData() { return this.sendfileData; }
+        public void setSendfileData(SendfileData sf) {
+            this.sendfileData = sf;
+        }
+
+        public SendfileData getSendfileData() {
+            return this.sendfileData;
+        }
 
         @Override
         public boolean isReadyForRead() throws IOException {
@@ -989,19 +982,19 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
 
         @Override
         protected <A> OperationState<A> newOperationState(boolean read,
-                ByteBuffer[] buffers, int offset, int length,
-                BlockingMode block, long timeout, TimeUnit unit, A attachment,
-                CompletionCheck check, CompletionHandler<Long, ? super A> handler,
-                Semaphore semaphore, VectoredIOCompletionHandler<A> completion) {
+                                                          ByteBuffer[] buffers, int offset, int length,
+                                                          BlockingMode block, long timeout, TimeUnit unit, A attachment,
+                                                          CompletionCheck check, CompletionHandler<Long, ? super A> handler,
+                                                          Semaphore semaphore, VectoredIOCompletionHandler<A> completion) {
             return new Nio2OperationState<>(read, buffers, offset, length, block,
-                    timeout, unit, attachment, check, handler, semaphore, completion);
+                timeout, unit, attachment, check, handler, semaphore, completion);
         }
 
         private class Nio2OperationState<A> extends OperationState<A> {
             private Nio2OperationState(boolean read, ByteBuffer[] buffers, int offset, int length,
-                    BlockingMode block, long timeout, TimeUnit unit, A attachment,
-                    CompletionCheck check, CompletionHandler<Long, ? super A> handler,
-                    Semaphore semaphore, VectoredIOCompletionHandler<A> completion) {
+                                       BlockingMode block, long timeout, TimeUnit unit, A attachment,
+                                       CompletionCheck check, CompletionHandler<Long, ? super A> handler,
+                                       Semaphore semaphore, VectoredIOCompletionHandler<A> completion) {
                 super(read, buffers, offset, length, block,
                     timeout, unit, attachment, check, handler, semaphore, completion);
             }
@@ -1034,7 +1027,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
                         synchronized (readCompletionHandler) {
                             socketBufferHandler.configureReadBufferForRead();
                             for (int i = 0; i < length && !socketBufferHandler.isReadBufferEmpty(); i++) {
-                                nBytes += transfer(socketBufferHandler.getReadBuffer(), buffers[offset + i]);
+                                nBytes += transfer(socketBufferHandler.getReadBuffer(), buffers[ offset + i ]);
                             }
                         }
                         if (nBytes > 0) {
@@ -1052,24 +1045,25 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
                             ByteBuffer[] array = nonBlockingWriteBuffer.toArray(socketBufferHandler.getWriteBuffer());
                             if (buffersArrayHasRemaining(array, 0, array.length)) {
                                 getSocket().write(array, 0, array.length, timeout, unit,
-                                        array, new CompletionHandler<Long, ByteBuffer[]>() {
-                                            @Override
-                                            public void completed(Long nBytes, ByteBuffer[] buffers) {
-                                                if (nBytes.longValue() < 0) {
-                                                    failed(new EOFException(), null);
-                                                } else if (buffersArrayHasRemaining(buffers, 0, buffers.length)) {
-                                                    getSocket().write(buffers, 0, buffers.length, toTimeout(getWriteTimeout()),
-                                                            TimeUnit.MILLISECONDS, buffers, this);
-                                                } else {
-                                                    // Continue until everything is written
-                                                    process();
-                                                }
+                                    array, new CompletionHandler<Long, ByteBuffer[]>() {
+                                        @Override
+                                        public void completed(Long nBytes, ByteBuffer[] buffers) {
+                                            if (nBytes.longValue() < 0) {
+                                                failed(new EOFException(), null);
+                                            } else if (buffersArrayHasRemaining(buffers, 0, buffers.length)) {
+                                                getSocket().write(buffers, 0, buffers.length, toTimeout(getWriteTimeout()),
+                                                    TimeUnit.MILLISECONDS, buffers, this);
+                                            } else {
+                                                // Continue until everything is written
+                                                process();
                                             }
-                                            @Override
-                                            public void failed(Throwable exc, ByteBuffer[] buffers) {
-                                                completion.failed(exc, Nio2OperationState.this);
-                                            }
-                                        });
+                                        }
+
+                                        @Override
+                                        public void failed(Throwable exc, ByteBuffer[] buffers) {
+                                            completion.failed(exc, Nio2OperationState.this);
+                                        }
+                                    });
                                 return;
                             }
                         }
@@ -1122,7 +1116,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
             } else {
                 Nio2Endpoint.startInline();
                 getSocket().read(to, toTimeout(getReadTimeout()), TimeUnit.MILLISECONDS, to,
-                        readCompletionHandler);
+                    readCompletionHandler);
                 Nio2Endpoint.endInline();
                 if (readPending.availablePermits() == 1) {
                     nRead = to.position();
@@ -1290,14 +1284,14 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
                         ByteBuffer[] array = nonBlockingWriteBuffer.toArray(socketBufferHandler.getWriteBuffer());
                         Nio2Endpoint.startInline();
                         getSocket().write(array, 0, array.length, toTimeout(getWriteTimeout()),
-                                TimeUnit.MILLISECONDS, array, gatheringWriteCompletionHandler);
+                            TimeUnit.MILLISECONDS, array, gatheringWriteCompletionHandler);
                         Nio2Endpoint.endInline();
                     } else if (socketBufferHandler.getWriteBuffer().hasRemaining()) {
                         // Regular write
                         Nio2Endpoint.startInline();
                         getSocket().write(socketBufferHandler.getWriteBuffer(), toTimeout(getWriteTimeout()),
-                                TimeUnit.MILLISECONDS, socketBufferHandler.getWriteBuffer(),
-                                writeCompletionHandler);
+                            TimeUnit.MILLISECONDS, socketBufferHandler.getWriteBuffer(),
+                            writeCompletionHandler);
                         Nio2Endpoint.endInline();
                     } else {
                         // Nothing was written
@@ -1316,7 +1310,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
         public boolean hasDataToRead() {
             synchronized (readCompletionHandler) {
                 return !socketBufferHandler.isReadBufferEmpty()
-                        || readNotify || getError() != null;
+                    || readNotify || getError() != null;
             }
         }
 
@@ -1325,7 +1319,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
         public boolean hasDataToWrite() {
             synchronized (writeCompletionHandler) {
                 return !socketBufferHandler.isWriteBufferEmpty() || !nonBlockingWriteBuffer.isEmpty()
-                        || writeNotify || writePending.availablePermits() == 0 || getError() != null;
+                    || writeNotify || writePending.availablePermits() == 0 || getError() != null;
             }
         }
 
@@ -1412,7 +1406,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
                 java.nio.file.Path path = new File(sendfileData.fileName).toPath();
                 try {
                     data.fchannel = java.nio.channels.FileChannel
-                            .open(path, StandardOpenOption.READ).position(sendfileData.pos);
+                        .open(path, StandardOpenOption.READ).position(sendfileData.pos);
                 } catch (IOException e) {
                     return SendfileState.ERROR;
                 }
@@ -1431,7 +1425,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
                 getSocket().getBufHandler().configureWriteBufferForRead();
                 Nio2Endpoint.startInline();
                 getSocket().write(buffer, toTimeout(getWriteTimeout()), TimeUnit.MILLISECONDS,
-                        data, sendfileHandler);
+                    data, sendfileHandler);
                 Nio2Endpoint.endInline();
                 if (data.doneInline) {
                     if (data.error) {
@@ -1601,6 +1595,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
 
 
     // ---------------------------------------------- SocketProcessor Inner Class
+
     /**
      * This class is the equivalent of the Worker, but will simply use in an
      * external Executor thread pool.
@@ -1623,7 +1618,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
                         // process this socket / event combination.
                         handshake = 0;
                     } else if (event == SocketEvent.STOP || event == SocketEvent.DISCONNECT ||
-                            event == SocketEvent.ERROR) {
+                        event == SocketEvent.ERROR) {
                         // Unable to complete the TLS handshake. Treat it as
                         // if the handshake failed.
                         handshake = -1;
@@ -1642,7 +1637,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
                     handshake = -1;
                     if (logHandshake.isDebugEnabled()) {
                         logHandshake.debug(sm.getString("endpoint.err.handshake",
-                                socketWrapper.getRemoteAddr(), Integer.toString(socketWrapper.getRemotePort())), x);
+                            socketWrapper.getRemoteAddr(), Integer.toString(socketWrapper.getRemotePort())), x);
                     }
                 }
                 if (handshake == 0) {
@@ -1659,7 +1654,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
                     } else if (state == SocketState.UPGRADING) {
                         launch = true;
                     }
-                } else if (handshake == -1 ) {
+                } else if (handshake == -1) {
                     getHandler().process(socketWrapper, SocketEvent.CONNECT_FAIL);
                     socketWrapper.close();
                 }
@@ -1677,7 +1672,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
                     } catch (NullPointerException npe) {
                         if (running) {
                             log.error(sm.getString("endpoint.launch.fail"),
-                                    npe);
+                                npe);
                         }
                     }
                 }
@@ -1692,6 +1687,7 @@ public class Nio2Endpoint extends AbstractNetworkChannelEndpoint<Nio2Channel,Asy
     }
 
     // ----------------------------------------------- SendfileData Inner Class
+
     /**
      * SendfileData class.
      */

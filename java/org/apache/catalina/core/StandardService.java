@@ -94,7 +94,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     private ClassLoader parentClassLoader = null;
 
     /**
-     * Mapper.
+     * ######Mapper######
      * Mapper是 Tomcat 处理 Http 请求时非常重要的组件。
      * Tomcat 使用 Mapper 来处理一个 Request 到 Host、Context 的映射关系，从而决定使用哪个 Service 来处理请求。
      */

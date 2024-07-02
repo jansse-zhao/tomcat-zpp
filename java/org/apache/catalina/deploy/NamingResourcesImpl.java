@@ -921,8 +921,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase implements Serializa
             try {
                 MBeanUtils.createMBean(cr);
             } catch (Exception e) {
-                log.warn(sm.getString(
-                    "namingResources.mbeanCreateFail", cr.getName()), e);
+                log.warn(sm.getString("namingResources.mbeanCreateFail", cr.getName()), e);
             }
         }
 
@@ -945,13 +944,11 @@ public class NamingResourcesImpl extends LifecycleMBeanBase implements Serializa
         }
     }
 
-
     @Override
     protected void startInternal() throws LifecycleException {
         fireLifecycleEvent(CONFIGURE_START_EVENT, null);
         setState(LifecycleState.STARTING);
     }
-
 
     @Override
     protected void stopInternal() throws LifecycleException {
@@ -976,8 +973,7 @@ public class NamingResourcesImpl extends LifecycleMBeanBase implements Serializa
                 ctxt = (javax.naming.Context) ctxt.lookup("comp/env");
             }
         } catch (NamingException e) {
-            log.warn(sm.getString("namingResources.cleanupNoContext",
-                container), e);
+            log.warn(sm.getString("namingResources.cleanupNoContext", container), e);
             return;
         }
         for (ContextResource cr : resources.values()) {
@@ -1000,7 +996,6 @@ public class NamingResourcesImpl extends LifecycleMBeanBase implements Serializa
         }
     }
 
-
     /**
      * Clean up a resource by calling the defined close method. For example,
      * closing a database connection pool will close it's open connections. This
@@ -1015,12 +1010,10 @@ public class NamingResourcesImpl extends LifecycleMBeanBase implements Serializa
         try {
             m = resource.getClass().getMethod(closeMethod, (Class<?>[]) null);
         } catch (SecurityException e) {
-            log.debug(sm.getString("namingResources.cleanupCloseSecurity",
-                closeMethod, name, container));
+            log.debug(sm.getString("namingResources.cleanupCloseSecurity", closeMethod, name, container));
             return;
         } catch (NoSuchMethodException e) {
-            log.debug(sm.getString("namingResources.cleanupNoClose",
-                name, container, closeMethod));
+            log.debug(sm.getString("namingResources.cleanupNoClose", name, container, closeMethod));
             return;
         }
         try {

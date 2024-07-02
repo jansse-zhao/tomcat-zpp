@@ -291,6 +291,18 @@ public class CoyoteAdapter implements Adapter {
         return success;
     }
 
+    /**
+     * 将客户端Socket解析的请求req适配成应用中标准Request
+     * 方法调用链：connector.startInternal()
+     * -> abstractProtocol.start()
+     * -> abstractEndpoint.start()
+     * -> nioEndpoint.startInternal()
+     * -> abstractEndpoint.startAcceptorThread()
+     * -> acceptor.run()
+     * -> nioEndpoint.setSocketOptions().Poller.run().processKey()
+     * -> http11Processor.service()
+     * -> this.service()
+     */
     @Override
     public void service(org.apache.coyote.Request req, org.apache.coyote.Response res) throws Exception {
         Request request = (Request) req.getNote(ADAPTER_NOTES);

@@ -645,7 +645,6 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
         endpoint.pause();
     }
 
-
     public boolean isPaused() {
         return endpoint.isPaused();
     }
@@ -700,8 +699,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
                     try {
                         mserver.unregisterMBean(oname);
                     } catch (MBeanRegistrationException | InstanceNotFoundException e) {
-                        getLog().info(sm.getString("abstractProtocol.mbeanDeregistrationFailed",
-                            oname, mserver));
+                        getLog().info(sm.getString("abstractProtocol.mbeanDeregistrationFailed", oname, mserver));
                     }
                 }
             }
@@ -713,25 +711,20 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
         }
     }
 
-
     @Override
     public void closeServerSocketGraceful() {
         endpoint.closeServerSocketGraceful();
     }
 
-
     @Override
     public long awaitConnectionsClose(long waitMillis) {
-        getLog().info(sm.getString("abstractProtocol.closeConnectionsAwait",
-            Long.valueOf(waitMillis), getName()));
+        getLog().info(sm.getString("abstractProtocol.closeConnectionsAwait", Long.valueOf(waitMillis), getName()));
         return endpoint.awaitConnectionsClose(waitMillis);
     }
 
-
     private void logPortOffset() {
         if (getPort() != getPortWithOffset()) {
-            getLog().info(sm.getString("abstractProtocolHandler.portOffset", getName(),
-                String.valueOf(getPort()), String.valueOf(getPortOffset())));
+            getLog().info(sm.getString("abstractProtocolHandler.portOffset", getName(), String.valueOf(getPort()), String.valueOf(getPortOffset())));
         }
     }
 
@@ -765,7 +758,6 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
         public void recycle() {
             recycledProcessors.clear();
         }
-
 
         @Override
         public SocketState process(SocketWrapperBase<S> wrapper, SocketEvent status) {
@@ -1035,7 +1027,6 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
             return SocketState.CLOSED;
         }
 
-
         protected void longPoll(SocketWrapperBase<?> socket, Processor processor) {
             if (!processor.isAsync()) {
                 // This is currently only used with HTTP
@@ -1046,7 +1037,6 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
                 socket.registerReadInterest();
             }
         }
-
 
         /**
          * Expected to be used by the handler once the processor is no longer
@@ -1083,7 +1073,6 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
             }
         }
 
-
         /**
          * Expected to be used by the Endpoint to release resources on socket
          * close, errors etc.
@@ -1093,7 +1082,6 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
             Processor processor = (Processor) socketWrapper.takeCurrentProcessor();
             release(processor);
         }
-
 
         protected void register(Processor processor) {
             if (getProtocol().getDomain() != null) {
