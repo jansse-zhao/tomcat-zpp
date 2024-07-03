@@ -36,6 +36,18 @@ public abstract class SocketProcessorBase<S> implements Runnable {
     }
 
 
+    /**
+     * 它包含三个任务：
+     * 对套接字进行处理并输出响应报文；
+     * 连接数计数器减1，腾出通道；
+     * 关闭套接字；
+     * <p>
+     * 其中对套接字的处理是最重要最复杂的，它包括：
+     * 1. 对底层套接字字节流的读取
+     * 2. http协议请求报文的解析（请求行、请求头、请求体等信息）
+     * 3. 根据请求行解析得到的路径去寻找相应的虚拟主机上的Web项目资源
+     * 4. 根据处理的结果组装好http协议响应报文输出到客户端
+     */
     @Override
     public final void run() {
         Lock lock = socketWrapper.getLock();

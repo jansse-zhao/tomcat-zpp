@@ -857,7 +857,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
 
                 SocketState state = SocketState.CLOSED;
                 do {
-                    // 处理http协议
+                    // ######处理http协议######
                     state = processor.process(wrapper, status);
 
                     if (state == SocketState.UPGRADING) {
@@ -877,9 +877,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
                                 processor = upgradeProtocol.getProcessor(wrapper, getProtocol().getAdapter());
                             } else {
                                 if (getLog().isDebugEnabled()) {
-                                    getLog().debug(sm.getString(
-                                        "abstractConnectionHandler.negotiatedProcessor.fail",
-                                        "h2c"));
+                                    getLog().debug(sm.getString("abstractConnectionHandler.negotiatedProcessor.fail", "h2c"));
                                 }
                                 // Exit loop and trigger appropriate clean-up
                                 state = SocketState.CLOSED;
@@ -891,8 +889,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
                             // Create the upgrade processor
                             processor = getProtocol().createUpgradeProcessor(wrapper, upgradeToken);
                             if (getLog().isDebugEnabled()) {
-                                getLog().debug(sm.getString("abstractConnectionHandler.upgradeCreate",
-                                    processor, wrapper));
+                                getLog().debug(sm.getString("abstractConnectionHandler.upgradeCreate", processor, wrapper));
                             }
                             // Initialise the upgrade handler (which may trigger
                             // some IO using the new protocol which is why the lines
@@ -1001,8 +998,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
             } catch (ProtocolException e) {
                 // Protocol exceptions normally mean the client sent invalid or
                 // incomplete data.
-                getLog().debug(sm.getString(
-                    "abstractConnectionHandler.protocolexception.debug"), e);
+                getLog().debug(sm.getString("abstractConnectionHandler.protocolexception.debug"), e);
             }
             // Future developers: if you discover any other
             // rare-but-nonfatal exceptions, catch them here, and log as

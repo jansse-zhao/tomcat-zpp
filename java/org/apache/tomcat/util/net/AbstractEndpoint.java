@@ -1587,6 +1587,9 @@ public abstract class AbstractEndpoint<S, U> {
 
     protected abstract Log getLog();
 
+    /**
+     * 初始化限流器
+     */
     protected LimitLatch initializeConnectionLatch() {
         if (maxConnections == -1) {
             return null;

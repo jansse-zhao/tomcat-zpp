@@ -173,6 +173,7 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
             return;
         }
 
+        // 开始配置状态
         if (Lifecycle.CONFIGURE_START_EVENT.equals(event.getType())) {
             if (initialized) {
                 return;
@@ -189,17 +190,16 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
                 }
 
                 // Configure write when read-only behaviour
-                namingContext.setExceptionOnFailedWrite(
-                    getExceptionOnFailedWrite());
+                namingContext.setExceptionOnFailedWrite(getExceptionOnFailedWrite());
 
                 // Setting the context in read/write mode
                 ContextAccessController.setWritable(getName(), token);
 
                 try {
+                    // 创建并初始化JNDI的上下文容器
                     createNamingContext();
                 } catch (NamingException e) {
-                    log.error
-                        (sm.getString("naming.namingContextCreationFailed", e));
+                    log.error(sm.getString("naming.namingContextCreationFailed", e));
                 }
 
                 namingResources.addPropertyChangeListener(this);
@@ -209,35 +209,31 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
                     // Setting the context in read only mode
                     ContextAccessController.setReadOnly(getName());
                     try {
-                        ContextBindings.bindClassLoader(container, token,
-                            ((Context) container).getLoader().getClassLoader());
+                        ContextBindings.bindClassLoader(container, token, ((Context) container).getLoader().getClassLoader());
                     } catch (NamingException e) {
                         log.error(sm.getString("naming.bindFailed", e));
                     }
                 }
 
                 if (container instanceof Server) {
-                    org.apache.naming.factory.ResourceLinkFactory.setGlobalContext
-                        (namingContext);
+                    org.apache.naming.factory.ResourceLinkFactory.setGlobalContext(namingContext);
                     try {
-                        ContextBindings.bindClassLoader(container, token,
-                            this.getClass().getClassLoader());
+                        ContextBindings.bindClassLoader(container, token, this.getClass().getClassLoader());
                     } catch (NamingException e) {
                         log.error(sm.getString("naming.bindFailed", e));
                     }
                     if (container instanceof StandardServer) {
-                        ((StandardServer) container).setGlobalNamingContext
-                            (namingContext);
+                        ((StandardServer) container).setGlobalNamingContext(namingContext);
                     }
                 }
-
             } finally {
                 // Regardless of success, so that we can do cleanup on configure_stop
                 initialized = true;
             }
 
-        } else if (Lifecycle.CONFIGURE_STOP_EVENT.equals(event.getType())) {
-
+        }
+        // 配置完成状态
+        else if (Lifecycle.CONFIGURE_STOP_EVENT.equals(event.getType())) {
             if (!initialized) {
                 return;
             }
@@ -248,13 +244,11 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
                 ContextBindings.unbindContext(container, token);
 
                 if (container instanceof Context) {
-                    ContextBindings.unbindClassLoader(container, token,
-                        ((Context) container).getLoader().getClassLoader());
+                    ContextBindings.unbindClassLoader(container, token, ((Context) container).getLoader().getClassLoader());
                 }
 
                 if (container instanceof Server) {
-                    ContextBindings.unbindClassLoader(container, token,
-                        this.getClass().getClassLoader());
+                    ContextBindings.unbindClassLoader(container, token, this.getClass().getClassLoader());
                 }
 
                 namingResources.removePropertyChangeListener(this);
@@ -277,7 +271,6 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
                 }
             } finally {
                 objectNames.clear();
-
                 namingContext = null;
                 envCtx = null;
                 compCtx = null;
@@ -447,9 +440,9 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
 
     /**
      * Create and initialize the JNDI naming context.
+     * 创建并初始化JNDI的上下文容器
      */
-    private void createNamingContext()
-        throws NamingException {
+    private void createNamingContext() throws NamingException {
 
         // Creating the comp subcontext
         if (container instanceof Server) {
@@ -472,8 +465,7 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
         }
 
         // Resource links
-        ContextResourceLink[] resourceLinks =
-            namingResources.findResourceLinks();
+        ContextResourceLink[] resourceLinks = namingResources.findResourceLinks();
         for (i = 0; i < resourceLinks.length; i++) {
             addResourceLink(resourceLinks[ i ]);
         }
@@ -491,8 +483,7 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
         }
 
         // Environment entries
-        ContextEnvironment[] contextEnvironments =
-            namingResources.findEnvironments();
+        ContextEnvironment[] contextEnvironments = namingResources.findEnvironments();
         for (i = 0; i < contextEnvironments.length; i++) {
             addEnvironment(contextEnvironments[ i ]);
         }
@@ -541,13 +532,11 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
         // Binding the resources directory context
         if (container instanceof Context) {
             try {
-                compCtx.bind("Resources",
-                    ((Context) container).getResources());
+                compCtx.bind("Resources", ((Context) container).getResources());
             } catch (NamingException e) {
                 log.error(sm.getString("naming.bindFailed", e));
             }
         }
-
     }
 
 

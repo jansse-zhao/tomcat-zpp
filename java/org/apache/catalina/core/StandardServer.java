@@ -75,6 +75,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         globalNamingResources = new NamingResourcesImpl();
         globalNamingResources.setContainer(this);
 
+        // 初始化java JNDI命名服务监听器
         if (isUseNaming()) {
             namingContextListener = new NamingContextListener();
             addLifecycleListener(namingContextListener);
@@ -539,7 +540,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      * This keeps the main thread alive - the thread pool listening for http
      * connections is daemon threads.
      * <p>
-     * 初始化SHUTDOWN命令的ServerSocket，等待连接
+     * 初始化SHUTDOWN命令的ServerSocket，等待关闭命令
      */
     @Override
     public void await() {
@@ -865,6 +866,8 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
     /**
      * @return <code>true</code> if naming should be used.
+     * <p>
+     * 是否启用java命名与目录服务，默认启用
      */
     private boolean isUseNaming() {
         boolean useNaming = true;

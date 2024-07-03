@@ -960,6 +960,7 @@ public class Connector extends LifecycleMBeanBase {
         // 交给protocolHandler
         protocolHandler.setAdapter(adapter);
         if (service != null) {
+            // 设置共享执行器，多个Connector将共享Service的线程池
             protocolHandler.setUtilityExecutor(service.getServer().getUtilityExecutor());
         }
 

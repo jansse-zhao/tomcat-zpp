@@ -218,7 +218,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
 
     // Separated out to make it easier for folks that extend NioEndpoint to
     // implement custom [server]sockets
-    // 初始化ServerSocket
+    // ######初始化ServerSocket######
     protected void initServerSocket() throws Exception {
         if (getUseInheritedChannel()) {
             // Retrieve the channel provided by the OS
@@ -287,6 +287,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
                 createExecutor();
             }
 
+            // 初始化连接限流器参数
             initializeConnectionLatch();
 
             // Start poller thread
@@ -1722,6 +1723,8 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
     /**
      * This class is the equivalent of the Worker, but will simply use in an
      * external Executor thread pool.
+     * <p>
+     * socket处理器线程，该线程用于处理包装后的socket对象，它是一个线程对象，将来是要放到线程池中执行的
      */
     protected class SocketProcessor extends SocketProcessorBase<NioChannel> {
 
@@ -1780,6 +1783,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
                 if (handshake == 0) {
                     SocketState state = SocketState.OPEN;
                     // Process the request from this socket
+                    // ######将socket交给Handler处理，这里Handler的默认实现是：AbstractProtocol.ConnectionHandler######
                     if (event == null) {
                         state = getHandler().process(socketWrapper, SocketEvent.OPEN_READ);
                     } else {

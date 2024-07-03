@@ -38,6 +38,15 @@ import org.apache.catalina.mapper.Mapper;
  */
 public interface Service extends Lifecycle {
 
+    /**
+     * Service组件中只包含Connector(负责监听不同某端口的客户端请求，不同的端口对应不同的Connector)组件
+     * 和Executor（Service抽象层提供的线程池，供Service下的组件共用的线程池）组件，还有子容器Engine
+     * 例如：
+     * addConnector/findConnectors/removeConnector
+     * addExecutor/findExecutors/getExecutor/removeExecutor
+     * getContainer/setContainer
+     */
+
     // ------------------------------------------------------------- Properties
 
     /**

@@ -33,6 +33,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class Acceptor<U> implements Runnable {
 
+    /**
+     * Acceptor主要的职责就是监听是否有客户端套接字连接并接收套接字，在将套接字交给执行器执行。
+     * 它接收套接字，尽可能做少的处理，最后交给线程池，它对每次接收处理的时间长短可能影响整个系统的性能。
+     * 它里面主要控制限流器的累加和Socket接收工作，限流器的减操作在Endpoint中实现，也就是当一个请求
+     * 在Endpoint中处理完后，有Endpoint负责调用限流器的减操作，同时通知线程池可以处理下一个阻塞的任务（如果有的话）
+     */
+
     private static final Log log = LogFactory.getLog(Acceptor.class);
     private static final StringManager sm = StringManager.getManager(Acceptor.class);
 
@@ -116,6 +123,7 @@ public class Acceptor<U> implements Runnable {
 
                 try {
                     //if we have reached max connections, wait
+                    // 将连接数加1，或者当链接数达到最大时，基于endpoint的LimitLatch对象实现阻塞新连接请求
                     endpoint.countUpOrAwaitConnection();
 
                     // Endpoint might have been paused while waiting for latch
@@ -147,7 +155,7 @@ public class Acceptor<U> implements Runnable {
                     // Configure the socket
                     if (!stopCalled && !endpoint.isPaused()) {
                         // setSocketOptions() will hand the socket off to an appropriate processor if successful
-                        // 通过endpoint处理客户端Socket
+                        // ######通过endpoint处理客户端Socket######
                         if (!endpoint.setSocketOptions(socket)) {
                             endpoint.closeSocket(socket);
                         }
