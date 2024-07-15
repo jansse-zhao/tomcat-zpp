@@ -95,19 +95,27 @@ public class Acceptor<U> implements Runnable {
                 // < 1ms       - tight loop
                 // 1ms to 10ms - 1ms sleep
                 // > 10ms      - 10ms sleep
+
+                // 循环---Endpoint是暂定状态并且当前线程没有停止
                 while (endpoint.isPaused() && !stopCalled) {
+                    // 刚开始对象state状态为new，则判断成立。让想成进入暂停状态
                     if (state != AcceptorState.PAUSED) {
                         pauseStart = System.nanoTime();
                         // Entered pause state
                         // 进入暂停状态
                         state = AcceptorState.PAUSED;
                     }
+
+                    // 如果线程暂停状态时间超过1s
                     if ((System.nanoTime() - pauseStart) > 1_000_000) {
                         // Paused for more than 1ms
                         try {
+                            // 暂停超过1s，在多睡眠10ms
                             if ((System.nanoTime() - pauseStart) > 10_000_000) {
                                 Thread.sleep(10);
-                            } else {
+                            }
+                            // 暂停不足1s，睡眠1ms
+                            else {
                                 Thread.sleep(1);
                             }
                         } catch (InterruptedException e) {
@@ -135,7 +143,7 @@ public class Acceptor<U> implements Runnable {
                     U socket = null;
                     try {
                         // Accept the next incoming connection from the server socket
-                        // 接收一个客户端Socket
+                        // 接收一个客户端Socket，此处将阻塞操作
                         socket = endpoint.serverSocketAccept();
                     } catch (Exception ioe) {
                         // We didn't get a socket
@@ -156,10 +164,12 @@ public class Acceptor<U> implements Runnable {
                     if (!stopCalled && !endpoint.isPaused()) {
                         // setSocketOptions() will hand the socket off to an appropriate processor if successful
                         // ######通过endpoint处理客户端Socket######
+                        // 如果处理socket失败则关闭这个socket
                         if (!endpoint.setSocketOptions(socket)) {
                             endpoint.closeSocket(socket);
                         }
                     } else {
+                        // 销毁socket
                         endpoint.destroySocket(socket);
                     }
                 } catch (Throwable t) {

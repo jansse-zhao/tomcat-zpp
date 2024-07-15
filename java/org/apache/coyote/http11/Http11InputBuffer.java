@@ -16,12 +16,6 @@
  */
 package org.apache.coyote.http11;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-
 import org.apache.coyote.CloseNowException;
 import org.apache.coyote.InputBuffer;
 import org.apache.coyote.Request;
@@ -35,9 +29,17 @@ import org.apache.tomcat.util.net.ApplicationBufferHandler;
 import org.apache.tomcat.util.net.SocketWrapperBase;
 import org.apache.tomcat.util.res.StringManager;
 
+import java.io.EOFException;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+
 /**
  * InputBuffer for HTTP that provides request header parsing as well as transfer
  * encoding.
+ * <p>
+ * 字节输入缓冲区
  */
 public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler {
 
@@ -50,21 +52,17 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
      */
     private static final StringManager sm = StringManager.getManager(Http11InputBuffer.class);
 
-
-    private static final byte[] CLIENT_PREFACE_START =
-            "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1);
+    private static final byte[] CLIENT_PREFACE_START = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1);
 
     /**
      * Associated Coyote request.
      */
     private final Request request;
 
-
     /**
      * Headers of the associated request.
      */
     private final MimeHeaders headers;
-
 
     private final boolean rejectIllegalHeader;
 
@@ -73,18 +71,16 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
      */
     private volatile boolean parsingHeader;
 
-
     /**
      * Swallow input ? (in the case of an expectation)
      */
     private boolean swallowInput;
 
-
     /**
      * The read buffer.
+     * 字节缓冲区，存数据用的
      */
     private ByteBuffer byteBuffer;
-
 
     /**
      * Pos of the end of the header in the buffer, which is also the
@@ -92,18 +88,16 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
      */
     private int end;
 
-
     /**
      * Wrapper that provides access to the underlying socket.
+     * 接收的socket的包装类
      */
     private SocketWrapperBase<?> wrapper;
-
 
     /**
      * Underlying input buffer.
      */
     private InputBuffer inputStreamInputBuffer;
-
 
     /**
      * Filter library.
@@ -111,18 +105,16 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
      */
     private InputFilter[] filterLibrary;
 
-
     /**
      * Active filters (in order).
      */
     private InputFilter[] activeFilters;
 
-
     /**
      * Index of the last active filter.
+     * 最后激活的过滤器的下标
      */
     private int lastActiveFilter;
-
 
     /**
      * Parsing state - used for non blocking parsing so that
@@ -130,6 +122,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
      */
     private byte prevChr = 0;
     private byte chr = 0;
+    // 是否解析请求行状态
     private volatile boolean parsingRequestLine;
     private int parsingRequestLinePhase = 0;
     private boolean parsingRequestLineEol = false;
@@ -150,12 +143,9 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
      */
     private int socketReadBufferSize;
 
-
     // ----------------------------------------------------------- Constructors
 
-    public Http11InputBuffer(Request request, int headerBufferSize,
-            boolean rejectIllegalHeader, HttpParser httpParser) {
-
+    public Http11InputBuffer(Request request, int headerBufferSize, boolean rejectIllegalHeader, HttpParser httpParser) {
         this.request = request;
         headers = request.getMimeHeaders();
 
@@ -163,8 +153,8 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
         this.rejectIllegalHeader = rejectIllegalHeader;
         this.httpParser = httpParser;
 
-        filterLibrary = new InputFilter[0];
-        activeFilters = new InputFilter[0];
+        filterLibrary = new InputFilter[ 0 ];
+        activeFilters = new InputFilter[ 0 ];
         lastActiveFilter = -1;
 
         parsingHeader = true;
@@ -179,27 +169,27 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
         inputStreamInputBuffer = new SocketInputBuffer();
     }
 
-
     // ------------------------------------------------------------- Properties
 
     /**
      * Add an input filter to the filter library.
+     * <p>
+     * 添加过滤器
      *
      * @throws NullPointerException if the supplied filter is null
      */
     void addFilter(InputFilter filter) {
-
         if (filter == null) {
             throw new NullPointerException(sm.getString("iib.filter.npe"));
         }
 
+        // 执行添加过滤器到过滤器数组的操作
         InputFilter[] newFilterLibrary = Arrays.copyOf(filterLibrary, filterLibrary.length + 1);
-        newFilterLibrary[filterLibrary.length] = filter;
+        newFilterLibrary[ filterLibrary.length ] = filter;
         filterLibrary = newFilterLibrary;
 
-        activeFilters = new InputFilter[filterLibrary.length];
+        activeFilters = new InputFilter[ filterLibrary.length ];
     }
-
 
     /**
      * Get filters.
@@ -208,24 +198,25 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
         return filterLibrary;
     }
 
-
     /**
      * Add an input filter to the filter library.
+     * 添加激活过滤器
      */
     void addActiveFilter(InputFilter filter) {
-
+        // 当最后一个激活过滤器不存在时，向添加的过滤器中设置输入缓冲器读取器
         if (lastActiveFilter == -1) {
             filter.setBuffer(inputStreamInputBuffer);
         } else {
+            // 判断添加的过滤器是否已存在，如果存在则退出
             for (int i = 0; i <= lastActiveFilter; i++) {
-                if (activeFilters[i] == filter) {
+                if (activeFilters[ i ] == filter) {
                     return;
                 }
             }
-            filter.setBuffer(activeFilters[lastActiveFilter]);
+            filter.setBuffer(activeFilters[ lastActiveFilter ]);
         }
 
-        activeFilters[++lastActiveFilter] = filter;
+        activeFilters[ ++lastActiveFilter ] = filter;
 
         filter.setRequest(request);
     }
@@ -246,7 +237,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
         if (lastActiveFilter == -1) {
             return inputStreamInputBuffer.doRead(handler);
         } else {
-            return activeFilters[lastActiveFilter].doRead(handler);
+            return activeFilters[ lastActiveFilter ].doRead(handler);
         }
     }
 
@@ -262,7 +253,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
         request.recycle();
 
         for (int i = 0; i <= lastActiveFilter; i++) {
-            activeFilters[i].recycle();
+            activeFilters[ i ].recycle();
         }
 
         byteBuffer.limit(0).position(0);
@@ -308,7 +299,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
 
         // Recycle filters
         for (int i = 0; i <= lastActiveFilter; i++) {
-            activeFilters[i].recycle();
+            activeFilters[ i ].recycle();
         }
 
         // Reset pointers
@@ -325,22 +316,20 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
         headerData.recycle();
     }
 
-
     /**
      * Read the request line. This function is meant to be used during the
      * HTTP request header parsing. Do NOT attempt to read the request body
      * using it.
-     *
-     * @throws IOException If an exception occurs during the underlying socket
-     * read operations, or if the given buffer is not big enough to accommodate
-     * the whole line.
+     * <p>
+     * 解析http协议的请求行，如：GET /sys/save HTTP1.1
      *
      * @return true if data is properly fed; false if no data is available
      * immediately and thread should be freed
+     * @throws IOException If an exception occurs during the underlying socket
+     *                     read operations, or if the given buffer is not big enough to accommodate
+     *                     the whole line.
      */
-    boolean parseRequestLine(boolean keptAlive, int connectionTimeout, int keepAliveTimeout)
-            throws IOException {
-
+    boolean parseRequestLine(boolean keptAlive, int connectionTimeout, int keepAliveTimeout) throws IOException {
         // check state
         if (!parsingRequestLine) {
             return true;
@@ -369,7 +358,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
                 if (!keptAlive && byteBuffer.position() == 0 && byteBuffer.limit() >= CLIENT_PREFACE_START.length) {
                     boolean prefaceMatch = true;
                     for (int i = 0; i < CLIENT_PREFACE_START.length && prefaceMatch; i++) {
-                        if (CLIENT_PREFACE_START[i] != byteBuffer.get(i)) {
+                        if (CLIENT_PREFACE_START[ i ] != byteBuffer.get(i)) {
                             prefaceMatch = false;
                         }
                     }
@@ -395,6 +384,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
             //
             // Reading the method name
             // Method name is a token
+            // 读取请求方法字段
             //
             boolean space = false;
             while (!space) {
@@ -410,8 +400,9 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
                 chr = byteBuffer.get();
                 if (chr == Constants.SP || chr == Constants.HT) {
                     space = true;
-                    request.method().setBytes(byteBuffer.array(), parsingRequestLineStart,
-                            pos - parsingRequestLineStart);
+                    // 这里存储的并不是解码后的字符串，而是字节数组，在具体使用到的时候才去解码
+                    // 这样做的目的是提高服务器的响应速度，一些用不到的协议字段不需要解码
+                    request.method().setBytes(byteBuffer.array(), parsingRequestLineStart, pos - parsingRequestLineStart);
                 } else if (!HttpParser.isToken(chr)) {
                     // Avoid unknown protocol triggering an additional error
                     request.protocol().setString(Constants.HTTP_11);
@@ -504,12 +495,12 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
             }
             if (parsingRequestLineQPos >= 0) {
                 request.queryString().setBytes(byteBuffer.array(), parsingRequestLineQPos + 1,
-                        end - parsingRequestLineQPos - 1);
+                    end - parsingRequestLineQPos - 1);
                 request.requestURI().setBytes(byteBuffer.array(), parsingRequestLineStart,
-                        parsingRequestLineQPos - parsingRequestLineStart);
+                    parsingRequestLineQPos - parsingRequestLineStart);
             } else {
                 request.requestURI().setBytes(byteBuffer.array(), parsingRequestLineStart,
-                        end - parsingRequestLineStart);
+                    end - parsingRequestLineStart);
             }
             // HTTP/0.9 processing jumps to stage 7.
             // Don't want to overwrite that here.
@@ -573,7 +564,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
 
             if ((end - parsingRequestLineStart) > 0) {
                 request.protocol().setBytes(byteBuffer.array(), parsingRequestLineStart,
-                        end - parsingRequestLineStart);
+                    end - parsingRequestLineStart);
                 parsingRequestLinePhase = 7;
             }
             // If no protocol is found, the ISE below will be triggered.
@@ -652,7 +643,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
     void endRequest() throws IOException {
 
         if (swallowInput && (lastActiveFilter != -1)) {
-            int extraBytes = (int) activeFilters[lastActiveFilter].end();
+            int extraBytes = (int) activeFilters[ lastActiveFilter ].end();
             byteBuffer.position(byteBuffer.position() - extraBytes);
         }
     }
@@ -666,7 +657,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
 
     /**
      * Available bytes in the buffers for the current request.
-     *
+     * <p>
      * Note that when requests are pipelined, the data in byteBuffer may relate
      * to the next request rather than this one.
      */
@@ -676,7 +667,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
         if (lastActiveFilter == -1) {
             available = inputStreamInputBuffer.available();
         } else {
-            available = activeFilters[lastActiveFilter].available();
+            available = activeFilters[ lastActiveFilter ].available();
         }
 
         // Only try a non-blocking read if:
@@ -718,7 +709,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
         // the current request body has been read. Note that byteBuffer may
         // contain pipelined data so is not a good indicator.
         if (lastActiveFilter >= 0) {
-            return activeFilters[lastActiveFilter].isFinished();
+            return activeFilters[ lastActiveFilter ].isFinished();
         } else {
             // No filters. Assume request is not finished. EOF will signal end of
             // request.
@@ -738,21 +729,21 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
 
     boolean isChunking() {
         for (int i = 0; i < lastActiveFilter; i++) {
-            if (activeFilters[i] == filterLibrary[Constants.CHUNKED_FILTER]) {
+            if (activeFilters[ i ] == filterLibrary[ Constants.CHUNKED_FILTER ]) {
                 return true;
             }
         }
         return false;
     }
 
-
+    /**
+     * 初始化socket客户端的字节输入缓冲区
+     */
     void init(SocketWrapperBase<?> socketWrapper) {
-
         wrapper = socketWrapper;
         wrapper.setAppReadBufHandler(this);
 
-        int bufLength = headerBufferSize +
-                wrapper.getSocketBufferHandler().getReadBuffer().capacity();
+        int bufLength = headerBufferSize + wrapper.getSocketBufferHandler().getReadBuffer().capacity();
         if (byteBuffer == null || byteBuffer.capacity() < bufLength) {
             byteBuffer = ByteBuffer.allocate(bufLength);
             byteBuffer.position(0).limit(0);
@@ -760,25 +751,25 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
     }
 
 
-
     // --------------------------------------------------------- Private Methods
 
     /**
      * Attempts to read some data into the input buffer.
+     * <p>
+     * 读入字节流到字节缓冲区
      *
      * @return <code>true</code> if more data was added to the input buffer
-     *         otherwise <code>false</code>
+     * otherwise <code>false</code>
      */
     private boolean fill(boolean block) throws IOException {
-
         if (log.isDebugEnabled()) {
             log.debug("Before fill(): parsingHeader: [" + parsingHeader +
-                    "], parsingRequestLine: [" + parsingRequestLine +
-                    "], parsingRequestLinePhase: [" + parsingRequestLinePhase +
-                    "], parsingRequestLineStart: [" + parsingRequestLineStart +
-                    "], byteBuffer.position(): [" + byteBuffer.position() +
-                    "], byteBuffer.limit(): [" + byteBuffer.limit() +
-                    "], end: [" + end + "]");
+                "], parsingRequestLine: [" + parsingRequestLine +
+                "], parsingRequestLinePhase: [" + parsingRequestLinePhase +
+                "], parsingRequestLineStart: [" + parsingRequestLineStart +
+                "], byteBuffer.position(): [" + byteBuffer.position() +
+                "], byteBuffer.limit(): [" + byteBuffer.limit() +
+                "], end: [" + end + "]");
         }
 
         if (parsingHeader) {
@@ -828,7 +819,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
 
         if (log.isDebugEnabled()) {
             log.debug("Received ["
-                    + new String(byteBuffer.array(), byteBuffer.position(), byteBuffer.remaining(), StandardCharsets.ISO_8859_1) + "]");
+                + new String(byteBuffer.array(), byteBuffer.position(), byteBuffer.remaining(), StandardCharsets.ISO_8859_1) + "]");
         }
 
         if (nRead > 0) {
@@ -838,9 +829,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
         } else {
             return false;
         }
-
     }
-
 
     /**
      * Parse an HTTP header.
@@ -850,9 +839,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
      * {@link HeaderParseStatus#DONE}.
      */
     private HeaderParseStatus parseHeader() throws IOException {
-
         while (headerParsePos == HeaderParsePosition.HEADER_START) {
-
             // Read new bytes if needed
             if (byteBuffer.position() >= byteBuffer.limit()) {
                 if (!fill(false)) {
@@ -906,7 +893,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
             if (chr == Constants.COLON) {
                 headerParsePos = HeaderParsePosition.HEADER_VALUE_START;
                 headerData.headerValue = headers.addValue(byteBuffer.array(), headerData.start,
-                        pos - headerData.start);
+                    pos - headerData.start);
                 pos = byteBuffer.position();
                 // Mark the current buffer position
                 headerData.start = pos;
@@ -938,8 +925,8 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
         //
 
         while (headerParsePos == HeaderParsePosition.HEADER_VALUE_START ||
-               headerParsePos == HeaderParsePosition.HEADER_VALUE ||
-               headerParsePos == HeaderParsePosition.HEADER_MULTI_LINE) {
+            headerParsePos == HeaderParsePosition.HEADER_VALUE ||
+            headerParsePos == HeaderParsePosition.HEADER_MULTI_LINE) {
 
             if (headerParsePos == HeaderParsePosition.HEADER_VALUE_START) {
                 // Skipping spaces
@@ -1033,7 +1020,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
         }
         // Set the header value
         headerData.headerValue.setBytes(byteBuffer.array(), headerData.start,
-                headerData.lastSignificantChar - headerData.start);
+            headerData.lastSignificantChar - headerData.start);
         headerData.recycle();
         return HeaderParseStatus.HAVE_MORE_HEADERS;
     }
@@ -1087,8 +1074,8 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
         }
         if (rejectThisHeader || log.isDebugEnabled()) {
             String message = sm.getString("iib.invalidheader",
-                    HeaderUtil.toPrintableString(byteBuffer.array(), headerData.lineStart,
-                            headerData.lastSignificantChar - headerData.lineStart + 1));
+                HeaderUtil.toPrintableString(byteBuffer.array(), headerData.lineStart,
+                    headerData.lastSignificantChar - headerData.lineStart + 1));
             if (rejectThisHeader) {
                 throw new IllegalArgumentException(message);
             }
@@ -1179,6 +1166,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
          * header name and is created after the name has been parsed.
          */
         MessageBytes headerValue = null;
+
         public void recycle() {
             lineStart = 0;
             start = 0;

@@ -924,6 +924,7 @@ public class Connector extends LifecycleMBeanBase {
     public void pause() {
         try {
             if (protocolHandler != null) {
+                // 调用协议暂停方法，protocolHandler内部调用的Endpoint的暂停方法，所以实际上暂停的是Endpoint
                 protocolHandler.pause();
             }
         } catch (Exception e) {

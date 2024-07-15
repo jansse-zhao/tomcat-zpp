@@ -44,17 +44,17 @@ import java.nio.charset.StandardCharsets;
 /**
  * This class is used to represent a chunk of bytes, and utilities to manipulate
  * byte[].
- *
+ * <p>
  * The buffer can be modified and used for both input and output.
- *
+ * <p>
  * There are 2 modes: The chunk can be associated with a sink - ByteInputChannel
  * or ByteOutputChannel, which will be used when the buffer is empty (on input)
  * or filled (on output). For output, it can also grow. This operating mode is
  * selected by calling setLimit() or allocate(initial, limit) with limit != -1.
- *
+ * <p>
  * Various search and append method are defined - similar with String and
  * StringBuffer, but operating on bytes.
- *
+ * <p>
  * This is important because it allows processing the http headers directly on
  * the received bytes, without converting to chars and Strings until the strings
  * are needed. In addition, the charset is determined later, from headers or
@@ -71,7 +71,7 @@ public final class ByteChunk extends AbstractChunk {
 
     /**
      * Input interface, used when the buffer is empty.
-     *
+     * <p>
      * Same as java.nio.channels.ReadableByteChannel
      */
     public static interface ByteInputChannel {
@@ -80,7 +80,6 @@ public final class ByteChunk extends AbstractChunk {
          * Read new bytes.
          *
          * @return The number of bytes read
-         *
          * @throws IOException If an I/O error occurs during reading
          */
         public int realReadBytes() throws IOException;
@@ -89,7 +88,7 @@ public final class ByteChunk extends AbstractChunk {
     /**
      * When we need more space we'll either grow the buffer ( up to the limit )
      * or send it to a channel.
-     *
+     * <p>
      * Same as java.nio.channel.WritableByteChannel.
      */
     public static interface ByteOutputChannel {
@@ -176,7 +175,7 @@ public final class ByteChunk extends AbstractChunk {
 
     public void allocate(int initial, int limit) {
         if (buff == null || buff.length < initial) {
-            buff = new byte[initial];
+            buff = new byte[ initial ];
         }
         setLimit(limit);
         start = 0;
@@ -189,7 +188,7 @@ public final class ByteChunk extends AbstractChunk {
     /**
      * Sets the buffer to the specified subarray of bytes.
      *
-     * @param b the ascii bytes
+     * @param b   the ascii bytes
      * @param off the start offset of the bytes
      * @param len the length of the bytes
      */
@@ -263,7 +262,7 @@ public final class ByteChunk extends AbstractChunk {
         if (end >= limit) {
             flushBuffer();
         }
-        buff[end++] = b;
+        buff[ end++ ] = b;
     }
 
 
@@ -393,14 +392,14 @@ public final class ByteChunk extends AbstractChunk {
         if (checkEof()) {
             return -1;
         }
-        return buff[start++] & 0xFF;
+        return buff[ start++ ] & 0xFF;
     }
 
     public byte subtractB() throws IOException {
         if (checkEof()) {
             return -1;
         }
-        return buff[start++];
+        return buff[ start++ ];
     }
 
 
@@ -426,7 +425,7 @@ public final class ByteChunk extends AbstractChunk {
      *
      * @param to the ByteBuffer into which bytes are to be written.
      * @return an integer specifying the actual number of bytes read, or -1 if
-     *         the end of the stream is reached
+     * the end of the stream is reached
      * @throws IOException if an input or output exception has occurred
      */
     public int subtract(ByteBuffer to) throws IOException {
@@ -466,7 +465,7 @@ public final class ByteChunk extends AbstractChunk {
         // assert out!=null
         if (out == null) {
             throw new BufferOverflowException(sm.getString(
-                    "chunk.overflow", Integer.valueOf(getLimit()), Integer.valueOf(buff.length)));
+                "chunk.overflow", Integer.valueOf(getLimit()), Integer.valueOf(buff.length)));
         }
         out.realWriteBytes(buff, start, end - start);
         end = start;
@@ -482,21 +481,24 @@ public final class ByteChunk extends AbstractChunk {
     public void makeSpace(int count) {
         byte[] tmp = null;
 
+        // 获取缓冲区最大长度，默认Integer.MAX_VALUE - 8;
         int limit = getLimitInternal();
 
         long newSize;
         long desiredSize = end + count;
 
         // Can't grow above the limit
+        // 不能超过limit限制
         if (desiredSize > limit) {
             desiredSize = limit;
         }
 
         if (buff == null) {
+            // 最小限制256
             if (desiredSize < 256) {
                 desiredSize = 256; // take a minimum
             }
-            buff = new byte[(int) desiredSize];
+            buff = new byte[ (int) desiredSize ];
         }
 
         // limit < buf.length (the buffer is already big)
@@ -514,7 +516,7 @@ public final class ByteChunk extends AbstractChunk {
         if (newSize > limit) {
             newSize = limit;
         }
-        tmp = new byte[(int) newSize];
+        tmp = new byte[ (int) newSize ];
 
         // Compacts buffer
         System.arraycopy(buff, start, tmp, 0, end - start);
@@ -534,6 +536,7 @@ public final class ByteChunk extends AbstractChunk {
         } else if (end - start == 0) {
             return "";
         }
+        // 进一步使用缓存提升性能，如果缓存中有则直接返回，否则在进行转码操作
         return StringCache.toString(this);
     }
 
@@ -571,7 +574,7 @@ public final class ByteChunk extends AbstractChunk {
      *
      * @param s the String to compare
      * @return <code>true</code> if the comparison succeeded, <code>false</code>
-     *         otherwise
+     * otherwise
      */
     public boolean equals(String s) {
         // XXX ENCODING - this only works if encoding is UTF8-compat
@@ -584,7 +587,7 @@ public final class ByteChunk extends AbstractChunk {
         }
         int off = start;
         for (int i = 0; i < len; i++) {
-            if (b[off++] != s.charAt(i)) {
+            if (b[ off++ ] != s.charAt(i)) {
                 return false;
             }
         }
@@ -597,7 +600,7 @@ public final class ByteChunk extends AbstractChunk {
      *
      * @param s the String to compare
      * @return <code>true</code> if the comparison succeeded, <code>false</code>
-     *         otherwise
+     * otherwise
      */
     public boolean equalsIgnoreCase(String s) {
         byte[] b = buff;
@@ -607,7 +610,7 @@ public final class ByteChunk extends AbstractChunk {
         }
         int off = start;
         for (int i = 0; i < len; i++) {
-            if (Ascii.toLower(b[off++]) != Ascii.toLower(s.charAt(i))) {
+            if (Ascii.toLower(b[ off++ ]) != Ascii.toLower(s.charAt(i))) {
                 return false;
             }
         }
@@ -634,7 +637,7 @@ public final class ByteChunk extends AbstractChunk {
         int off1 = start;
 
         while (len-- > 0) {
-            if (b1[off1++] != b2[off2++]) {
+            if (b1[ off1++ ] != b2[ off2++ ]) {
                 return false;
             }
         }
@@ -661,7 +664,7 @@ public final class ByteChunk extends AbstractChunk {
         int len = end - start;
 
         while (len-- > 0) {
-            if ((char) b1[off1++] != c2[off2++]) {
+            if ((char) b1[ off1++ ] != c2[ off2++ ]) {
                 return false;
             }
         }
@@ -673,9 +676,8 @@ public final class ByteChunk extends AbstractChunk {
      * Returns true if the buffer starts with the specified string when tested
      * in a case sensitive manner.
      *
-     * @param s the string
+     * @param s   the string
      * @param pos The position
-     *
      * @return <code>true</code> if the start matches
      */
     public boolean startsWith(String s, int pos) {
@@ -686,7 +688,7 @@ public final class ByteChunk extends AbstractChunk {
         }
         int off = start + pos;
         for (int i = 0; i < len; i++) {
-            if (b[off++] != s.charAt(i)) {
+            if (b[ off++ ] != s.charAt(i)) {
                 return false;
             }
         }
@@ -698,9 +700,8 @@ public final class ByteChunk extends AbstractChunk {
      * Returns true if the buffer starts with the specified string when tested
      * in a case insensitive manner.
      *
-     * @param s the string
+     * @param s   the string
      * @param pos The position
-     *
      * @return <code>true</code> if the start matches
      */
     public boolean startsWithIgnoreCase(String s, int pos) {
@@ -711,7 +712,7 @@ public final class ByteChunk extends AbstractChunk {
         }
         int off = start + pos;
         for (int i = 0; i < len; i++) {
-            if (Ascii.toLower(b[off++]) != Ascii.toLower(s.charAt(i))) {
+            if (Ascii.toLower(b[ off++ ]) != Ascii.toLower(s.charAt(i))) {
                 return false;
             }
         }
@@ -721,7 +722,7 @@ public final class ByteChunk extends AbstractChunk {
 
     @Override
     protected int getBufferElement(int index) {
-        return buff[index];
+        return buff[ index ];
     }
 
 
@@ -731,10 +732,10 @@ public final class ByteChunk extends AbstractChunk {
      * returned. <br>
      * NOTE: This only works for characters in the range 0-127.
      *
-     * @param c The character
+     * @param c        The character
      * @param starting The start position
      * @return The position of the first instance of the character or -1 if the
-     *         character is not found.
+     * character is not found.
      */
     public int indexOf(char c, int starting) {
         int ret = indexOf(buff, start + starting, end, c);
@@ -749,16 +750,16 @@ public final class ByteChunk extends AbstractChunk {
      *
      * @param bytes The array to search
      * @param start The point to start searching from in the array
-     * @param end The point to stop searching in the array
-     * @param s The character to search for
+     * @param end   The point to stop searching in the array
+     * @param s     The character to search for
      * @return The position of the first instance of the character or -1 if the
-     *         character is not found.
+     * character is not found.
      */
     public static int indexOf(byte bytes[], int start, int end, char s) {
         int offset = start;
 
         while (offset < end) {
-            byte b = bytes[offset];
+            byte b = bytes[ offset ];
             if (b == s) {
                 return offset;
             }
@@ -774,15 +775,15 @@ public final class ByteChunk extends AbstractChunk {
      *
      * @param bytes The byte array to search
      * @param start The point to start searching from in the byte array
-     * @param end The point to stop searching in the byte array
-     * @param b The byte to search for
+     * @param end   The point to stop searching in the byte array
+     * @param b     The byte to search for
      * @return The position of the first instance of the byte or -1 if the byte
-     *         is not found.
+     * is not found.
      */
     public static int findByte(byte bytes[], int start, int end, byte b) {
         int offset = start;
         while (offset < end) {
-            if (bytes[offset] == b) {
+            if (bytes[ offset ] == b) {
                 return offset;
             }
             offset++;
@@ -797,16 +798,16 @@ public final class ByteChunk extends AbstractChunk {
      *
      * @param bytes The byte array to search
      * @param start The point to start searching from in the byte array
-     * @param end The point to stop searching in the byte array
-     * @param b The array of bytes to search for
+     * @param end   The point to stop searching in the byte array
+     * @param b     The array of bytes to search for
      * @return The position of the first instance of the byte or -1 if the byte
-     *         is not found.
+     * is not found.
      */
     public static int findBytes(byte bytes[], int start, int end, byte b[]) {
         int offset = start;
         while (offset < end) {
             for (byte value : b) {
-                if (bytes[offset] == value) {
+                if (bytes[ offset ] == value) {
                     return offset;
                 }
             }
@@ -824,9 +825,9 @@ public final class ByteChunk extends AbstractChunk {
      * @return the byte array value
      */
     public static final byte[] convertToBytes(String value) {
-        byte[] result = new byte[value.length()];
+        byte[] result = new byte[ value.length() ];
         for (int i = 0; i < value.length(); i++) {
-            result[i] = (byte) value.charAt(i);
+            result[ i ] = (byte) value.charAt(i);
         }
         return result;
     }

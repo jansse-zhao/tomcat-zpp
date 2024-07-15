@@ -78,6 +78,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
 
     /**
      * Server socket "pointer".
+     * 应用服务器程序监听通道
      */
     private volatile ServerSocketChannel serverSock = null;
 
@@ -93,10 +94,14 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
 
     /**
      * Bytebuffer cache, each channel holds a set of buffers (two, except for SSL holds four)
+     * NioChannel缓存，为了避免重复创建Channel造成的性能损耗，将已生成的Channel缓存起来，
+     * 等再有新的客户端socketChannel到来时就只替换内部的socketChannel再将其他属性重置即可。
      */
     private SynchronizedStack<NioChannel> nioChannels;
 
+    // 记录上一个请求的客户端socketChannel
     private SocketAddress previousAcceptedSocketRemoteAddress = null;
+    // 记录上一个请求客户端的纳秒，主要用来区别两个请求是否为同一个请求
     private long previousAcceptedSocketNanoTime = 0;
 
 
@@ -104,6 +109,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
 
     /**
      * Use System.inheritableChannel to obtain channel from stdin/stdout.
+     * 是否使用虚拟机系统继承的通道？
      */
     private boolean useInheritedChannel = false;
 
@@ -115,9 +121,9 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
         return useInheritedChannel;
     }
 
-
     /**
      * Path for the Unix domain socket, used to create the socket address.
+     * Unix域套接字的路径，用于创建套接字地址。
      */
     private String unixDomainSocketPath = null;
 
@@ -128,7 +134,6 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
     public void setUnixDomainSocketPath(String unixDomainSocketPath) {
         this.unixDomainSocketPath = unixDomainSocketPath;
     }
-
 
     /**
      * Permissions which will be set on the Unix domain socket if it is created.
@@ -257,6 +262,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
             InetSocketAddress addr = new InetSocketAddress(getAddress(), getPortWithOffset());
             serverSock.bind(addr, getAcceptCount());
         }
+        // 设置服务器端socket为阻塞模式，而客户端socket为非阻塞模式
         serverSock.configureBlocking(true); //mimic APR behavior
     }
 
@@ -291,6 +297,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
             initializeConnectionLatch();
 
             // Start poller thread
+            // 启动轮询线程，用来接收Acceptor线程接收到的socket连接，poller用于监听内部的读写事件，然后再交给其他线程组处理
             poller = new Poller();
             Thread pollerThread = new Thread(poller, getName() + "-Poller");
             pollerThread.setPriority(threadPriority);
@@ -453,7 +460,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
         try {
             // Allocate channel and wrapper
             NioChannel channel = null;
-            // nioChannels通道的字节缓冲区分组
+            // 如果队列中有NioChannel时从队列中取，没有时则重新创建
             if (nioChannels != null) {
                 channel = nioChannels.pop();
             }
@@ -465,6 +472,8 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
                     socketProperties.getDirectBuffer());
 
                 // 安全通道和非安全通道
+                // 当通道缓存nioChannels中不存在时，在创建新的NioChannel通道
+                // NioChannel和SecureNioChannel非阻塞通道，负责将数据读到缓冲区中，或将数据从缓冲区中写入
                 if (isSSLEnabled()) {
                     channel = new SecureNioChannel(bufhandler, this);
                 } else {
@@ -480,6 +489,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
 
             // Set socket properties
             // Disable blocking, polling will be used
+            // 设置非阻塞模式
             socket.configureBlocking(false);
             if (getUnixDomainSocketPath() == null) {
                 socketProperties.setProperties(socket.socket());
@@ -617,6 +627,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
 
         private volatile int keyCount = 0;
 
+        // 创建对象实例时初始化一个通道选择器Selector
         public Poller() throws IOException {
             this.selector = Selector.open();
         }
@@ -641,8 +652,11 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
         }
 
         private void addEvent(PollerEvent event) {
+            // 将event事件设置到队列中
             events.offer(event);
+            // 唤醒数量等于=0
             if (wakeupCounter.incrementAndGet() == 0) {
+                // 唤醒selector
                 selector.wakeup();
             }
         }
@@ -693,11 +707,15 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
                 NioSocketWrapper socketWrapper = pe.getSocketWrapper();
                 SocketChannel sc = socketWrapper.getSocket().getIOChannel();
                 int interestOps = pe.getInterestOps();
+                // 空Channel则关闭socket
                 if (sc == null) {
                     log.warn(sm.getString("endpoint.nio.nullSocketChannel"));
                     socketWrapper.close();
-                } else if (interestOps == OP_REGISTER) {
+                }
+                // 如果是注册事件则把socket注册到选择器上
+                else if (interestOps == OP_REGISTER) {
                     try {
+                        // 将通道注册到选择器上，此选择器将关注读取事件（OP_READ）
                         sc.register(getSelector(), SelectionKey.OP_READ, socketWrapper);
                     } catch (Exception x) {
                         log.error(sm.getString("endpoint.nio.registerFail"), x);
@@ -711,7 +729,9 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
                         // since it won't have been counted down when the socket
                         // closed.
                         socketWrapper.close();
-                    } else {
+                    }
+                    // 否则，设置socket的监听事件--interestOps
+                    else {
                         final NioSocketWrapper attachment = (NioSocketWrapper) key.attachment();
                         if (attachment != null) {
                             // We are registering the key to start with, reset the fairness counter.
@@ -742,6 +762,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
          * @param socketWrapper The socket wrapper
          */
         public void register(final NioSocketWrapper socketWrapper) {
+            // 注册读取数据操作描述符
             socketWrapper.interestOps(SelectionKey.OP_READ);//this is what OP_REGISTER turns into.
             PollerEvent pollerEvent = createPollerEvent(socketWrapper, OP_REGISTER);
             addEvent(pollerEvent);
@@ -751,12 +772,14 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
          * The background thread that adds sockets to the Poller, checks the
          * poller for triggered events and hands the associated socket off to an
          * appropriate processor as events occur.
+         * <p>
+         * 轮询器线程一直运行监听socketWrapper事件的到来，
+         * 如果有socketWrapper到来则将客户单socket的读写事件交给一个线程池来处理
          */
         @Override
         public void run() {
             // Loop until destroy() is called
             while (true) {
-
                 boolean hasEvents = false;
 
                 try {
@@ -765,6 +788,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
                         if (wakeupCounter.getAndSet(-1) > 0) {
                             // If we are here, means we have other stuff to do
                             // Do a non blocking select
+                            // 非阻塞selector获取key数量
                             keyCount = selector.selectNow();
                         } else {
                             keyCount = selector.select(selectorTimeout);
@@ -801,6 +825,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
                     // Attachment may be null if another thread has called
                     // cancelledKey()
                     if (socketWrapper != null) {
+                        // 开始处理socket连接
                         processKey(sk, socketWrapper);
                     }
                 }
@@ -817,6 +842,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
                 if (close) {
                     socketWrapper.close();
                 } else if (sk.isValid()) {
+                    // 处理读或写事件
                     if (sk.isReadable() || sk.isWritable()) {
                         if (socketWrapper.getSendfileData() != null) {
                             processSendfile(sk, socketWrapper, false);
@@ -824,6 +850,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
                             unreg(sk, socketWrapper, sk.readyOps());
                             boolean closeSocket = false;
                             // Read goes before write
+                            // 处理读取socket数据操作
                             if (sk.isReadable()) {
                                 if (socketWrapper.readOperation != null) {
                                     if (!socketWrapper.readOperation.process()) {
@@ -846,6 +873,7 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
                                     closeSocket = true;
                                 }
                             }
+                            // 处理写入socket数据操作
                             if (!closeSocket && sk.isWritable()) {
                                 if (socketWrapper.writeOperation != null) {
                                     if (!socketWrapper.writeOperation.process()) {
@@ -860,6 +888,8 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
                                     closeSocket = true;
                                 }
                             }
+
+                            // 是否关闭socket
                             if (closeSocket) {
                                 socketWrapper.close();
                             }

@@ -42,7 +42,9 @@ public class TestByteChunk {
         String string = "HTTP/1.1 100 \r\n\r\n";
         byte[] bytes = ByteChunk.convertToBytes(string);
         byte[] expected = string.getBytes("ISO-8859-1");
-        Assert.assertTrue(Arrays.equals(bytes, expected));
+
+        System.out.println("expected = " + Arrays.equals(bytes, expected));
+        Assert.assertArrayEquals(bytes, expected);
     }
 
 

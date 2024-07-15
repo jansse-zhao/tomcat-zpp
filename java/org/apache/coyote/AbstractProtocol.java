@@ -641,7 +641,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
         if (getLog().isInfoEnabled()) {
             getLog().info(sm.getString("abstractProtocolHandler.pause", getName()));
         }
-
+        // 调用Endpoint暂定方法
         endpoint.pause();
     }
 

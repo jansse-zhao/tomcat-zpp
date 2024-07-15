@@ -47,6 +47,10 @@ import java.util.regex.Pattern;
 
 public class Http11Processor extends AbstractProcessor {
 
+    /**
+     * HTTP1.1协议解析器
+     */
+
     private static final Log log = LogFactory.getLog(Http11Processor.class);
 
     /**

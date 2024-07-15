@@ -487,6 +487,12 @@ public class StandardService extends LifecycleMBeanBase implements Service {
 
             // Pause the connectors
             for (Connector connector : connectors) {
+                /**
+                 * 生命周期方法stop方法时，调用{@link Connector.pause()}的暂停方法，
+                 * 内部调用{@link org.apache.coyote.AbstractProtocol.pause()}的暂停方法，
+                 * {@link org.apache.coyote.AbstractProtocol}的暂停方法又调用的{@link jakarta.websocket.Endpoint.pause()}的暂停方法，
+                 * 这将最终导致连接接收器{@link org.apache.tomcat.util.net.Acceptor}线程的暂停
+                 */
                 connector.pause();
             }
         }

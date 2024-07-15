@@ -132,7 +132,6 @@ public abstract class AbstractEndpoint<S, U> {
         }
     }
 
-
     public static long toTimeout(long timeout) {
         // Many calls can't do infinite timeout so use Long.MAX_VALUE if timeout is <= 0
         return (timeout > 0) ? timeout : Long.MAX_VALUE;
@@ -145,7 +144,6 @@ public abstract class AbstractEndpoint<S, U> {
      */
     protected volatile boolean running = false;
 
-
     /**
      * Will be set to true whenever the endpoint is paused.
      */
@@ -156,9 +154,9 @@ public abstract class AbstractEndpoint<S, U> {
      */
     protected volatile boolean internalExecutor = true;
 
-
     /**
      * counter for nr of connections handled by an endpoint
+     * 请求连接数限流器
      */
     private volatile LimitLatch connectionLimitLatch = null;
 
@@ -717,12 +715,10 @@ public abstract class AbstractEndpoint<S, U> {
 
     public void setPortOffset(int portOffset) {
         if (portOffset < 0) {
-            throw new IllegalArgumentException(
-                sm.getString("endpoint.portOffset.invalid", Integer.valueOf(portOffset)));
+            throw new IllegalArgumentException(sm.getString("endpoint.portOffset.invalid", Integer.valueOf(portOffset)));
         }
         this.portOffset = portOffset;
     }
-
 
     public int getPortWithOffset() {
         // Zero is a special case and negative values are invalid
@@ -746,7 +742,6 @@ public abstract class AbstractEndpoint<S, U> {
         }
     }
 
-
     /**
      * Address for the server socket.
      */
@@ -760,7 +755,6 @@ public abstract class AbstractEndpoint<S, U> {
         this.address = address;
     }
 
-
     /**
      * Obtain the network address the server socket is bound to. This primarily
      * exists to enable the correct address to be used when unlocking the server
@@ -773,7 +767,6 @@ public abstract class AbstractEndpoint<S, U> {
      *                     socket
      */
     protected abstract InetSocketAddress getLocalAddress() throws IOException;
-
 
     /**
      * Allows the server developer to specify the acceptCount (backlog) that
@@ -1385,6 +1378,7 @@ public abstract class AbstractEndpoint<S, U> {
                 sc.reset(socketWrapper, event);
             }
             Executor executor = getExecutor();
+            // #####调用线程处理socket数据######
             if (dispatch && executor != null) {
                 executor.execute(sc);
             } else {
@@ -1543,6 +1537,8 @@ public abstract class AbstractEndpoint<S, U> {
     /**
      * Pause the endpoint, which will stop it accepting new connections and
      * unlock the acceptor.
+     * <p>
+     * 暂停
      */
     public void pause() {
         if (running && !paused) {
@@ -1556,6 +1552,8 @@ public abstract class AbstractEndpoint<S, U> {
     /**
      * Resume the endpoint, which will make it start accepting new connections
      * again.
+     * <p>
+     * 重新开始
      */
     public void resume() {
         if (running) {
