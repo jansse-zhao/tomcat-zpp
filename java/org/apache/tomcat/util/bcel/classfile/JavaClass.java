@@ -30,6 +30,12 @@ import java.util.List;
  */
 public class JavaClass {
 
+    /**
+     * Tomcat解析的/WEB-INF/lib目录和/WEB-INF/classes目录下的jar包和.class文件，将这些.class文件解析成JavaClass对象，
+     * 里面包含Class版本信息，常量池信息，注解，接口等等信息
+     * 这个类配合ClassParser完成三方引用的解析工作
+     */
+
     private final int accessFlags;
     private final String className;
     private final String superclassName;
@@ -40,17 +46,17 @@ public class JavaClass {
     /**
      * Constructor gets all contents as arguments.
      *
-     * @param className Name of this class.
-     * @param superclassName Name of this class's superclass.
-     * @param accessFlags Access rights defined by bit flags
-     * @param constant_pool Array of constants
-     * @param interfaceNames Implemented interfaces
-     * @param runtimeVisibleAnnotations "RuntimeVisibleAnnotations" attribute defined on the Class, or null
+     * @param className                              Name of this class.
+     * @param superclassName                         Name of this class's superclass.
+     * @param accessFlags                            Access rights defined by bit flags
+     * @param constant_pool                          Array of constants
+     * @param interfaceNames                         Implemented interfaces
+     * @param runtimeVisibleAnnotations              "RuntimeVisibleAnnotations" attribute defined on the Class, or null
      * @param runtimeVisibleFieldOrMethodAnnotations "RuntimeVisibleAnnotations" attribute defined on the fields or methods, or null
      */
     JavaClass(final String className, final String superclassName,
-            final int accessFlags, final ConstantPool constant_pool, final String[] interfaceNames,
-            final Annotations runtimeVisibleAnnotations, final List<Annotations> runtimeVisibleFieldOrMethodAnnotations) {
+              final int accessFlags, final ConstantPool constant_pool, final String[] interfaceNames,
+              final Annotations runtimeVisibleAnnotations, final List<Annotations> runtimeVisibleFieldOrMethodAnnotations) {
         this.accessFlags = accessFlags;
         this.runtimeVisibleAnnotations = runtimeVisibleAnnotations;
         this.runtimeVisibleFieldOrMethodAnnotations = runtimeVisibleFieldOrMethodAnnotations;
@@ -93,7 +99,7 @@ public class JavaClass {
             }
         }
         if (runtimeVisibleFieldOrMethodAnnotations != null) {
-            for (Annotations annotations : runtimeVisibleFieldOrMethodAnnotations.toArray(new Annotations[0])) {
+            for (Annotations annotations : runtimeVisibleFieldOrMethodAnnotations.toArray(new Annotations[ 0 ])) {
                 for (AnnotationEntry annotationEntry : annotations.getAnnotationEntries()) {
                     annotationEntries.putIfAbsent(annotationEntry.getAnnotationType(), annotationEntry);
                 }
@@ -102,7 +108,7 @@ public class JavaClass {
         if (annotationEntries.isEmpty()) {
             return null;
         } else {
-            return annotationEntries.values().toArray(new AnnotationEntry[0]);
+            return annotationEntries.values().toArray(new AnnotationEntry[ 0 ]);
         }
     }
 

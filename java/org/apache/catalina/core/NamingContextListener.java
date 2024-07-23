@@ -548,8 +548,7 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
      * @return ObjectName The object name
      * @throws MalformedObjectNameException if a name cannot be created
      */
-    protected ObjectName createObjectName(ContextResource resource)
-        throws MalformedObjectNameException {
+    protected ObjectName createObjectName(ContextResource resource) throws MalformedObjectNameException {
 
         String domain = null;
         if (container instanceof StandardServer) {
@@ -990,8 +989,7 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
     public void addResourceLink(ContextResourceLink resourceLink) {
 
         // Create a reference to the resource.
-        Reference ref = new ResourceLinkRef
-            (resourceLink.getType(), resourceLink.getGlobal(), resourceLink.getFactory(), null);
+        Reference ref = new ResourceLinkRef(resourceLink.getType(), resourceLink.getGlobal(), resourceLink.getFactory(), null);
         Iterator<String> i = resourceLink.listProperties();
         while (i.hasNext()) {
             String key = i.next();
@@ -1001,9 +999,7 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
                 ref.add(refAddr);
             }
         }
-        javax.naming.Context ctx =
-            "UserTransaction".equals(resourceLink.getName())
-                ? compCtx : envCtx;
+        javax.naming.Context ctx = "UserTransaction".equals(resourceLink.getName()) ? compCtx : envCtx;
         try {
             if (log.isDebugEnabled()) {
                 log.debug("  Adding resource link " + resourceLink.getName());
@@ -1014,8 +1010,7 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
             log.error(sm.getString("naming.bindFailed", e));
         }
 
-        ResourceLinkFactory.registerGlobalResourceAccess(
-            getGlobalNamingContext(), resourceLink.getName(), resourceLink.getGlobal());
+        ResourceLinkFactory.registerGlobalResourceAccess(getGlobalNamingContext(), resourceLink.getName(), resourceLink.getGlobal());
     }
 
 

@@ -80,7 +80,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
      * The set of Connectors associated with this Service.
      * 与此服务关联的一组连接器。
      */
-    protected Connector connectors[] = new Connector[ 0 ];
+    protected Connector[] connectors = new Connector[ 0 ];
     private final Object connectorsLock = new Object();
 
     /**

@@ -84,7 +84,7 @@ public interface Container extends Lifecycle {
      * Container的层次结构方法：
      * 1. 查找父容器的方法：getParent、setParent
      * 2. 查找Service方法：通过Engine查找Service，getService
-     * 3. Parent方法，那肯定也child方法：addChild、findChildren、removeChild
+     * 3. 有Parent方法，那肯定也有child方法：addChild、findChildren、removeChild
      * 4. Container事件监听相关方法：addContainerListener、findContainerListeners、removeContainerListener
      * 5. 属性级别监听方法：removePropertyChangeListener、addPropertyChangeListener
      * 6. 事件触发方法：fireContainerEvent

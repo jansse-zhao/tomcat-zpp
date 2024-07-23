@@ -16,9 +16,9 @@
  */
 package org.apache.tomcat.util.descriptor.web;
 
-import java.io.Serializable;
-
 import org.apache.tomcat.util.buf.UDecoder;
+
+import java.io.Serializable;
 
 /**
  * Representation of an error page element for a web application,
@@ -80,7 +80,6 @@ public class ErrorPage extends XmlEncodingBase implements Serializable {
      * @param errorCode The new error code
      */
     public void setErrorCode(String errorCode) {
-
         try {
             this.errorCode = Integer.parseInt(errorCode);
         } catch (NumberFormatException nfe) {
@@ -121,12 +120,10 @@ public class ErrorPage extends XmlEncodingBase implements Serializable {
      * @param location The new location
      */
     public void setLocation(String location) {
-
         //        if ((location == null) || !location.startsWith("/"))
         //            throw new IllegalArgumentException
         //                ("Error Page Location must start with a '/'");
         this.location = UDecoder.URLDecode(location, getCharset());
-
     }
 
 

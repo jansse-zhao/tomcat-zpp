@@ -43,6 +43,13 @@ import java.util.Set;
  */
 public class StandardPipeline extends LifecycleBase implements Pipeline {
 
+    /**
+     * Pipeline是一种设计模式，在Tomcat中可以认为它是将不同容器串联起来的通道，当请求进来时就可以通过管道进行流转处理。
+     * 在Tomcat中4个级别的容器，每个容器会有一个属于自己的Pipeline，不同级别容器的Pipeline完成的工作都不一样，每个Pipeline
+     * 要搭配阀门（Value）才能工作。Engine容器的Pipeline默认有StandardEngineValve作为基础阀门，这个阀门处理逻辑很简单，
+     * 就是通过请求找到对应的Host容器并调用该容器的管道。
+     */
+
     private static final Log log = LogFactory.getLog(StandardPipeline.class);
     private static final StringManager sm = StringManager.getManager(StandardPipeline.class);
 
@@ -59,6 +66,9 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
     /**
      * Construct a new StandardPipeline instance that is associated with the
      * specified Container.
+     * <p>
+     * 每个容器在实例化StandardPipeline时会把容器自身注册进当前管道中，并且会设置容器对应的阀门到baseValue中
+     * 例如：Host容器在实例化的时候会把StandardHost传入当前对象的构造函数中，并且设置base = StandardHostValue
      *
      * @param container The container we should be associated with
      */
@@ -71,13 +81,13 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
 
     /**
      * The basic Valve (if any) associated with this Pipeline.
-     * 与此管道相关联的基本value(如果有的话)。
+     * 与此管道相关联的基本value(如果有的话)。比如HostValue阀门
      */
     protected Valve basic = null;
 
     /**
      * The Container with which this Pipeline is associated.
-     * 与此管道相关联的容器。
+     * 与此管道相关联的容器。比如Host容器
      */
     protected Container container = null;
 

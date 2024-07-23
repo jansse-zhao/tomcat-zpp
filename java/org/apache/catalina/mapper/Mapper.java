@@ -1080,9 +1080,7 @@ public final class Mapper {
     /**
      * Wildcard mapping.
      */
-    private final void internalMapWildcardWrapper
-    (MappedWrapper[] wrappers, int nesting, CharChunk path,
-     MappingData mappingData) {
+    private final void internalMapWildcardWrapper(MappedWrapper[] wrappers, int nesting, CharChunk path, MappingData mappingData) {
 
         int pathEnd = path.getEnd();
 
@@ -1344,8 +1342,7 @@ public final class Mapper {
      *
      * @see #find(MapElement[], String)
      */
-    private static final <T, E extends MapElement<T>> E exactFind(E[] map,
-                                                                  String name) {
+    private static final <T, E extends MapElement<T>> E exactFind(E[] map, String name) {
         int pos = find(map, name);
         if (pos >= 0) {
             E result = map[ pos ];
@@ -1558,9 +1555,7 @@ public final class Mapper {
 
     // ------------------------------------------------- MapElement Inner Class
 
-
     protected abstract static class MapElement<T> {
-
         public final String name;
         public final T object;
 
@@ -1570,9 +1565,7 @@ public final class Mapper {
         }
     }
 
-
     // ------------------------------------------------------- Host Inner Class
-
 
     protected static final class MappedHost extends MapElement<Host> {
 

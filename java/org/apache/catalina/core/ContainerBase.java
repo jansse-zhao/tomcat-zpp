@@ -134,12 +134,10 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      */
     protected final HashMap<String, Container> children = new HashMap<>();
 
-
     /**
      * The processor delay for this component.
      */
     protected int backgroundProcessorDelay = -1;
-
 
     /**
      * The future allowing control of the background processor.
@@ -714,7 +712,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     @Override
     public Container[] findChildren() {
         synchronized (children) {
-            return children.values().toArray(new Container[0]);
+            return children.values().toArray(new Container[ 0 ]);
         }
     }
 
@@ -725,7 +723,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      */
     @Override
     public ContainerListener[] findContainerListeners() {
-        return listeners.toArray(new ContainerListener[0]);
+        return listeners.toArray(new ContainerListener[ 0 ]);
     }
 
     /**
@@ -828,17 +826,21 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     protected synchronized void startInternal() throws LifecycleException {
         // Start our subordinate components, if any
         logger = null;
+        // 初始化日志输出器
         getLogger();
+        // 启动集群
         Cluster cluster = getClusterInternal();
         if (cluster instanceof Lifecycle) {
             ((Lifecycle) cluster).start();
         }
+        // 用户名密码管理器
         Realm realm = getRealmInternal();
         if (realm instanceof Lifecycle) {
             ((Lifecycle) realm).start();
         }
 
         // Start our child containers, if any
+        // 异步线程启动子容器
         Container children[] = findChildren();
         List<Future<Void>> results = new ArrayList<>();
         for (Container child : children) {
@@ -847,7 +849,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         }
 
         MultiThrowable multiThrowable = null;
-
+        // get()方法阻塞，等待子容器启动完毕
         for (Future<Void> result : results) {
             try {
                 result.get();
@@ -861,23 +863,23 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
 
         }
         if (multiThrowable != null) {
-            throw new LifecycleException(sm.getString("containerBase.threadedStartFailed"),
-                multiThrowable.getThrowable());
+            throw new LifecycleException(sm.getString("containerBase.threadedStartFailed"), multiThrowable.getThrowable());
         }
 
         // Start the Valves in our pipeline (including the basic), if any
+        // 启动管道
         if (pipeline instanceof Lifecycle) {
             ((Lifecycle) pipeline).start();
         }
 
+        // 设置当前容器生命周期状态
         setState(LifecycleState.STARTING);
 
         // Start our thread
         // 看这个，本质是调用最上层server的utilityExecutorWrapper 线程池去执行 ContainerBackgroundProcessorMonitor 任务
         if (backgroundProcessorDelay > 0) {
             monitorFuture = Container.getService(ContainerBase.this).getServer()
-                .getUtilityExecutor().scheduleWithFixedDelay(
-                    new ContainerBackgroundProcessorMonitor(), 0, 60, TimeUnit.SECONDS);
+                .getUtilityExecutor().scheduleWithFixedDelay(new ContainerBackgroundProcessorMonitor(), 0, 60, TimeUnit.SECONDS);
         }
     }
 
@@ -1050,6 +1052,8 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      * Execute a periodic task, such as reloading, etc. This method will be
      * invoked inside the classloading context of this container. Unexpected
      * throwables will be caught and logged.
+     * <p>
+     * 后台进程执行各容器
      */
     @Override
     public void backgroundProcess() {
@@ -1075,6 +1079,8 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
                 log.warn(sm.getString("containerBase.backgroundProcess.realm", realm), e);
             }
         }
+
+        // 后台线程执行pipeline管道中的阀门
         Valve current = pipeline.getFirst();
         while (current != null) {
             try {
@@ -1084,6 +1090,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
             }
             current = current.getNext();
         }
+        // 触发执行生命周期事件监听器
         fireLifecycleEvent(Lifecycle.PERIODIC_EVENT, null);
     }
 
@@ -1192,7 +1199,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
                 names.add(next.getObjectName());
             }
         }
-        return names.toArray(new ObjectName[0]);
+        return names.toArray(new ObjectName[ 0 ]);
     }
 
 
@@ -1206,6 +1213,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         if (backgroundProcessorDelay > 0
             && (getState().isAvailable() || LifecycleState.STARTING_PREP.equals(getState()))
             && (backgroundProcessorFuture == null || backgroundProcessorFuture.isDone())) {
+
             if (backgroundProcessorFuture != null && backgroundProcessorFuture.isDone()) {
                 // There was an error executing the scheduled task, get it and log it
                 try {
@@ -1214,10 +1222,9 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
                     log.error(sm.getString("containerBase.backgroundProcess.error"), e);
                 }
             }
+            // 循环执行后台线程
             backgroundProcessorFuture = Container.getService(this).getServer().getUtilityExecutor()
-                .scheduleWithFixedDelay(new ContainerBackgroundProcessor(),
-                    backgroundProcessorDelay, backgroundProcessorDelay,
-                    TimeUnit.SECONDS);
+                .scheduleWithFixedDelay(new ContainerBackgroundProcessor(), backgroundProcessorDelay, backgroundProcessorDelay, TimeUnit.SECONDS);
         }
     }
 

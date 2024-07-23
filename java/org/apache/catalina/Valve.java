@@ -112,8 +112,7 @@ public interface Valve {
      * @throws ServletException if a servlet error occurs, or is thrown
      *                          by a subsequently invoked Valve, Filter, or Servlet
      */
-    void invoke(Request request, Response response)
-        throws IOException, ServletException;
+    void invoke(Request request, Response response) throws IOException, ServletException;
 
 
     boolean isAsyncSupported();

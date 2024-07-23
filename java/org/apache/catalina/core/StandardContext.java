@@ -96,15 +96,12 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
     private static final Log log = LogFactory.getLog(StandardContext.class);
 
-
     // ----------------------------------------------------------- Constructors
-
 
     /**
      * Create a new StandardContext component with the default basic Valve.
      */
     public StandardContext() {
-
         super();
         pipeline.setBasic(new StandardContextValve());
         broadcaster = new NotificationBroadcasterSupport();
@@ -115,7 +112,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             resourceOnlyServlets.add("jsp");
         }
     }
-
 
     // ----------------------------------------------------- Instance Variables
 
@@ -137,18 +133,19 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private String altDDName = null;
 
-
     /**
      * Lifecycle provider.
+     * 实例管理器，它主要的作用就是实现对Context 容器中监听器过滤器以及 Servlet等实例的管理。
+     * 它的实现其实很简单，其中就使用了一些反射机制实例化出对象，但这里面需要注意的地方是，InstanceManager包含了两个类加载器，
+     * 一个是属于Tomcat 容器内部的类加载器，而另外一个是 Web 应用的类加载器。Tomcat 容器类加载器是 Web 应用类加载器的父类加载器，
+     * 且 Tomcat 容器类加载器在 Tomcat 的整个生命周期中都存在，而 Web 应用类加载器则不同，它可能在重启后则被丢弃，最终被GC回收。
      */
     private InstanceManager instanceManager = null;
-
 
     /**
      * The antiResourceLocking flag for this Context.
      */
     private boolean antiResourceLocking = false;
-
 
     /**
      * The set of application listener class names configured for this
@@ -169,34 +166,31 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * The list of instantiated application event listener objects. Note that
      * SCIs and other code may use the pluggability APIs to add listener
      * instances directly to this list before the application starts.
+     * <p>
+     * 监听器事件集合
      */
     private List<Object> applicationEventListenersList = new CopyOnWriteArrayList<>();
-
 
     /**
      * The set of instantiated application lifecycle listener objects. Note that
      * SCIs and other code may use the pluggability APIs to add listener
      * instances directly to this list before the application starts.
+     * <p>
+     * 事件监听器集合
      */
-    private Object applicationLifecycleListenersObjects[] =
-        new Object[ 0 ];
-
+    private Object[] applicationLifecycleListenersObjects = new Object[ 0 ];
 
     /**
      * The ordered set of ServletContainerInitializers for this web application.
      */
-    private Map<ServletContainerInitializer, Set<Class<?>>> initializers =
-        new LinkedHashMap<>();
-
+    private Map<ServletContainerInitializer, Set<Class<?>>> initializers = new LinkedHashMap<>();
 
     /**
      * The set of application parameters defined for this application.
      */
-    private ApplicationParameter applicationParameters[] =
-        new ApplicationParameter[ 0 ];
+    private ApplicationParameter applicationParameters[] = new ApplicationParameter[ 0 ];
 
     private final Object applicationParametersLock = new Object();
-
 
     /**
      * The broadcaster that sends j2ee notifications.
@@ -208,39 +202,27 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private CharsetMapper charsetMapper = null;
 
-
     /**
      * The Java class name of the CharsetMapper class to be created.
      */
-    private String charsetMapperClass =
-        "org.apache.catalina.util.CharsetMapper";
-
+    private String charsetMapperClass = "org.apache.catalina.util.CharsetMapper";
 
     /**
      * The URL of the XML descriptor for this context.
      */
     private URL configFile = null;
 
-
     /**
      * The "correctly configured" flag for this Context.
      */
     private boolean configured = false;
 
-
     /**
      * The security constraints for this web application.
      */
-    private volatile SecurityConstraint constraints[] =
-        new SecurityConstraint[ 0 ];
+    private volatile SecurityConstraint constraints[] = new SecurityConstraint[ 0 ];
 
     private final Object constraintsLock = new Object();
-
-
-    /**
-     * The ServletContext implementation associated with this Context.
-     */
-    protected ApplicationContext context = null;
 
     /**
      * The wrapped version of the associated ServletContext that is presented
@@ -249,12 +231,10 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private NoPluggabilityServletContext noPluggabilityServletContext = null;
 
-
     /**
      * Should we attempt to use cookies for session id communication?
      */
     private boolean cookies = true;
-
 
     /**
      * Should we allow the <code>ServletContext.getContext()</code> method
@@ -262,18 +242,15 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private boolean crossContext = false;
 
-
     /**
      * Encoded path.
      */
     private String encodedPath = null;
 
-
     /**
      * Unencoded path for this web application.
      */
     private String path = null;
-
 
     /**
      * The "follow standard delegation model" flag that will be used to
@@ -283,61 +260,58 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private boolean delegate = JreCompat.isGraalAvailable();
 
-
     private boolean denyUncoveredHttpMethods;
-
 
     /**
      * The display name of this web application.
      */
     private String displayName = null;
 
-
     /**
      * Override the default context xml location.
      */
     private String defaultContextXml;
-
 
     /**
      * Override the default web xml location.
      */
     private String defaultWebXml;
 
-
     /**
      * The distributable flag for this web application.
      */
     private boolean distributable = false;
-
 
     /**
      * The document root for this web application.
      */
     private String docBase = null;
 
-
     private final ErrorPageSupport errorPageSupport = new ErrorPageSupport();
 
+    /**
+     * The ServletContext implementation associated with this Context.
+     */
+    protected ApplicationContext context = null;
     /**
      * The set of filter configurations (and associated filter instances) we
      * have initialized, keyed by filter name.
      */
     private Map<String, ApplicationFilterConfig> filterConfigs = new HashMap<>();
 
-
     /**
-     * The set of filter definitions for this application, keyed by
-     * filter name.
+     * The set of filter definitions for this application, keyed by filter name.
+     * 过滤器描述对象集合映射
      */
     private Map<String, FilterDef> filterDefs = new HashMap<>();
-
 
     /**
      * The set of filter mappings for this application, in the order
      * they were defined in the deployment descriptor with additional mappings
      * added via the {@link ServletContext} possibly both before and after those
      * defined in the deployment descriptor.
+     * <p>
+     * 过滤器对应的web.xml文件中的filter-mapping和filter-name和url-pattern
      */
     private final ContextFilterMaps filterMaps = new ContextFilterMaps();
 
@@ -346,19 +320,16 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private boolean ignoreAnnotations = false;
 
-
     /**
      * The Loader implementation with which this Container is associated.
      */
     private Loader loader = null;
     private final ReadWriteLock loaderLock = new ReentrantReadWriteLock();
 
-
     /**
      * The login configuration descriptor for this web application.
      */
     private LoginConfig loginConfig = null;
-
 
     /**
      * The Manager implementation with which this Container is associated.
@@ -366,30 +337,26 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     protected Manager manager = null;
     private final ReadWriteLock managerLock = new ReentrantReadWriteLock();
 
-
     /**
      * The naming context listener for this web application.
      */
     private NamingContextListener namingContextListener = null;
 
-
     /**
      * The naming resources for this web application.
+     * NamingResources组件负责的工作是将配置文件中声明的不同的资源及其属性映射到内存中，这些映射统一由NamingResources对象封装
      */
     private NamingResourcesImpl namingResources = null;
 
     /**
      * The message destinations for this web application.
      */
-    private HashMap<String, MessageDestination> messageDestinations =
-        new HashMap<>();
-
+    private HashMap<String, MessageDestination> messageDestinations = new HashMap<>();
 
     /**
      * The MIME mappings for this web application, keyed by extension.
      */
     private Map<String, String> mimeMappings = new HashMap<>();
-
 
     /**
      * The context initialization parameters for this web application,
@@ -397,12 +364,10 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private final Map<String, String> parameters = new ConcurrentHashMap<>();
 
-
     /**
      * The request processing pause flag (while reloading occurs)
      */
     private volatile boolean paused = false;
-
 
     /**
      * The public identifier of the DTD for the web application deployment
@@ -411,42 +376,35 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private String publicId = null;
 
-
     /**
      * The reloadable flag for this web application.
      */
     private boolean reloadable = false;
-
 
     /**
      * Unpack WAR property.
      */
     private boolean unpackWAR = true;
 
-
     /**
      * Context level override for default {@link StandardHost#isCopyXML()}.
      */
     private boolean copyXML = false;
-
 
     /**
      * The default context override flag for this web application.
      */
     private boolean override = false;
 
-
     /**
      * The original document root for this web application.
      */
     private String originalDocBase = null;
 
-
     /**
      * The privileged flag for this web application.
      */
     private boolean privileged = false;
-
 
     /**
      * Should the next call to <code>addWelcomeFile()</code> cause replacement
@@ -457,13 +415,11 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private boolean replaceWelcomeFiles = false;
 
-
     /**
      * The security role mappings for this application, keyed by role
      * name (as used within the application).
      */
     private Map<String, String> roleMappings = new HashMap<>();
-
 
     /**
      * The security roles for this application, keyed by role name.
@@ -472,7 +428,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
     private final Object securityRolesLock = new Object();
 
-
     /**
      * The servlet mappings for this web application, keyed by
      * matching pattern.
@@ -480,7 +435,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     private Map<String, String> servletMappings = new HashMap<>();
 
     private final Object servletMappingsLock = new Object();
-
 
     /**
      * The session timeout (in minutes) for this web application.
@@ -492,19 +446,16 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private AtomicLong sequenceNumber = new AtomicLong(0);
 
-
     /**
      * Set flag to true to cause the system.out and system.err to be redirected
      * to the logger when executing a servlet.
      */
     private boolean swallowOutput = false;
 
-
     /**
      * Amount of ms that the container will wait for servlets to unload.
      */
     private long unloadDelay = 2000;
-
 
     /**
      * The watched resources for this application.
@@ -513,14 +464,12 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
     private final Object watchedResourcesLock = new Object();
 
-
     /**
      * The welcome files for this application.
      */
     private String welcomeFiles[] = new String[ 0 ];
 
     private final Object welcomeFilesLock = new Object();
-
 
     /**
      * The set of classnames of LifecycleListeners that will be added
@@ -544,25 +493,21 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private String workDir = null;
 
-
     /**
      * Java class name of the Wrapper class implementation we use.
      */
     private String wrapperClassName = StandardWrapper.class.getName();
     private Class<?> wrapperClass = null;
 
-
     /**
      * JNDI use flag.
      */
     private boolean useNaming = true;
 
-
     /**
      * Name of the associated naming context.
      */
     private String namingContextName = null;
-
 
     private WebResourceRoot resources;
     private final ReadWriteLock resourcesLock = new ReentrantReadWriteLock();
@@ -577,25 +522,21 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     private String j2EEApplication = "none";
     private String j2EEServer = "none";
 
-
     /**
      * Attribute value used to turn on/off XML validation for web.xml and
      * web-fragment.xml files.
      */
     private boolean webXmlValidation = Globals.STRICT_SERVLET_COMPLIANCE;
 
-
     /**
      * Attribute value used to turn on/off XML namespace validation
      */
     private boolean webXmlNamespaceAware = Globals.STRICT_SERVLET_COMPLIANCE;
 
-
     /**
      * Attribute used to turn on/off the use of external entities.
      */
     private boolean xmlBlockExternal = true;
-
 
     /**
      * Attribute value used to turn on/off XML validation
@@ -609,12 +550,10 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private String sessionCookieName;
 
-
     /**
      * The flag that indicates that session cookies should use HttpOnly
      */
     private boolean useHttpOnly = true;
-
 
     /**
      * The domain to use for session cookies. <code>null</code> indicates that
@@ -622,13 +561,11 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private String sessionCookieDomain;
 
-
     /**
      * The path to use for session cookies. <code>null</code> indicates that
      * the path is controlled by the application.
      */
     private String sessionCookiePath;
-
 
     /**
      * Is a / added to the end of the session cookie path to ensure browsers,
@@ -636,7 +573,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * requests intended for context /foobar.
      */
     private boolean sessionCookiePathUsesTrailingSlash = false;
-
 
     /**
      * The Jar scanner to use to search for Jars that might contain
@@ -1260,8 +1196,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      *                interest
      */
     @Override
-    public void addServletContainerInitializer(
-        ServletContainerInitializer sci, Set<Class<?>> classes) {
+    public void addServletContainerInitializer(ServletContainerInitializer sci, Set<Class<?>> classes) {
         initializers.put(sci, classes);
     }
 
@@ -1325,7 +1260,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * the union of both.
      */
     @Override
-    public void setApplicationEventListeners(Object listeners[]) {
+    public void setApplicationEventListeners(Object[] listeners) {
         applicationEventListenersList.clear();
         if (listeners != null && listeners.length > 0) {
             applicationEventListenersList.addAll(Arrays.asList(listeners));
@@ -1371,8 +1306,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     public void addApplicationLifecycleListener(Object listener) {
         int len = applicationLifecycleListenersObjects.length;
-        Object[] newListeners = Arrays.copyOf(
-            applicationLifecycleListenersObjects, len + 1);
+        Object[] newListeners = Arrays.copyOf(applicationLifecycleListenersObjects, len + 1);
         newListeners[ len ] = listener;
         applicationLifecycleListenersObjects = newListeners;
     }
@@ -1861,8 +1795,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             this.loader = loader;
 
             // Stop the old component if necessary
-            if (getState().isAvailable() && (oldLoader != null) &&
-                (oldLoader instanceof Lifecycle)) {
+            if (getState().isAvailable() && (oldLoader != null) && (oldLoader instanceof Lifecycle)) {
                 try {
                     ((Lifecycle) oldLoader).stop();
                 } catch (LifecycleException e) {
@@ -1874,8 +1807,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             if (loader != null) {
                 loader.setContext(this);
             }
-            if (getState().isAvailable() && (loader != null) &&
-                (loader instanceof Lifecycle)) {
+            if (getState().isAvailable() && (loader != null) && (loader instanceof Lifecycle)) {
                 try {
                     ((Lifecycle) loader).start();
                 } catch (LifecycleException e) {
@@ -1955,7 +1887,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         return this.ignoreAnnotations;
     }
 
-
     /**
      * Set the boolean on the annotations parsing for this web
      * application.
@@ -1990,43 +1921,35 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
         // Validate the incoming property value
         if (config == null) {
-            throw new IllegalArgumentException
-                (sm.getString("standardContext.loginConfig.required"));
+            throw new IllegalArgumentException(sm.getString("standardContext.loginConfig.required"));
         }
         String loginPage = config.getLoginPage();
         if ((loginPage != null) && !loginPage.startsWith("/")) {
             if (isServlet22()) {
                 if (log.isDebugEnabled()) {
-                    log.debug(sm.getString("standardContext.loginConfig.loginWarning",
-                        loginPage));
+                    log.debug(sm.getString("standardContext.loginConfig.loginWarning", loginPage));
                 }
                 config.setLoginPage("/" + loginPage);
             } else {
-                throw new IllegalArgumentException
-                    (sm.getString("standardContext.loginConfig.loginPage",
-                        loginPage));
+                throw new IllegalArgumentException(sm.getString("standardContext.loginConfig.loginPage", loginPage));
             }
         }
         String errorPage = config.getErrorPage();
         if ((errorPage != null) && !errorPage.startsWith("/")) {
             if (isServlet22()) {
                 if (log.isDebugEnabled()) {
-                    log.debug(sm.getString("standardContext.loginConfig.errorWarning",
-                        errorPage));
+                    log.debug(sm.getString("standardContext.loginConfig.errorWarning", errorPage));
                 }
                 config.setErrorPage("/" + errorPage);
             } else {
-                throw new IllegalArgumentException
-                    (sm.getString("standardContext.loginConfig.errorPage",
-                        errorPage));
+                throw new IllegalArgumentException(sm.getString("standardContext.loginConfig.errorPage", errorPage));
             }
         }
 
         // Process the property setting change
         LoginConfig oldLoginConfig = this.loginConfig;
         this.loginConfig = config;
-        support.firePropertyChange("loginConfig",
-            oldLoginConfig, this.loginConfig);
+        support.firePropertyChange("loginConfig", oldLoginConfig, this.loginConfig);
 
     }
 
@@ -2042,7 +1965,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         return namingResources;
     }
 
-
     /**
      * Set the naming resources for this web application.
      *
@@ -2050,15 +1972,13 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     @Override
     public void setNamingResources(NamingResourcesImpl namingResources) {
-
         // Process the property setting change
         NamingResourcesImpl oldNamingResources = this.namingResources;
         this.namingResources = namingResources;
         if (namingResources != null) {
             namingResources.setContainer(this);
         }
-        support.firePropertyChange("namingResources",
-            oldNamingResources, this.namingResources);
+        support.firePropertyChange("namingResources", oldNamingResources, this.namingResources);
 
         if (getState() == LifecycleState.NEW ||
             getState() == LifecycleState.INITIALIZING ||
@@ -2093,7 +2013,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             }
         }
     }
-
 
     /**
      * @return the context path for this Context.
@@ -2949,21 +2868,17 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     public void addErrorPage(ErrorPage errorPage) {
         // Validate the input parameters
         if (errorPage == null) {
-            throw new IllegalArgumentException
-                (sm.getString("standardContext.errorPage.required"));
+            throw new IllegalArgumentException(sm.getString("standardContext.errorPage.required"));
         }
         String location = errorPage.getLocation();
         if ((location != null) && !location.startsWith("/")) {
             if (isServlet22()) {
                 if (log.isDebugEnabled()) {
-                    log.debug(sm.getString("standardContext.errorPage.warning",
-                        location));
+                    log.debug(sm.getString("standardContext.errorPage.warning", location));
                 }
                 errorPage.setLocation("/" + location);
             } else {
-                throw new IllegalArgumentException
-                    (sm.getString("standardContext.errorPage.error",
-                        location));
+                throw new IllegalArgumentException(sm.getString("standardContext.errorPage.error", location));
             }
         }
 
@@ -2974,23 +2889,21 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
     /**
      * Add a filter definition to this Context.
+     * <p>
+     * 添加过滤器描述对象
      *
      * @param filterDef The filter definition to be added
      */
     @Override
     public void addFilterDef(FilterDef filterDef) {
-
         synchronized (filterDefs) {
             filterDefs.put(filterDef.getFilterName(), filterDef);
         }
         fireContainerEvent("addFilterDef", filterDef);
-
     }
 
-
     /**
-     * Add a filter mapping to this Context at the end of the current set
-     * of filter mappings.
+     * Add a filter mapping to this Context at the end of the current set of filter mappings.
      *
      * @param filterMap The filter mapping to be added
      * @throws IllegalArgumentException if the specified filter name
@@ -3004,7 +2917,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         filterMaps.add(filterMap);
         fireContainerEvent("addFilterMap", filterMap);
     }
-
 
     /**
      * Add a filter mapping to this Context before the mappings defined in the
@@ -3035,21 +2947,17 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         String[] servletNames = filterMap.getServletNames();
         String[] urlPatterns = filterMap.getURLPatterns();
         if (findFilterDef(filterName) == null) {
-            throw new IllegalArgumentException
-                (sm.getString("standardContext.filterMap.name", filterName));
+            throw new IllegalArgumentException(sm.getString("standardContext.filterMap.name", filterName));
         }
 
         if (!filterMap.getMatchAllServletNames() &&
             !filterMap.getMatchAllUrlPatterns() &&
             (servletNames.length == 0) && (urlPatterns.length == 0)) {
-            throw new IllegalArgumentException
-                (sm.getString("standardContext.filterMap.either"));
+            throw new IllegalArgumentException(sm.getString("standardContext.filterMap.either"));
         }
         for (String urlPattern : urlPatterns) {
             if (!validateURLPattern(urlPattern)) {
-                throw new IllegalArgumentException
-                    (sm.getString("standardContext.filterMap.pattern",
-                        urlPattern));
+                throw new IllegalArgumentException(sm.getString("standardContext.filterMap.pattern", urlPattern));
             }
         }
     }
@@ -3295,7 +3203,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     @Override
     public Wrapper createWrapper() {
-
         Wrapper wrapper = null;
         if (wrapperClass != null) {
             try {
@@ -3417,7 +3324,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         }
     }
 
-
     /**
      * @return the set of defined filters for this Context.
      */
@@ -3427,7 +3333,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             return filterDefs.values().toArray(new FilterDef[ 0 ]);
         }
     }
-
 
     /**
      * @return the set of filter mappings for this Context.
@@ -3876,14 +3781,11 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     @Override
     public void removeFilterDef(FilterDef filterDef) {
-
         synchronized (filterDefs) {
             filterDefs.remove(filterDef.getFilterName());
         }
         fireContainerEvent("removeFilterDef", filterDef);
-
     }
-
 
     /**
      * Remove a filter mapping from this Context.
@@ -3896,7 +3798,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         // Inform interested listeners
         fireContainerEvent("removeFilterMap", filterMap);
     }
-
 
     /**
      * Remove any message destination with the specified name.
@@ -4266,7 +4167,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * StandardContext
      */
     public int getRequestCount() {
-
         int result = 0;
 
         Container[] children = findChildren();
@@ -4275,7 +4175,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
                 result += ((StandardWrapper) child).getRequestCount();
             }
         }
-
         return result;
     }
 
@@ -4287,7 +4186,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * StandardContext
      */
     public int getErrorCount() {
-
         int result = 0;
 
         Container[] children = findChildren();
@@ -4296,10 +4194,8 @@ public class StandardContext extends ContainerBase implements Context, Notificat
                 result += ((StandardWrapper) child).getErrorCount();
             }
         }
-
         return result;
     }
-
 
     /**
      * Return the real path for a given virtual path, if possible; otherwise
@@ -4438,8 +4334,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
                 // Remove the specified filter mapping
                 FilterMap results[] = new FilterMap[ array.length - 1 ];
                 System.arraycopy(array, 0, results, 0, n);
-                System.arraycopy(array, n + 1, results, n, (array.length - 1)
-                    - n);
+                System.arraycopy(array, n + 1, results, n, (array.length - 1) - n);
                 array = results;
                 if (n < insertPoint) {
                     insertPoint--;
@@ -4458,7 +4353,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * successfully, or <code>false</code> otherwise.
      */
     public boolean filterStart() {
-
         if (getLogger().isDebugEnabled()) {
             getLogger().debug("Starting filters");
         }
@@ -4472,19 +4366,16 @@ public class StandardContext extends ContainerBase implements Context, Notificat
                     getLogger().debug(" Starting filter '" + name + "'");
                 }
                 try {
-                    ApplicationFilterConfig filterConfig =
-                        new ApplicationFilterConfig(this, entry.getValue());
+                    ApplicationFilterConfig filterConfig = new ApplicationFilterConfig(this, entry.getValue());
                     filterConfigs.put(name, filterConfig);
                 } catch (Throwable t) {
                     t = ExceptionUtils.unwrapInvocationTargetException(t);
                     ExceptionUtils.handleThrowable(t);
-                    getLogger().error(sm.getString(
-                        "standardContext.filterStart", name), t);
+                    getLogger().error(sm.getString("standardContext.filterStart", name), t);
                     ok = false;
                 }
             }
         }
-
         return ok;
     }
 
@@ -4496,7 +4387,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * successfully, or <code>false</code> otherwise.
      */
     public boolean filterStop() {
-
         if (getLogger().isDebugEnabled()) {
             getLogger().debug("Stopping filters");
         }
@@ -4513,9 +4403,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             filterConfigs.clear();
         }
         return true;
-
     }
-
 
     /**
      * Find and return the initialized <code>FilterConfig</code> for the
@@ -4528,7 +4416,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         return filterConfigs.get(name);
     }
 
-
     /**
      * Configure the set of instantiated application event listeners
      * for this Context.
@@ -4537,19 +4424,17 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * initialized successfully, or <code>false</code> otherwise.
      */
     public boolean listenerStart() {
-
         if (log.isDebugEnabled()) {
             log.debug("Configuring application event listeners");
         }
 
         // Instantiate the required listeners
-        String listeners[] = findApplicationListeners();
-        Object results[] = new Object[ listeners.length ];
+        String[] listeners = findApplicationListeners();
+        Object[] results = new Object[ listeners.length ];
         boolean ok = true;
         for (int i = 0; i < results.length; i++) {
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug(" Configuring event listener class '" +
-                    listeners[ i ] + "'");
+                getLogger().debug(" Configuring event listener class '" + listeners[ i ] + "'");
             }
             try {
                 String listener = listeners[ i ];
@@ -4557,8 +4442,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             } catch (Throwable t) {
                 t = ExceptionUtils.unwrapInvocationTargetException(t);
                 ExceptionUtils.handleThrowable(t);
-                getLogger().error(sm.getString(
-                    "standardContext.applicationListener", listeners[ i ]), t);
+                getLogger().error(sm.getString("standardContext.applicationListener", listeners[ i ]), t);
                 ok = false;
             }
         }
@@ -4578,8 +4462,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
                 || (result instanceof HttpSessionAttributeListener)) {
                 eventListeners.add(result);
             }
-            if ((result instanceof ServletContextListener)
-                || (result instanceof HttpSessionListener)) {
+            if ((result instanceof ServletContextListener) || (result instanceof HttpSessionListener)) {
                 lifecycleListeners.add(result);
             }
         }
@@ -4642,9 +4525,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             }
         }
         return ok;
-
     }
-
 
     /**
      * Send an application stop event to all interested listeners.
@@ -4653,13 +4534,12 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * or <code>false</code> otherwise.
      */
     public boolean listenerStop() {
-
         if (log.isDebugEnabled()) {
             log.debug("Sending application stop events");
         }
 
         boolean ok = true;
-        Object listeners[] = getApplicationLifecycleListeners();
+        Object[] listeners = getApplicationLifecycleListeners();
         if (listeners != null && listeners.length > 0) {
             ServletContextEvent event = new ServletContextEvent(getServletContext());
             ServletContextEvent tldEvent = null;
@@ -4672,8 +4552,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
                     continue;
                 }
                 if (listeners[ j ] instanceof ServletContextListener) {
-                    ServletContextListener listener =
-                        (ServletContextListener) listeners[ j ];
+                    ServletContextListener listener = (ServletContextListener) listeners[ j ];
                     try {
                         fireContainerEvent("beforeContextDestroyed", listener);
                         if (noPluggabilityListeners.contains(listener)) {
@@ -4745,7 +4624,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * @throws LifecycleException if a start error occurs
      */
     public void resourcesStart() throws LifecycleException {
-
         // Check current status in case resources were added that had already
         // been started
         if (!resources.getState().isAvailable()) {
@@ -4762,7 +4640,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             }
         }
     }
-
 
     /**
      * Deallocate resources and destroy proxy.
@@ -4845,15 +4722,13 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     @Override
     protected synchronized void startInternal() throws LifecycleException {
-
         if (log.isDebugEnabled()) {
             log.debug("Starting " + getBaseName());
         }
 
         // Send j2ee.state.starting notification
         if (this.getObjectName() != null) {
-            Notification notification = new Notification("j2ee.state.starting",
-                this.getObjectName(), sequenceNumber.getAndIncrement());
+            Notification notification = new Notification("j2ee.state.starting", this.getObjectName(), sequenceNumber.getAndIncrement());
             broadcaster.sendNotification(notification);
         }
 
@@ -4902,8 +4777,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
         // Reading the "catalina.useNaming" environment variable
         String useNamingProperty = System.getProperty("catalina.useNaming");
-        if ((useNamingProperty != null)
-            && (useNamingProperty.equals("false"))) {
+        if ((useNamingProperty != null) && (useNamingProperty.equals("false"))) {
             useNaming = false;
         }
 
@@ -5020,8 +4894,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
                 // Configure default manager if none was specified
                 if (contextManager != null) {
                     if (log.isDebugEnabled()) {
-                        log.debug(sm.getString("standardContext.manager",
-                            contextManager.getClass().getName()));
+                        log.debug(sm.getString("standardContext.manager", contextManager.getClass().getName()));
                     }
                     setManager(contextManager);
                 }
@@ -5040,19 +4913,16 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
             // We put the resources into the servlet context
             if (ok) {
-                getServletContext().setAttribute
-                    (Globals.RESOURCES_ATTR, getResources());
+                getServletContext().setAttribute(Globals.RESOURCES_ATTR, getResources());
 
                 if (getInstanceManager() == null) {
                     setInstanceManager(createInstanceManager());
                 }
-                getServletContext().setAttribute(
-                    InstanceManager.class.getName(), getInstanceManager());
+                getServletContext().setAttribute(InstanceManager.class.getName(), getInstanceManager());
                 InstanceManagerBindings.bind(getLoader().getClassLoader(), getInstanceManager());
 
                 // Create context attributes that will be required
-                getServletContext().setAttribute(
-                    JarScanner.class.getName(), getJarScanner());
+                getServletContext().setAttribute(JarScanner.class.getName(), getJarScanner());
 
                 // Make the version info available
                 getServletContext().setAttribute(Globals.WEBAPP_VERSION, getWebappVersion());
@@ -5062,11 +4932,9 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             mergeParameters();
 
             // Call ServletContainerInitializers
-            for (Map.Entry<ServletContainerInitializer, Set<Class<?>>> entry :
-                initializers.entrySet()) {
+            for (Map.Entry<ServletContainerInitializer, Set<Class<?>>> entry : initializers.entrySet()) {
                 try {
-                    entry.getKey().onStartup(entry.getValue(),
-                        getServletContext());
+                    entry.getKey().onStartup(entry.getValue(), getServletContext());
                 } catch (ServletException e) {
                     log.error(sm.getString("standardContext.sciFail"), e);
                     ok = false;
@@ -5173,17 +5041,14 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         }
     }
 
-
     @Override
     public InstanceManager createInstanceManager() {
         javax.naming.Context context = null;
         if (isUseNaming() && getNamingContextListener() != null) {
             context = getNamingContextListener().getEnvContext();
         }
-        Map<String, Map<String, String>> injectionMap = buildInjectionMap(
-            getIgnoreAnnotations() ? new NamingResourcesImpl() : getNamingResources());
-        return new DefaultInstanceManager(context, injectionMap,
-            this, this.getClass().getClassLoader());
+        Map<String, Map<String, String>> injectionMap = buildInjectionMap(getIgnoreAnnotations() ? new NamingResourcesImpl() : getNamingResources());
+        return new DefaultInstanceManager(context, injectionMap, this, this.getClass().getClassLoader());
     }
 
     private Map<String, Map<String, String>> buildInjectionMap(NamingResourcesImpl namingResources) {
@@ -5218,8 +5083,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             String jndiName = resource.getName();
             for (InjectionTarget injectionTarget : injectionTargets) {
                 String clazz = injectionTarget.getTargetClass();
-                injectionMap.computeIfAbsent(clazz, k -> new HashMap<>())
-                    .put(injectionTarget.getTargetName(), jndiName);
+                injectionMap.computeIfAbsent(clazz, k -> new HashMap<>()).put(injectionTarget.getTargetName(), jndiName);
             }
         }
     }
@@ -5266,12 +5130,9 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     @Override
     protected synchronized void stopInternal() throws LifecycleException {
-
         // Send j2ee.state.stopping notification
         if (this.getObjectName() != null) {
-            Notification notification =
-                new Notification("j2ee.state.stopping", this.getObjectName(),
-                    sequenceNumber.getAndIncrement());
+            Notification notification = new Notification("j2ee.state.stopping", this.getObjectName(), sequenceNumber.getAndIncrement());
             broadcaster.sendNotification(notification);
         }
 
@@ -5362,19 +5223,14 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
             // Stop resources
             resourcesStop();
-
         } finally {
-
             // Unbinding thread
             unbindThread(oldCCL);
-
         }
 
         // Send j2ee.state.stopped notification
         if (this.getObjectName() != null) {
-            Notification notification =
-                new Notification("j2ee.state.stopped", this.getObjectName(),
-                    sequenceNumber.getAndIncrement());
+            Notification notification = new Notification("j2ee.state.stopped", this.getObjectName(), sequenceNumber.getAndIncrement());
             broadcaster.sendNotification(notification);
         }
 
@@ -5394,7 +5250,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         if (log.isDebugEnabled()) {
             log.debug("Stopping complete");
         }
-
     }
 
     /**
@@ -5454,8 +5309,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             try {
                 loader.backgroundProcess();
             } catch (Exception e) {
-                log.warn(sm.getString(
-                    "standardContext.backgroundProcess.loader", loader), e);
+                log.warn(sm.getString("standardContext.backgroundProcess.loader", loader), e);
             }
         }
         Manager manager = getManager();
@@ -5463,9 +5317,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             try {
                 manager.backgroundProcess();
             } catch (Exception e) {
-                log.warn(sm.getString(
-                        "standardContext.backgroundProcess.manager", manager),
-                    e);
+                log.warn(sm.getString("standardContext.backgroundProcess.manager", manager), e);
             }
         }
         WebResourceRoot resources = getResources();
@@ -5473,9 +5325,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             try {
                 resources.backgroundProcess();
             } catch (Exception e) {
-                log.warn(sm.getString(
-                    "standardContext.backgroundProcess.resources",
-                    resources), e);
+                log.warn(sm.getString("standardContext.backgroundProcess.resources", resources), e);
             }
         }
         InstanceManager instanceManager = getInstanceManager();
@@ -5483,9 +5333,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             try {
                 instanceManager.backgroundProcess();
             } catch (Exception e) {
-                log.warn(sm.getString(
-                    "standardContext.backgroundProcess.instanceManager",
-                    resources), e);
+                log.warn(sm.getString("standardContext.backgroundProcess.instanceManager", resources), e);
             }
         }
         super.backgroundProcess();
@@ -6487,54 +6335,42 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         @Override
         public jakarta.servlet.FilterRegistration.Dynamic addFilter(
             String filterName, String className) {
-            throw new UnsupportedOperationException(
-                sm.getString("noPluggabilityServletContext.notAllowed"));
+            throw new UnsupportedOperationException(sm.getString("noPluggabilityServletContext.notAllowed"));
         }
 
         @Override
-        public jakarta.servlet.FilterRegistration.Dynamic addFilter(
-            String filterName, Filter filter) {
-            throw new UnsupportedOperationException(
-                sm.getString("noPluggabilityServletContext.notAllowed"));
+        public jakarta.servlet.FilterRegistration.Dynamic addFilter(String filterName, Filter filter) {
+            throw new UnsupportedOperationException(sm.getString("noPluggabilityServletContext.notAllowed"));
         }
 
         @Override
-        public jakarta.servlet.FilterRegistration.Dynamic addFilter(
-            String filterName, Class<? extends Filter> filterClass) {
-            throw new UnsupportedOperationException(
-                sm.getString("noPluggabilityServletContext.notAllowed"));
+        public jakarta.servlet.FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> filterClass) {
+            throw new UnsupportedOperationException(sm.getString("noPluggabilityServletContext.notAllowed"));
         }
 
         @Override
-        public <T extends Filter> T createFilter(Class<T> c)
-            throws ServletException {
-            throw new UnsupportedOperationException(
-                sm.getString("noPluggabilityServletContext.notAllowed"));
+        public <T extends Filter> T createFilter(Class<T> c) throws ServletException {
+            throw new UnsupportedOperationException(sm.getString("noPluggabilityServletContext.notAllowed"));
         }
 
         @Override
         public FilterRegistration getFilterRegistration(String filterName) {
-            throw new UnsupportedOperationException(
-                sm.getString("noPluggabilityServletContext.notAllowed"));
+            throw new UnsupportedOperationException(sm.getString("noPluggabilityServletContext.notAllowed"));
         }
 
         @Override
         public Map<String, ? extends FilterRegistration> getFilterRegistrations() {
-            throw new UnsupportedOperationException(
-                sm.getString("noPluggabilityServletContext.notAllowed"));
+            throw new UnsupportedOperationException(sm.getString("noPluggabilityServletContext.notAllowed"));
         }
 
         @Override
         public SessionCookieConfig getSessionCookieConfig() {
-            throw new UnsupportedOperationException(
-                sm.getString("noPluggabilityServletContext.notAllowed"));
+            throw new UnsupportedOperationException(sm.getString("noPluggabilityServletContext.notAllowed"));
         }
 
         @Override
-        public void setSessionTrackingModes(
-            Set<SessionTrackingMode> sessionTrackingModes) {
-            throw new UnsupportedOperationException(
-                sm.getString("noPluggabilityServletContext.notAllowed"));
+        public void setSessionTrackingModes(Set<SessionTrackingMode> sessionTrackingModes) {
+            throw new UnsupportedOperationException(sm.getString("noPluggabilityServletContext.notAllowed"));
         }
 
         @Override
@@ -6549,27 +6385,22 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
         @Override
         public void addListener(String className) {
-            throw new UnsupportedOperationException(
-                sm.getString("noPluggabilityServletContext.notAllowed"));
+            throw new UnsupportedOperationException(sm.getString("noPluggabilityServletContext.notAllowed"));
         }
 
         @Override
         public <T extends EventListener> void addListener(T t) {
-            throw new UnsupportedOperationException(
-                sm.getString("noPluggabilityServletContext.notAllowed"));
+            throw new UnsupportedOperationException(sm.getString("noPluggabilityServletContext.notAllowed"));
         }
 
         @Override
         public void addListener(Class<? extends EventListener> listenerClass) {
-            throw new UnsupportedOperationException(
-                sm.getString("noPluggabilityServletContext.notAllowed"));
+            throw new UnsupportedOperationException(sm.getString("noPluggabilityServletContext.notAllowed"));
         }
 
         @Override
-        public <T extends EventListener> T createListener(Class<T> c)
-            throws ServletException {
-            throw new UnsupportedOperationException(
-                sm.getString("noPluggabilityServletContext.notAllowed"));
+        public <T extends EventListener> T createListener(Class<T> c) throws ServletException {
+            throw new UnsupportedOperationException(sm.getString("noPluggabilityServletContext.notAllowed"));
         }
 
         @Override
@@ -6584,8 +6415,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
         @Override
         public void declareRoles(String... roleNames) {
-            throw new UnsupportedOperationException(
-                sm.getString("noPluggabilityServletContext.notAllowed"));
+            throw new UnsupportedOperationException(sm.getString("noPluggabilityServletContext.notAllowed"));
         }
 
         @Override
@@ -6600,8 +6430,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
         @Override
         public void setSessionTimeout(int sessionTimeout) {
-            throw new UnsupportedOperationException(
-                sm.getString("noPluggabilityServletContext.notAllowed"));
+            throw new UnsupportedOperationException(sm.getString("noPluggabilityServletContext.notAllowed"));
         }
 
         @Override
@@ -6611,8 +6440,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
         @Override
         public void setRequestCharacterEncoding(String encoding) {
-            throw new UnsupportedOperationException(
-                sm.getString("noPluggabilityServletContext.notAllowed"));
+            throw new UnsupportedOperationException(sm.getString("noPluggabilityServletContext.notAllowed"));
         }
 
         @Override
@@ -6622,8 +6450,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
         @Override
         public void setResponseCharacterEncoding(String encoding) {
-            throw new UnsupportedOperationException(
-                sm.getString("noPluggabilityServletContext.notAllowed"));
+            throw new UnsupportedOperationException(sm.getString("noPluggabilityServletContext.notAllowed"));
         }
     }
 }

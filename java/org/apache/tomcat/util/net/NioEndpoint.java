@@ -679,6 +679,8 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
          * be added to a temporary array, and polled first after a maximum amount
          * of time equal to pollTime (in most cases, latency will be much lower,
          * however).
+         * <p>
+         * 在processSocket()方法中处理socket连接
          *
          * @param socketWrapper to add to the poller
          * @param interestOps   Operations for which to register this socket with
@@ -884,7 +886,9 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
                                         socketWrapper.writeBlocking = false;
                                         socketWrapper.writeLock.notify();
                                     }
-                                } else if (!processSocket(socketWrapper, SocketEvent.OPEN_WRITE, true)) {
+                                }
+                                // 处理socket的写操作
+                                else if (!processSocket(socketWrapper, SocketEvent.OPEN_WRITE, true)) {
                                     closeSocket = true;
                                 }
                             }
@@ -907,8 +911,8 @@ public class NioEndpoint extends AbstractNetworkChannelEndpoint<NioChannel, Sock
             }
         }
 
-        public SendfileState processSendfile(SelectionKey sk, NioSocketWrapper socketWrapper,
-                                             boolean calledByProcessor) {
+        // 处理发送文件
+        public SendfileState processSendfile(SelectionKey sk, NioSocketWrapper socketWrapper, boolean calledByProcessor) {
             NioChannel sc = null;
             try {
                 unreg(sk, socketWrapper, sk.readyOps());

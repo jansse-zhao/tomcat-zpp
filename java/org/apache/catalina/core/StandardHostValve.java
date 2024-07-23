@@ -16,15 +16,11 @@
  */
 package org.apache.catalina.core;
 
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletResponse;
-
 import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
 import org.apache.catalina.Wrapper;
@@ -38,6 +34,9 @@ import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.descriptor.web.ErrorPage;
 import org.apache.tomcat.util.res.StringManager;
+
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Valve that implements the default basic behavior for the
@@ -73,16 +72,13 @@ final class StandardHostValve extends ValveBase {
      * based on the specified request URI.  If no matching Context can
      * be found, return an appropriate HTTP error.
      *
-     * @param request Request to be processed
+     * @param request  Request to be processed
      * @param response Response to be produced
-     *
-     * @exception IOException if an input/output error occurred
-     * @exception ServletException if a servlet error occurred
+     * @throws IOException      if an input/output error occurred
+     * @throws ServletException if a servlet error occurred
      */
     @Override
-    public final void invoke(Request request, Response response)
-        throws IOException, ServletException {
-
+    public final void invoke(Request request, Response response) throws IOException, ServletException {
         // Select the Context to be used for this Request
         Context context = request.getContext();
         if (context == null) {
@@ -180,7 +176,7 @@ final class StandardHostValve extends ValveBase {
      * Response.  Any exceptions that occur during generation of the error
      * report are logged and swallowed.
      *
-     * @param request The request being processed
+     * @param request  The request being processed
      * @param response The response being generated
      */
     private void status(Request request, Response response) {
@@ -246,10 +242,10 @@ final class StandardHostValve extends ValveBase {
      * exceptions that occur during generation of the exception report are
      * logged and swallowed.
      *
-     * @param request The request being processed
-     * @param response The response being generated
+     * @param request   The request being processed
+     * @param response  The response being generated
      * @param throwable The exception that occurred (which possibly wraps
-     *  a root cause exception
+     *                  a root cause exception
      */
     protected void throwable(Request request, Response response, Throwable throwable) {
         Context context = request.getContext();
@@ -267,7 +263,7 @@ final class StandardHostValve extends ValveBase {
         }
 
         // If this is an aborted request from a client just log it and return
-        if (realError instanceof ClientAbortException ) {
+        if (realError instanceof ClientAbortException) {
             if (log.isDebugEnabled()) {
                 log.debug(sm.getString("standardHost.clientAbort", realError.getCause().getMessage()));
             }
@@ -285,7 +281,7 @@ final class StandardHostValve extends ValveBase {
                 request.setAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR, errorPage.getLocation());
                 request.setAttribute(Globals.DISPATCHER_TYPE_ATTR, DispatcherType.ERROR);
                 request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE,
-                        Integer.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
+                    Integer.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
                 request.setAttribute(RequestDispatcher.ERROR_MESSAGE, throwable.getMessage());
                 request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, realError);
                 Wrapper wrapper = request.getWrapper();
@@ -325,27 +321,22 @@ final class StandardHostValve extends ValveBase {
      * we successfully utilized the specified error page location, or
      * <code>false</code> if the default error report should be rendered.
      *
-     * @param request The request being processed
-     * @param response The response being generated
+     * @param request   The request being processed
+     * @param response  The response being generated
      * @param errorPage The errorPage directive we are obeying
      */
-    private boolean custom(Request request, Response response,
-                             ErrorPage errorPage) {
-
+    private boolean custom(Request request, Response response, ErrorPage errorPage) {
         if (container.getLogger().isDebugEnabled()) {
             container.getLogger().debug("Processing " + errorPage);
         }
 
         try {
             // Forward control to the specified location
-            ServletContext servletContext =
-                request.getContext().getServletContext();
-            RequestDispatcher rd =
-                servletContext.getRequestDispatcher(errorPage.getLocation());
+            ServletContext servletContext = request.getContext().getServletContext();
+            RequestDispatcher rd = servletContext.getRequestDispatcher(errorPage.getLocation());
 
             if (rd == null) {
-                container.getLogger().error(
-                    sm.getString("standardHostValue.customStatusFailed", errorPage.getLocation()));
+                container.getLogger().error(sm.getString("standardHostValue.customStatusFailed", errorPage.getLocation()));
                 return false;
             }
 
@@ -365,7 +356,7 @@ final class StandardHostValve extends ValveBase {
                 // Now close immediately as an additional signal to the client
                 // that something went wrong
                 response.getCoyoteResponse().action(ActionCode.CLOSE_NOW,
-                        request.getAttribute(RequestDispatcher.ERROR_EXCEPTION));
+                    request.getAttribute(RequestDispatcher.ERROR_EXCEPTION));
             } else {
                 // Reset the response (keeping the real error code and message)
                 response.resetBuffer(true);

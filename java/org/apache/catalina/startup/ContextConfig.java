@@ -69,12 +69,10 @@ public class ContextConfig implements LifecycleListener {
     /**
      * The string resources for this package.
      */
-    protected static final StringManager sm =
-        StringManager.getManager(Constants.Package);
+    protected static final StringManager sm = StringManager.getManager(Constants.Package);
 
 
-    protected static final LoginConfig DUMMY_LOGIN_CONFIG =
-        new LoginConfig("NONE", null, null, null);
+    protected static final LoginConfig DUMMY_LOGIN_CONFIG = new LoginConfig("NONE", null, null, null);
 
 
     /**
@@ -107,8 +105,7 @@ public class ContextConfig implements LifecycleListener {
     /**
      * Cache of default web.xml fragments per Host
      */
-    protected static final Map<Host, DefaultWebXmlCacheEntry> hostWebXmlCache =
-        new ConcurrentHashMap<>();
+    protected static final Map<Host, DefaultWebXmlCacheEntry> hostWebXmlCache = new ConcurrentHashMap<>();
 
 
     /**
@@ -159,15 +156,13 @@ public class ContextConfig implements LifecycleListener {
     /**
      * Map of ServletContainerInitializer to classes they expressed interest in.
      */
-    protected final Map<ServletContainerInitializer, Set<Class<?>>> initializerClassMap =
-        new LinkedHashMap<>();
+    protected final Map<ServletContainerInitializer, Set<Class<?>>> initializerClassMap = new LinkedHashMap<>();
 
     /**
      * Map of Types to ServletContainerInitializer that are interested in those
      * types.
      */
-    protected final Map<Class<?>, Set<ServletContainerInitializer>> typeInitializerMap =
-        new HashMap<>();
+    protected final Map<Class<?>, Set<ServletContainerInitializer>> typeInitializerMap = new HashMap<>();
 
     /**
      * Flag that indicates if at least one {@link HandlesTypes} entry is present
@@ -986,7 +981,7 @@ public class ContextConfig implements LifecycleListener {
         // Removing children
         Container[] children = context.findChildren();
         for (i = 0; i < children.length; i++) {
-            context.removeChild(children[i]);
+            context.removeChild(children[ i ]);
         }
 
         // Removing application parameters
@@ -1002,67 +997,67 @@ public class ContextConfig implements LifecycleListener {
         // Removing security constraints
         SecurityConstraint[] securityConstraints = context.findConstraints();
         for (i = 0; i < securityConstraints.length; i++) {
-            context.removeConstraint(securityConstraints[i]);
+            context.removeConstraint(securityConstraints[ i ]);
         }
 
         // Removing errors pages
         ErrorPage[] errorPages = context.findErrorPages();
         for (i = 0; i < errorPages.length; i++) {
-            context.removeErrorPage(errorPages[i]);
+            context.removeErrorPage(errorPages[ i ]);
         }
 
         // Removing filter defs
         FilterDef[] filterDefs = context.findFilterDefs();
         for (i = 0; i < filterDefs.length; i++) {
-            context.removeFilterDef(filterDefs[i]);
+            context.removeFilterDef(filterDefs[ i ]);
         }
 
         // Removing filter maps
         FilterMap[] filterMaps = context.findFilterMaps();
         for (i = 0; i < filterMaps.length; i++) {
-            context.removeFilterMap(filterMaps[i]);
+            context.removeFilterMap(filterMaps[ i ]);
         }
 
         // Removing Mime mappings
         String[] mimeMappings = context.findMimeMappings();
         for (i = 0; i < mimeMappings.length; i++) {
-            context.removeMimeMapping(mimeMappings[i]);
+            context.removeMimeMapping(mimeMappings[ i ]);
         }
 
         // Removing parameters
         String[] parameters = context.findParameters();
         for (i = 0; i < parameters.length; i++) {
-            context.removeParameter(parameters[i]);
+            context.removeParameter(parameters[ i ]);
         }
 
         // Removing security role
         String[] securityRoles = context.findSecurityRoles();
         for (i = 0; i < securityRoles.length; i++) {
-            context.removeSecurityRole(securityRoles[i]);
+            context.removeSecurityRole(securityRoles[ i ]);
         }
 
         // Removing servlet mappings
         String[] servletMappings = context.findServletMappings();
         for (i = 0; i < servletMappings.length; i++) {
-            context.removeServletMapping(servletMappings[i]);
+            context.removeServletMapping(servletMappings[ i ]);
         }
 
         // Removing welcome files
         String[] welcomeFiles = context.findWelcomeFiles();
         for (i = 0; i < welcomeFiles.length; i++) {
-            context.removeWelcomeFile(welcomeFiles[i]);
+            context.removeWelcomeFile(welcomeFiles[ i ]);
         }
 
         // Removing wrapper lifecycles
         String[] wrapperLifecycles = context.findWrapperLifecycles();
         for (i = 0; i < wrapperLifecycles.length; i++) {
-            context.removeWrapperLifecycle(wrapperLifecycles[i]);
+            context.removeWrapperLifecycle(wrapperLifecycles[ i ]);
         }
 
         // Removing wrapper listeners
         String[] wrapperListeners = context.findWrapperListeners();
         for (i = 0; i < wrapperListeners.length; i++) {
-            context.removeWrapperListener(wrapperListeners[i]);
+            context.removeWrapperListener(wrapperListeners[ i ]);
         }
 
         // Remove (partially) folders and files created by antiLocking
@@ -2783,7 +2778,7 @@ public class ContextConfig implements LifecycleListener {
         } else {
             values.add(ev.stringifyValue());
         }
-        return values.toArray(new String[0]);
+        return values.toArray(new String[ 0 ]);
     }
 
     protected Map<String, String> processAnnotationWebInitParams(

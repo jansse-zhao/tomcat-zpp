@@ -50,6 +50,11 @@ public class StandardEngine extends ContainerBase implements Engine {
      * Realm 组件:提供了Engine 容器级别的用户-密码-权限的数据对象，配合资源认证模块使用。
      */
 
+    /**
+     * Tomcat中有Engine和Host两个级别的集群，而这里的集群组件正式属于全局引擎容器。
+     * 它主要把不同jvm上的全局引擎容器内的所有应用都抽象成集群，让他们在不同的jvm之间互相通信。
+     */
+
     private static final Log log = LogFactory.getLog(StandardEngine.class);
 
     // ----------------------------------------------------------- Constructors
@@ -197,15 +202,14 @@ public class StandardEngine extends ContainerBase implements Engine {
     /**
      * Disallow any attempt to set a parent for this Container, since an
      * Engine is supposed to be at the top of the Container hierarchy.
+     * <p>
+     * Engine组件没有父组件
      *
      * @param container Proposed parent Container
      */
     @Override
     public void setParent(Container container) {
-
-        throw new IllegalArgumentException
-            (sm.getString("standardEngine.notParent"));
-
+        throw new IllegalArgumentException(sm.getString("standardEngine.notParent"));
     }
 
     @Override

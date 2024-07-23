@@ -56,6 +56,10 @@ import java.util.HashSet;
  */
 public class Connector extends LifecycleMBeanBase {
 
+    /**
+     * 包含{@link ProtocolHandler} 和 {@link Adapter}
+     */
+
     private static final Log log = LogFactory.getLog(Connector.class);
 
     public static final String INTERNAL_EXECUTOR_NAME = "Internal";

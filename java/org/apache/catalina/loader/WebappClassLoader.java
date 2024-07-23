@@ -20,6 +20,27 @@ import org.apache.catalina.LifecycleException;
 
 public class WebappClassLoader extends WebappClassLoaderBase {
 
+    /**
+     * WebappClassLoader 并没有遵循双亲委派机制，而是按自己的策略顺序加载类。根据委托标识，加载分为两种方式。
+     * ① 当委托标识 delegate 为false 时，WebappClassLoader 类加载器首先先尝试从本地缓存中查找加载该类，
+     * 然后用System 类加载器尝试加载类，接着由自己尝试加载类，最后才由父类加载(Common)器尝试加载。
+     * 所以此时它搜索的目录顺序是<JAVA HOME>/jre/lib---→
+     * <JAVAHOME>jre/lib/ext---->
+     * CLASSPATH---->
+     * /WEB-INF/classes---→
+     * /WEB-INF/ib---->
+     * $CATALINA BASE/ib---->
+     * $CATALINA HOME/ib。
+     * ② 当委托标识 delegate 为 true 时,WebappClassLoader 类加载器首先先尝试从本地缓存中查找加载该类，
+     * 然后用System 类加载器尝试加载类，接着由父类加载器(Common)尝试加载类，最后才由自己尝试加载。
+     * 所以此时它的搜索的目录顺序是<JAVA HOME>/jre/lib---→
+     * <JAVAHOME>/jre/lib/ext---->
+     * CLASSPATH---->
+     * $CATALINA_BASE/lib--->$CATALINA_HOME/lib---->
+     * /WEB-INF/classes---->
+     * /WEB-INF/lib。
+     */
+
     public WebappClassLoader() {
         super();
     }
