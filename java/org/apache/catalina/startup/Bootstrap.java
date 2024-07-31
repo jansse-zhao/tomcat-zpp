@@ -506,6 +506,7 @@ public final class Bootstrap {
                 // 调用 Catalina 对象的 await()方法
                 daemon.setAwait(true);
                 // 调用 Catalina 对象的 load()方法
+                // 对应Lifecycle生命周期的init阶段，因为在Catalina内部会调用Server的init方法
                 daemon.load(args);
                 // 调用 Catalina 对象的 start()方法
                 daemon.start();

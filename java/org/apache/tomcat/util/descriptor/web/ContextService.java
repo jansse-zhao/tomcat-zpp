@@ -121,29 +121,29 @@ public class ContextService extends ResourceBase {
      * Declares the specific WSDL service element that is being referred to.
      * It is not specified if no wsdl-file is declared or if WSDL contains only
      * 1 service element.
-     *
+     * <p>
      * A service-qname is composed by a namespaceURI and a localpart.
      * It must be defined if more than 1 service is declared in the WSDL.
-     *
+     * <p>
      * serviceqname[0] : namespaceURI
      * serviceqname[1] : localpart
      */
-    private String[] serviceqname = new String[2];
+    private String[] serviceqname = new String[ 2 ];
 
     public String[] getServiceqname() {
         return this.serviceqname;
     }
 
     public String getServiceqname(int i) {
-        return this.serviceqname[i];
+        return this.serviceqname[ i ];
     }
 
     public String getServiceqnameNamespaceURI() {
-        return this.serviceqname[0];
+        return this.serviceqname[ 0 ];
     }
 
     public String getServiceqnameLocalpart() {
-        return this.serviceqname[1];
+        return this.serviceqname[ 1 ];
     }
 
     public void setServiceqname(String[] serviceqname) {
@@ -151,21 +151,22 @@ public class ContextService extends ResourceBase {
     }
 
     public void setServiceqname(String serviceqname, int i) {
-        this.serviceqname[i] = serviceqname;
+        this.serviceqname[ i ] = serviceqname;
     }
 
     public void setServiceqnameNamespaceURI(String namespaceuri) {
-        this.serviceqname[0] = namespaceuri;
+        this.serviceqname[ 0 ] = namespaceuri;
     }
 
     public void setServiceqnameLocalpart(String localpart) {
-        this.serviceqname[1] = localpart;
+        this.serviceqname[ 1 ] = localpart;
     }
 
     /**
      * Declares a client dependency on the container to resolving a Service Endpoint Interface
      * to a WSDL port. It optionally associates the Service Endpoint Interface with a
      * particular port-component.
+     *
      * @return the endpoint names
      */
     public Iterator<String> getServiceendpoints() {
@@ -185,7 +186,7 @@ public class ContextService extends ResourceBase {
 
     /**
      * A list of Handlers to use for this service-ref.
-     *
+     * <p>
      * The instantiation of the handler have to be done.
      */
     private final Map<String, ContextHandler> handlers = new HashMap<>();
@@ -243,13 +244,13 @@ public class ContextService extends ResourceBase {
             sb.append(", jaxrpc-mapping-file=");
             sb.append(jaxrpcmappingfile);
         }
-        if (serviceqname[0] != null) {
+        if (serviceqname[ 0 ] != null) {
             sb.append(", service-qname/namespaceURI=");
-            sb.append(serviceqname[0]);
+            sb.append(serviceqname[ 0 ]);
         }
-        if (serviceqname[1] != null) {
+        if (serviceqname[ 1 ] != null) {
             sb.append(", service-qname/localpart=");
-            sb.append(serviceqname[1]);
+            sb.append(serviceqname[ 1 ]);
         }
         if (this.getServiceendpoints() != null) {
             sb.append(", port-component/service-endpoint-interface=");
@@ -268,22 +269,14 @@ public class ContextService extends ResourceBase {
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result +
-                ((displayname == null) ? 0 : displayname.hashCode());
-        result = prime * result +
-                ((handlers == null) ? 0 : handlers.hashCode());
-        result = prime *
-                result +
-                ((jaxrpcmappingfile == null) ? 0 : jaxrpcmappingfile.hashCode());
-        result = prime * result +
-                ((largeIcon == null) ? 0 : largeIcon.hashCode());
-        result = prime * result +
-                ((serviceInterface == null) ? 0 : serviceInterface.hashCode());
+        result = prime * result + ((displayname == null) ? 0 : displayname.hashCode());
+        result = prime * result + ((handlers == null) ? 0 : handlers.hashCode());
+        result = prime * result + ((jaxrpcmappingfile == null) ? 0 : jaxrpcmappingfile.hashCode());
+        result = prime * result + ((largeIcon == null) ? 0 : largeIcon.hashCode());
+        result = prime * result + ((serviceInterface == null) ? 0 : serviceInterface.hashCode());
         result = prime * result + Arrays.hashCode(serviceqname);
-        result = prime * result +
-                ((smallIcon == null) ? 0 : smallIcon.hashCode());
-        result = prime * result +
-                ((wsdlfile == null) ? 0 : wsdlfile.hashCode());
+        result = prime * result + ((smallIcon == null) ? 0 : smallIcon.hashCode());
+        result = prime * result + ((wsdlfile == null) ? 0 : wsdlfile.hashCode());
         return result;
     }
 

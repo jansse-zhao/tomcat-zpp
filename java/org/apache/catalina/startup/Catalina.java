@@ -367,7 +367,7 @@ public class Catalina {
     /**
      * Create and configure the Digester we will be using for startup.
      * <p>
-     * 创建并配置Digester，这个类用于解析server.xml，
+     * 创建并配置Digester，这个类用于解析xml文件，
      * 将里面的xml节点解析成对应的Server、Service、Engine、Listener、Connector等实例对象组件
      * 因为server.xml文件中配置的有Server、Listener、Service、Engine、Connector等节点
      *
@@ -703,7 +703,7 @@ public class Catalina {
         initNaming();
 
         // Parse main server.xml
-        // 解析 server.xml
+        // 解析 server.xml，这里通过Digester实例化一个Server对象实例
         parseServerXml(true);
         Server s = getServer();
         if (s == null) {
@@ -790,7 +790,7 @@ public class Catalina {
             }
 
             /**
-             * JVM的关闭钩子：
+             * ######JVM的关闭钩子：######
              *
              * 关闭钩子是指通过Runtime.addShutdownHook注册的但尚未开始的线程。
              * 这些钩子可以用于实现服务或者应用程序的清理工作，例如删除临时文件，或者清除无法由操作系统自动清除的资源。
@@ -827,8 +827,7 @@ public class Catalina {
      */
     public void stop() {
         try {
-            // Remove the ShutdownHook first so that server.stop()
-            // doesn't get invoked twice
+            // Remove the ShutdownHook first so that server.stop() doesn't get invoked twice
             if (useShutdownHook) {
                 Runtime.getRuntime().removeShutdownHook(shutdownHook);
 

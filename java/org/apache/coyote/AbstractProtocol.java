@@ -829,12 +829,9 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
                             }
                             return SocketState.CLOSED;
                             /*
-                             * To replace the code above once OpenSSL 1.1.0 is
-                             * used.
+                             * To replace the code above once OpenSSL 1.1.0 is used.
                             // Failed to create processor. This is a bug.
-                            throw new IllegalStateException(sm.getString(
-                                    "abstractConnectionHandler.negotiatedProcessor.fail",
-                                    negotiatedProtocol));
+                            throw new IllegalStateException(sm.getString("abstractConnectionHandler.negotiatedProcessor.fail", negotiatedProtocol));
                             */
                         }
                     }

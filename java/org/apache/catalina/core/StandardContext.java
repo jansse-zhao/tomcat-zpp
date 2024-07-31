@@ -3342,7 +3342,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         return filterMaps.asArray();
     }
 
-
     /**
      * @param name Name of the desired message destination
      * @return the message destination with the specified name, if any;
@@ -5004,9 +5003,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
         // Send j2ee.state.running notification
         if (ok && (this.getObjectName() != null)) {
-            Notification notification =
-                new Notification("j2ee.state.running", this.getObjectName(),
-                    sequenceNumber.getAndIncrement());
+            Notification notification = new Notification("j2ee.state.running", this.getObjectName(), sequenceNumber.getAndIncrement());
             broadcaster.sendNotification(notification);
         }
 
@@ -5021,8 +5018,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             setState(LifecycleState.FAILED);
             // Send j2ee.object.failed notification
             if (this.getObjectName() != null) {
-                Notification notification = new Notification("j2ee.object.failed",
-                    this.getObjectName(), sequenceNumber.getAndIncrement());
+                Notification notification = new Notification("j2ee.object.failed", this.getObjectName(), sequenceNumber.getAndIncrement());
                 broadcaster.sendNotification(notification);
             }
         } else {

@@ -157,6 +157,8 @@ public abstract class LifecycleBase implements Lifecycle {
 
     /**
      * {@inheritDoc}
+     * <p>
+     * 父类中的start方法基本都是一写状态判断的操作，真正的启动操作交由子类的startInternal方法执行
      */
     @Override
     public final synchronized void start() throws LifecycleException {
@@ -183,8 +185,7 @@ public abstract class LifecycleBase implements Lifecycle {
             stop();
         }
         // 不是`INITIALIZED`和`STOPPED`时，则说明是非法的操作
-        else if (!state.equals(LifecycleState.INITIALIZED) &&
-            !state.equals(LifecycleState.STOPPED)) {
+        else if (!state.equals(LifecycleState.INITIALIZED) && !state.equals(LifecycleState.STOPPED)) {
             invalidTransition(Lifecycle.BEFORE_START_EVENT);
         }
 

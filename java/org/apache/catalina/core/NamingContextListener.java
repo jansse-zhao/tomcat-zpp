@@ -125,14 +125,12 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
         this.exceptionOnFailedWrite = exceptionOnFailedWrite;
     }
 
-
     /**
      * @return the "name" property.
      */
     public String getName() {
         return this.name;
     }
-
 
     /**
      * Set the "name" property.
@@ -143,14 +141,12 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
         this.name = name;
     }
 
-
     /**
      * @return the naming environment context.
      */
     public javax.naming.Context getEnvContext() {
         return this.envCtx;
     }
-
 
     // ---------------------------------------------- LifecycleListener Methods
 
@@ -173,7 +169,7 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
             return;
         }
 
-        // 开始配置状态
+        // 开始配置事件
         if (Lifecycle.CONFIGURE_START_EVENT.equals(event.getType())) {
             if (initialized) {
                 return;
@@ -232,7 +228,7 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
             }
 
         }
-        // 配置完成状态
+        // 配置完成事件
         else if (Lifecycle.CONFIGURE_STOP_EVENT.equals(event.getType())) {
             if (!initialized) {
                 return;
@@ -305,14 +301,10 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
 
             // Setting the context in read only mode
             ContextAccessController.setReadOnly(getName());
-
         }
-
     }
 
-
     // -------------------------------------------------------- Private Methods
-
 
     /**
      * Process a property change on the naming resources, by making the
@@ -322,9 +314,7 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
      * @param oldValue The old value (or <code>null</code> if adding)
      * @param newValue The new value (or <code>null</code> if removing)
      */
-    private void processGlobalResourcesChange(String name,
-                                              Object oldValue,
-                                              Object newValue) {
+    private void processGlobalResourcesChange(String name, Object oldValue, Object newValue) {
 
         if (name.equals("ejb")) {
             if (oldValue != null) {
@@ -1033,15 +1023,12 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
      * @param name the name of the EJB which should be removed
      */
     public void removeEjb(String name) {
-
         try {
             envCtx.unbind(name);
         } catch (NamingException e) {
             log.error(sm.getString("naming.unbindFailed", name), e);
         }
-
     }
-
 
     /**
      * Remove the specified environment entry from the naming context.
@@ -1049,15 +1036,12 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
      * @param name the name of the environment entry which should be removed
      */
     public void removeEnvironment(String name) {
-
         try {
             envCtx.unbind(name);
         } catch (NamingException e) {
             log.error(sm.getString("naming.unbindFailed", name), e);
         }
-
     }
-
 
     /**
      * Remove the specified local EJB from the naming context.
@@ -1065,32 +1049,25 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
      * @param name the name of the EJB which should be removed
      */
     public void removeLocalEjb(String name) {
-
         try {
             envCtx.unbind(name);
         } catch (NamingException e) {
             log.error(sm.getString("naming.unbindFailed", name), e);
         }
-
     }
-
 
     /**
      * Remove the specified message destination ref from the naming context.
      *
-     * @param name the name of the message destination ref which should be
-     *             removed
+     * @param name the name of the message destination ref which should be removed
      */
     public void removeMessageDestinationRef(String name) {
-
         try {
             envCtx.unbind(name);
         } catch (NamingException e) {
             log.error(sm.getString("naming.unbindFailed", name), e);
         }
-
     }
-
 
     /**
      * Remove the specified web service from the naming context.
@@ -1098,15 +1075,12 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
      * @param name the name of the web service which should be removed
      */
     public void removeService(String name) {
-
         try {
             envCtx.unbind(name);
         } catch (NamingException e) {
             log.error(sm.getString("naming.unbindFailed", name), e);
         }
-
     }
-
 
     /**
      * Remove the specified resource from the naming context.
@@ -1114,7 +1088,6 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
      * @param name the name of the resource which should be removed
      */
     public void removeResource(String name) {
-
         try {
             envCtx.unbind(name);
         } catch (NamingException e) {
@@ -1125,27 +1098,20 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
         if (on != null) {
             Registry.getRegistry(null, null).unregisterComponent(on);
         }
-
     }
 
-
     /**
-     * Remove the specified resource environment reference from the naming
-     * context.
+     * Remove the specified resource environment reference from the naming context.
      *
-     * @param name the name of the resource environment reference which should
-     *             be removed
+     * @param name the name of the resource environment reference which should be removed
      */
     public void removeResourceEnvRef(String name) {
-
         try {
             envCtx.unbind(name);
         } catch (NamingException e) {
             log.error(sm.getString("naming.unbindFailed", name), e);
         }
-
     }
-
 
     /**
      * Remove the specified resource link from the naming context.
@@ -1153,7 +1119,6 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
      * @param name the name of the resource link which should be removed
      */
     public void removeResourceLink(String name) {
-
         try {
             envCtx.unbind(name);
         } catch (NamingException e) {
@@ -1163,12 +1128,10 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
         ResourceLinkFactory.deregisterGlobalResourceAccess(getGlobalNamingContext(), name);
     }
 
-
     /**
      * Create all intermediate subcontexts.
      */
-    private void createSubcontexts(javax.naming.Context ctx, String name)
-        throws NamingException {
+    private void createSubcontexts(javax.naming.Context ctx, String name) throws NamingException {
         javax.naming.Context currentContext = ctx;
         StringTokenizer tokenizer = new StringTokenizer(name, "/");
         while (tokenizer.hasMoreTokens()) {
@@ -1177,15 +1140,12 @@ public class NamingContextListener implements LifecycleListener, PropertyChangeL
                 try {
                     currentContext = currentContext.createSubcontext(token);
                 } catch (NamingException e) {
-                    // Silent catch. Probably an object is already bound in
-                    // the context.
-                    currentContext =
-                        (javax.naming.Context) currentContext.lookup(token);
+                    // Silent catch. Probably an object is already bound in the context.
+                    currentContext = (javax.naming.Context) currentContext.lookup(token);
                 }
             }
         }
     }
-
 
     /**
      * Gets look up reference from resource if exist.

@@ -636,8 +636,7 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
         }
         UpgradeGroupInfo result = upgradeProtocolGroupInfos.get(upgradeProtocol);
         if (result == null) {
-            // Protecting against multiple JMX registration, not modification
-            // of the Map.
+            // Protecting against multiple JMX registration, not modification of the Map.
             synchronized (upgradeProtocolGroupInfos) {
                 result = upgradeProtocolGroupInfos.get(upgradeProtocol);
                 if (result == null) {
@@ -679,7 +678,6 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
         return oname;
     }
 
-
     // ------------------------------------------------ HTTP specific properties
     // ------------------------------------------ passed through to the EndPoint
 
@@ -691,7 +689,6 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
         getEndpoint().setSSLEnabled(SSLEnabled);
     }
 
-
     public boolean getUseSendfile() {
         return getEndpoint().getUseSendfile();
     }
@@ -699,7 +696,6 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     public void setUseSendfile(boolean useSendfile) {
         getEndpoint().setUseSendfile(useSendfile);
     }
-
 
     /**
      * @return The maximum number of requests which can be performed over a
@@ -720,7 +716,6 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     public void setMaxKeepAliveRequests(int mkar) {
         getEndpoint().setMaxKeepAliveRequests(mkar);
     }
-
 
     // ----------------------------------------------- HTTPS specific properties
     // ------------------------------------------ passed through to the EndPoint
@@ -783,9 +778,7 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     protected abstract Processor createProcessor();
 
     @Override
-    protected Processor createUpgradeProcessor(
-        SocketWrapperBase<?> socket,
-        UpgradeToken upgradeToken) {
+    protected Processor createUpgradeProcessor(SocketWrapperBase<?> socket, UpgradeToken upgradeToken) {
         HttpUpgradeHandler httpUpgradeHandler = upgradeToken.getHttpUpgradeHandler();
         if (httpUpgradeHandler instanceof InternalHttpUpgradeHandler) {
             return new UpgradeProcessorInternal(socket, upgradeToken, getUpgradeGroupInfo(upgradeToken.getProtocol()));

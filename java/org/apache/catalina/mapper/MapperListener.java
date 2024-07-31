@@ -27,6 +27,8 @@ import java.util.List;
 
 /**
  * Mapper listener.
+ * <p>
+ * Mapper组件间的映射主要通过监听器进行
  *
  * @author Remy Maucherat
  * @author Costin Manolache
@@ -56,7 +58,6 @@ public class MapperListener extends LifecycleMBeanBase implements ContainerListe
      * The domain (effectively the engine) this mapper is associated with
      */
     private final String domain = null;
-
 
     // ----------------------------------------------------------- Constructors
 

@@ -16,7 +16,6 @@
  */
 package org.apache.catalina.core;
 
-
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterConfig;
 import jakarta.servlet.ServletContext;
@@ -42,7 +41,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-
 
 /**
  * Implementation of a <code>jakarta.servlet.FilterConfig</code> useful in
@@ -87,8 +85,7 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
      * @throws IllegalArgumentException If the provided configuration is not
      *                                  valid
      */
-    ApplicationFilterConfig(Context context, FilterDef filterDef)
-        throws ClassCastException, ReflectiveOperationException, ServletException,
+    ApplicationFilterConfig(Context context, FilterDef filterDef) throws ClassCastException, ReflectiveOperationException, ServletException,
         NamingException, IllegalArgumentException, SecurityException {
 
         super();
@@ -105,21 +102,17 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
         }
     }
 
-
     // ----------------------------------------------------- Instance Variables
-
 
     /**
      * The Context with which we are associated.
      */
     private final transient Context context;
 
-
     /**
      * The application Filter we are configured for.
      */
     private transient Filter filter = null;
-
 
     /**
      * The <code>FilterDef</code> that defines our associated Filter.
@@ -132,7 +125,6 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
     private ObjectName oname;
 
     // --------------------------------------------------- FilterConfig Methods
-
 
     /**
      * Return the name of the filter we are configuring.

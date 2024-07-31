@@ -16,28 +16,14 @@
  */
 package org.apache.catalina.mbeans;
 
-
-import java.util.Iterator;
-
-import javax.naming.Binding;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.OperationNotSupportedException;
-
-import org.apache.catalina.Group;
-import org.apache.catalina.Lifecycle;
-import org.apache.catalina.LifecycleEvent;
-import org.apache.catalina.LifecycleListener;
-import org.apache.catalina.Role;
-import org.apache.catalina.Server;
-import org.apache.catalina.User;
-import org.apache.catalina.UserDatabase;
+import org.apache.catalina.*;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.res.StringManager;
 
+import javax.naming.Context;
+import javax.naming.*;
+import java.util.Iterator;
 
 /**
  * Implementation of <code>LifecycleListener</code> that instantiates the
@@ -72,11 +58,9 @@ public class GlobalResourcesLifecycleListener implements LifecycleListener {
      */
     @Override
     public void lifecycleEvent(LifecycleEvent event) {
-
         if (Lifecycle.START_EVENT.equals(event.getType())) {
             if (!(event.getLifecycle() instanceof Server)) {
-                log.warn(sm.getString("listener.notServer",
-                        event.getLifecycle().getClass().getSimpleName()));
+                log.warn(sm.getString("listener.notServer", event.getLifecycle().getClass().getSimpleName()));
             }
             component = event.getLifecycle();
             createMBeans();
@@ -85,7 +69,6 @@ public class GlobalResourcesLifecycleListener implements LifecycleListener {
             component = null;
         }
     }
-
 
     // ------------------------------------------------------ Protected Methods
 
@@ -110,21 +93,17 @@ public class GlobalResourcesLifecycleListener implements LifecycleListener {
         }
     }
 
-
     /**
      * Create the MBeans for the interesting global JNDI resources in
      * the specified naming context.
      *
-     * @param prefix Prefix for complete object name paths
+     * @param prefix  Prefix for complete object name paths
      * @param context Context to be scanned
-     *
-     * @exception NamingException if a JNDI exception occurs
+     * @throws NamingException if a JNDI exception occurs
      */
     protected void createMBeans(String prefix, Context context) throws NamingException {
-
         if (log.isDebugEnabled()) {
-            log.debug("Creating MBeans for Global JNDI Resources in Context '" +
-                prefix + "'");
+            log.debug("Creating MBeans for Global JNDI Resources in Context '" + prefix + "'");
         }
 
         try {
@@ -153,17 +132,14 @@ public class GlobalResourcesLifecycleListener implements LifecycleListener {
         }
     }
 
-
     /**
      * Create the MBeans for the specified UserDatabase and its contents.
      *
-     * @param name Complete resource name of this UserDatabase
+     * @param name     Complete resource name of this UserDatabase
      * @param database The UserDatabase to be processed
-     *
-     * @exception Exception if an exception occurs while creating MBeans
+     * @throws Exception if an exception occurs while creating MBeans
      */
     protected void createMBeans(String name, UserDatabase database) throws Exception {
-
         // Create the MBean for the UserDatabase itself
         if (log.isDebugEnabled()) {
             log.debug("Creating UserDatabase MBeans for resource " + name);
@@ -171,7 +147,7 @@ public class GlobalResourcesLifecycleListener implements LifecycleListener {
         }
         try {
             MBeanUtils.createMBean(database);
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new IllegalArgumentException(sm.getString("globalResources.createError.userDatabase", name), e);
         }
 
@@ -222,7 +198,6 @@ public class GlobalResourcesLifecycleListener implements LifecycleListener {
             }
         }
     }
-
 
     /**
      * Destroy the MBeans for the interesting global JNDI resources.

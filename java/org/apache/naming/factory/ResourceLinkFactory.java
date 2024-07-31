@@ -16,20 +16,15 @@
  */
 package org.apache.naming.factory;
 
+import org.apache.naming.ResourceLinkRef;
+import org.apache.naming.StringManager;
+
+import javax.naming.*;
+import javax.naming.spi.ObjectFactory;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.naming.Context;
-import javax.naming.Name;
-import javax.naming.NamingException;
-import javax.naming.RefAddr;
-import javax.naming.Reference;
-import javax.naming.spi.ObjectFactory;
-
-import org.apache.naming.ResourceLinkRef;
-import org.apache.naming.StringManager;
 
 /**
  * <p>Object factory for resource links.</p>
@@ -47,13 +42,14 @@ public class ResourceLinkFactory implements ObjectFactory {
      */
     private static Context globalContext = null;
 
-    private static Map<ClassLoader,Map<String,String>> globalResourceRegistrations =
-            new ConcurrentHashMap<>();
+    private static Map<ClassLoader, Map<String, String>> globalResourceRegistrations = new ConcurrentHashMap<>();
 
     // --------------------------------------------------------- Public Methods
 
     /**
      * Set the global context (note: can only be used once).
+     * <p>
+     * 设置java.naming的全局容器Context
      *
      * @param newGlobalContext new global context value
      */
@@ -61,14 +57,15 @@ public class ResourceLinkFactory implements ObjectFactory {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkPermission(new RuntimePermission(
-                   ResourceLinkFactory.class.getName() + ".setGlobalContext"));
+                ResourceLinkFactory.class.getName() + ".setGlobalContext"));
         }
         globalContext = newGlobalContext;
     }
 
-
-    public static void registerGlobalResourceAccess(Context globalContext, String localName,
-            String globalName) {
+    /**
+     * 注册全局资源访问
+     */
+    public static void registerGlobalResourceAccess(Context globalContext, String localName, String globalName) {
         validateGlobalContext(globalContext);
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         // Web application initialization is single threaded so this is
@@ -76,27 +73,32 @@ public class ResourceLinkFactory implements ObjectFactory {
         globalResourceRegistrations.computeIfAbsent(cl, k -> new HashMap<>()).put(localName, globalName);
     }
 
-
+    /**
+     * 取消全局资源访问
+     */
     public static void deregisterGlobalResourceAccess(Context globalContext, String localName) {
         validateGlobalContext(globalContext);
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        Map<String,String> registrations = globalResourceRegistrations.get(cl);
+        Map<String, String> registrations = globalResourceRegistrations.get(cl);
         if (registrations != null) {
             registrations.remove(localName);
         }
     }
 
-
+    /**
+     * 取消全局资源访问
+     */
     public static void deregisterGlobalResourceAccess(Context globalContext) {
         validateGlobalContext(globalContext);
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         globalResourceRegistrations.remove(cl);
     }
 
-
+    /**
+     * 验证是否为统一个全局容器
+     */
     private static void validateGlobalContext(Context globalContext) {
-        if (ResourceLinkFactory.globalContext != null &&
-                ResourceLinkFactory.globalContext != globalContext) {
+        if (ResourceLinkFactory.globalContext != null && ResourceLinkFactory.globalContext != globalContext) {
             throw new SecurityException(sm.getString("resourceLinkFactory.invalidGlobalContext"));
         }
     }
@@ -105,7 +107,7 @@ public class ResourceLinkFactory implements ObjectFactory {
     private static boolean validateGlobalResourceAccess(String globalName) {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         while (cl != null) {
-            Map<String,String> registrations = globalResourceRegistrations.get(cl);
+            Map<String, String> registrations = globalResourceRegistrations.get(cl);
             if (registrations != null && registrations.containsValue(globalName)) {
                 return true;
             }
@@ -123,8 +125,7 @@ public class ResourceLinkFactory implements ObjectFactory {
      * @param obj The reference object describing the DataSource
      */
     @Override
-    public Object getObjectInstance(Object obj, Name name, Context nameCtx,
-            Hashtable<?,?> environment) throws NamingException {
+    public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws NamingException {
 
         if (!(obj instanceof ResourceLinkRef)) {
             return null;
@@ -149,18 +150,18 @@ public class ResourceLinkFactory implements ObjectFactory {
             String expectedClassName = ref.getClassName();
             if (expectedClassName == null) {
                 throw new IllegalArgumentException(
-                        sm.getString("resourceLinkFactory.nullType", name, globalName));
+                    sm.getString("resourceLinkFactory.nullType", name, globalName));
             }
             try {
                 Class<?> expectedClazz = Class.forName(
-                        expectedClassName, true, Thread.currentThread().getContextClassLoader());
+                    expectedClassName, true, Thread.currentThread().getContextClassLoader());
                 if (!expectedClazz.isAssignableFrom(result.getClass())) {
                     throw new IllegalArgumentException(sm.getString("resourceLinkFactory.wrongType",
-                            name, globalName, expectedClassName, result.getClass().getName()));
+                        name, globalName, expectedClassName, result.getClass().getName()));
                 }
             } catch (ClassNotFoundException e) {
                 throw new IllegalArgumentException(sm.getString("resourceLinkFactory.unknownType",
-                        name, globalName, expectedClassName), e);
+                    name, globalName, expectedClassName), e);
             }
             return result;
         }

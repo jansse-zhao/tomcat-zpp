@@ -16,28 +16,11 @@
  */
 package org.apache.catalina.storeconfig;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.naming.directory.DirContext;
-
-import org.apache.catalina.CredentialHandler;
-import org.apache.catalina.LifecycleListener;
-import org.apache.catalina.Manager;
-import org.apache.catalina.Realm;
-import org.apache.catalina.Valve;
-import org.apache.catalina.WebResourceRoot;
-import org.apache.catalina.WebResourceSet;
+import org.apache.catalina.*;
 import org.apache.catalina.ha.CatalinaCluster;
 import org.apache.catalina.ha.ClusterDeployer;
 import org.apache.catalina.ha.ClusterListener;
-import org.apache.catalina.tribes.Channel;
-import org.apache.catalina.tribes.ChannelInterceptor;
-import org.apache.catalina.tribes.ChannelReceiver;
-import org.apache.catalina.tribes.ChannelSender;
-import org.apache.catalina.tribes.Member;
-import org.apache.catalina.tribes.MembershipService;
-import org.apache.catalina.tribes.MessageListener;
+import org.apache.catalina.tribes.*;
 import org.apache.catalina.tribes.transport.DataSender;
 import org.apache.coyote.UpgradeProtocol;
 import org.apache.juli.logging.Log;
@@ -45,10 +28,15 @@ import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.http.CookieProcessor;
 import org.apache.tomcat.util.res.StringManager;
 
+import javax.naming.directory.DirContext;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Central StoreRegistry for all server.xml elements
  */
 public class StoreRegistry {
+
     private static Log log = LogFactory.getLog(StoreRegistry.class);
     private static StringManager sm = StringManager.getManager(StoreRegistry.class);
 
@@ -61,15 +49,15 @@ public class StoreRegistry {
     private String version;
 
     // Access Information
-    private static Class<?> interfaces[] = { CatalinaCluster.class,
-            ChannelSender.class, ChannelReceiver.class, Channel.class,
-            MembershipService.class, ClusterDeployer.class, Realm.class,
-            Manager.class, DirContext.class, LifecycleListener.class,
-            Valve.class, ClusterListener.class, MessageListener.class,
-            DataSender.class, ChannelInterceptor.class, Member.class,
-            WebResourceRoot.class, WebResourceSet.class,
-            CredentialHandler.class, UpgradeProtocol.class,
-            CookieProcessor.class };
+    private static Class<?> interfaces[] = {CatalinaCluster.class,
+        ChannelSender.class, ChannelReceiver.class, Channel.class,
+        MembershipService.class, ClusterDeployer.class, Realm.class,
+        Manager.class, DirContext.class, LifecycleListener.class,
+        Valve.class, ClusterListener.class, MessageListener.class,
+        DataSender.class, ChannelInterceptor.class, Member.class,
+        WebResourceRoot.class, WebResourceSet.class,
+        CredentialHandler.class, UpgradeProtocol.class,
+        CookieProcessor.class};
 
     /**
      * @return the name
@@ -121,8 +109,8 @@ public class StoreRegistry {
             if (aClass != null) {
                 desc = descriptors.get(aClass.getName());
                 for (int i = 0; desc == null && i < interfaces.length; i++) {
-                    if (interfaces[i].isAssignableFrom(aClass)) {
-                        desc = descriptors.get(interfaces[i].getName());
+                    if (interfaces[ i ].isAssignableFrom(aClass)) {
+                        desc = descriptors.get(interfaces[ i ].getName());
                     }
                 }
             }
@@ -130,7 +118,7 @@ public class StoreRegistry {
         if (log.isDebugEnabled()) {
             if (desc != null) {
                 log.debug("find descriptor " + id + "#" + desc.getTag() + "#"
-                        + desc.getStoreFactoryClass());
+                    + desc.getStoreFactoryClass());
             } else {
                 log.debug(("Can't find descriptor for key " + id));
             }
@@ -186,8 +174,7 @@ public class StoreRegistry {
         }
         descriptors.put(key, desc);
         if (log.isDebugEnabled()) {
-            log.debug("register store descriptor " + key + "#" + desc.getTag()
-                    + "#" + desc.getTagClass());
+            log.debug("register store descriptor " + key + "#" + desc.getTag() + "#" + desc.getTagClass());
         }
     }
 
@@ -216,6 +203,7 @@ public class StoreRegistry {
 
     /**
      * Set the encoding to use when writing the configuration files.
+     *
      * @param string The encoding
      */
     public void setEncoding(String string) {

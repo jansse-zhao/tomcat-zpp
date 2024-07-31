@@ -100,7 +100,6 @@ public class StringManager {
     public String getString(String key) {
         if (key == null) {
             String msg = "key may not have a null value";
-
             throw new IllegalArgumentException(msg);
         }
 
@@ -114,14 +113,11 @@ public class StringManager {
         } catch (MissingResourceException mre) {
             //bad: shouldn't mask an exception the following way:
             //   str = "[cannot find message associated with key '" + key + "' due to " + mre + "]";
-            //     because it hides the fact that the String was missing
-            //     from the calling code.
+            //     because it hides the fact that the String was missing from the calling code.
             //good: could just throw the exception (or wrap it in another)
-            //      but that would probably cause much havoc on existing
-            //      code.
+            //      but that would probably cause much havoc on existing code.
             //better: consistent with container pattern to
-            //      simply return null.  Calling code can then do
-            //      a null check.
+            //      simply return null.  Calling code can then do a null check.
             str = null;
         }
 
@@ -133,7 +129,6 @@ public class StringManager {
 
             }
         }
-
 
         return str;
     }

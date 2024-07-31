@@ -237,9 +237,12 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         NamingResourcesImpl oldGlobalNamingResources = this.globalNamingResources;
         this.globalNamingResources = globalNamingResources;
         this.globalNamingResources.setContainer(this);
-        support.firePropertyChange("globalNamingResources",
-            oldGlobalNamingResources,
-            this.globalNamingResources);
+
+        /**
+         * 当前对象的属性值发生变化时，通知所有已经注册的PropertyChangeListener监听器。
+         * 这个方法的作用是触发一个PropertyChangeEvent事件，使得所有注册的监听器能够接收到这个事件，并执行相应的处理逻辑。
+         */
+        support.firePropertyChange("globalNamingResources", oldGlobalNamingResources, this.globalNamingResources);
     }
 
     /**
@@ -280,9 +283,10 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         return this.port;
     }
 
-
     /**
      * Set the port number we listen to for shutdown commands.
+     * <p>
+     * 设置停止服务器监听端口，{@link org.apache.catalina.startup.Tomcat}中会调用方法，将port设置为-1
      *
      * @param port The new port number
      */
@@ -291,27 +295,22 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         this.port = port;
     }
 
-
     @Override
     public int getPortOffset() {
         return portOffset;
     }
 
-
     @Override
     public void setPortOffset(int portOffset) {
         if (portOffset < 0) {
-            throw new IllegalArgumentException(
-                sm.getString("standardServer.portOffset.invalid", Integer.valueOf(portOffset)));
+            throw new IllegalArgumentException(sm.getString("standardServer.portOffset.invalid", Integer.valueOf(portOffset)));
         }
         this.portOffset = portOffset;
     }
 
-
     @Override
     public int getPortWithOffset() {
-        // Non-positive port values have special meanings and the offset should
-        // not apply.
+        // Non-positive port values have special meanings and the offset should not apply.
         int port = getPort();
         if (port > 0) {
             return port + getPortOffset();
@@ -319,7 +318,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
             return port;
         }
     }
-
 
     /**
      * Return the address on which we listen to for shutdown commands.
