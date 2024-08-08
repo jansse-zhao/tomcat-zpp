@@ -63,6 +63,7 @@ public class StandardEngine extends ContainerBase implements Engine {
      * Create a new StandardEngine component with the default basic Valve.
      */
     public StandardEngine() {
+        // Basic阀门会在Pipeline（管道的最后执行）
         pipeline.setBasic(new StandardEngineValve());
         // By default, the engine will hold the reloading thread
         backgroundProcessorDelay = 10;

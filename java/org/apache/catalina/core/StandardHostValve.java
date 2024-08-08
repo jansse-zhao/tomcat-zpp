@@ -112,6 +112,7 @@ final class StandardHostValve extends ValveBase {
             // application for processing.
             try {
                 if (!response.isErrorReportRequired()) {
+                    // 执行Context的阀门
                     context.getPipeline().getFirst().invoke(request, response);
                 }
             } catch (Throwable t) {
@@ -167,7 +168,6 @@ final class StandardHostValve extends ValveBase {
         }
     }
 
-
     // -------------------------------------------------------- Private Methods
 
     /**
@@ -180,7 +180,6 @@ final class StandardHostValve extends ValveBase {
      * @param response The response being generated
      */
     private void status(Request request, Response response) {
-
         int statusCode = response.getStatus();
 
         // Handle a custom error page for this status code
@@ -215,7 +214,6 @@ final class StandardHostValve extends ValveBase {
             request.setAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR, errorPage.getLocation());
             request.setAttribute(Globals.DISPATCHER_TYPE_ATTR, DispatcherType.ERROR);
 
-
             Wrapper wrapper = request.getWrapper();
             if (wrapper != null) {
                 request.setAttribute(RequestDispatcher.ERROR_SERVLET_NAME, wrapper.getName());
@@ -234,7 +232,6 @@ final class StandardHostValve extends ValveBase {
             }
         }
     }
-
 
     /**
      * Handle the specified Throwable encountered while processing
@@ -280,8 +277,7 @@ final class StandardHostValve extends ValveBase {
                 response.setAppCommitted(false);
                 request.setAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR, errorPage.getLocation());
                 request.setAttribute(Globals.DISPATCHER_TYPE_ATTR, DispatcherType.ERROR);
-                request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE,
-                    Integer.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
+                request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, Integer.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
                 request.setAttribute(RequestDispatcher.ERROR_MESSAGE, throwable.getMessage());
                 request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, realError);
                 Wrapper wrapper = request.getWrapper();
@@ -311,7 +307,6 @@ final class StandardHostValve extends ValveBase {
             status(request, response);
         }
     }
-
 
     /**
      * Handle an HTTP status code or Java exception by forwarding control

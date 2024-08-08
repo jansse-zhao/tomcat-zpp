@@ -186,6 +186,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
 
     /**
      * The Pipeline object with which this Container is associated.
+     * 四个容器中每个容器都各自持有一个管道对象
      */
     protected final Pipeline pipeline = new StandardPipeline(this);
 
@@ -1043,10 +1044,8 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      *                                  associated with a different Container
      */
     public synchronized void addValve(Valve valve) {
-
         pipeline.addValve(valve);
     }
-
 
     /**
      * Execute a periodic task, such as reloading, etc. This method will be

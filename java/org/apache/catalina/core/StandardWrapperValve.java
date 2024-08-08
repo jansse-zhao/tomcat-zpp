@@ -53,16 +53,21 @@ final class StandardWrapperValve extends ValveBase {
         super(true);
     }
 
-
     // ----------------------------------------------------- Instance Variables
 
     // Some JMX statistics. This valve is associated with a StandardWrapper.
-    // We expose the StandardWrapper as JMX ( j2eeType=Servlet ). The fields
-    // are here for performance.
+    // We expose the StandardWrapper as JMX ( j2eeType=Servlet ).
+    // The fields are here for performance.
+
+    // 给JMX暴露的一些统计信息
+
+    // 处理时间
     private volatile long processingTime;
     private volatile long maxTime;
     private volatile long minTime = Long.MAX_VALUE;
+    // 请求数量
     private final AtomicInteger requestCount = new AtomicInteger(0);
+    // 异常数量
     private final AtomicInteger errorCount = new AtomicInteger(0);
 
 
@@ -71,6 +76,8 @@ final class StandardWrapperValve extends ValveBase {
     /**
      * Invoke the servlet we are managing, respecting the rules regarding
      * servlet lifecycle support.
+     * <p>
+     * 此阀门负责统计请求次数、统计处理时间、分配servlet内存、执行servlet过滤器、调用servlet的Service方法、释放servlet内存
      *
      * @param request  Request to be processed
      * @param response Response to be produced
@@ -84,6 +91,7 @@ final class StandardWrapperValve extends ValveBase {
         Throwable throwable = null;
         // This should be a Request attribute...
         long t1 = System.currentTimeMillis();
+        // 请求数量加一
         requestCount.incrementAndGet();
         StandardWrapper wrapper = (StandardWrapper) getContainer();
         Servlet servlet = null;
@@ -103,6 +111,7 @@ final class StandardWrapperValve extends ValveBase {
         }
 
         // Allocate a servlet instance to process this request
+        // 分配一个servlet实例来处理请求
         try {
             if (!unavailable) {
                 // 实例化并初始化这个servlet
@@ -123,7 +132,9 @@ final class StandardWrapperValve extends ValveBase {
             servlet = null;
         }
 
+        // 请求地址
         MessageBytes requestPathMB = request.getRequestPathMB();
+        // 派发类型
         DispatcherType dispatcherType = DispatcherType.REQUEST;
         if (request.getDispatcherType() == DispatcherType.ASYNC) {
             dispatcherType = DispatcherType.ASYNC;

@@ -584,7 +584,6 @@ public class StandardWrapper extends ContainerBase implements ServletConfig, Wra
      */
     @Override
     public Servlet allocate() throws ServletException {
-
         // If we are currently unloading this servlet, throw an exception
         if (unloading) {
             throw new ServletException(sm.getString("standardWrapper.unloading", getName()));

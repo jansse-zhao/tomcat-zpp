@@ -81,7 +81,7 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
 
     /**
      * The basic Valve (if any) associated with this Pipeline.
-     * 与此管道相关联的基本value(如果有的话)。比如HostValue阀门
+     * 与此管道相关联的基本value(如果有的话)。比如HostValue阀门，在管道的最后才会执行基础阀门
      */
     protected Valve basic = null;
 

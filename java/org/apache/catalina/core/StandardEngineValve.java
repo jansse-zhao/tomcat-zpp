@@ -47,6 +47,8 @@ final class StandardEngineValve extends ValveBase {
      * Select the appropriate child Host to process this request,
      * based on the requested server name.  If no matching Host can
      * be found, return an appropriate HTTP error.
+     * <p>
+     * 根据请求的服务器名，选择一个合适Host容器
      *
      * @param request  Request to be processed
      * @param response Response to be produced

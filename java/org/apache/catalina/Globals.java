@@ -237,7 +237,7 @@ public final class Globals {
 
     /**
      * Has security been turned on?
-     * 是否开启安全security
+     * 是否开启了安全管理器
      */
     public static final boolean IS_SECURITY_ENABLED = (System.getSecurityManager() != null);
 
